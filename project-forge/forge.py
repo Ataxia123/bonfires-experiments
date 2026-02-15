@@ -5,22 +5,17 @@ Three-stage pipeline:
   2. synthesize()      — Claude generates project ideas from selected themes
   3. generate_mockup() — Claude generates an HTML wireframe for a project
 
-Supports two Claude backends:
-  - Claude Code SDK (local dev): requires `claude` CLI installed and authenticated
-  - Anthropic API (deployment): requires ANTHROPIC_API_KEY environment variable
+Uses the Claude Agent SDK (claude-agent-sdk) for all Claude interactions.
+Requires ANTHROPIC_API_KEY environment variable to be set.
 """
 
 import asyncio
 import json
 import os
-import shutil
 import urllib.request
 import urllib.error
 from dataclasses import dataclass, field
 from pathlib import Path
-
-# Allow Claude Code SDK to run even when called from within a Claude Code session
-os.environ.pop("CLAUDECODE", None)
 
 # ---------------------------------------------------------------------------
 # Config
@@ -28,12 +23,6 @@ os.environ.pop("CLAUDECODE", None)
 DELVE_API_KEY = os.environ.get("DELVE_API_KEY", "8n5l-sJnrHjywrTnJ3rJCjo1f1uLyTPYy_yLgq_bf-d")
 BONFIRE_ID = os.environ.get("BONFIRE_ID", "698b70002849d936f4259848")
 BASE_URL = os.environ.get("DELVE_BASE_URL", "https://tnt-v2.api.bonfires.ai")
-
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-5-20250929")
-
-# Use SDK if claude CLI is available AND no API key is explicitly set
-USE_SDK = shutil.which("claude") is not None and not ANTHROPIC_API_KEY
 
 # ---------------------------------------------------------------------------
 # KG client
@@ -160,53 +149,28 @@ def extract_themes() -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Claude helper — supports both SDK and direct API
+# Claude helper — uses Claude Agent SDK
 # ---------------------------------------------------------------------------
 
-def _call_anthropic_api(prompt: str, max_tokens: int = 8192) -> str:
-    """Call the Anthropic Messages API directly. Used for deployment."""
-    payload = json.dumps({
-        "model": CLAUDE_MODEL,
-        "max_tokens": max_tokens,
-        "messages": [{"role": "user", "content": prompt}],
-    }).encode()
-    req = urllib.request.Request(
-        "https://api.anthropic.com/v1/messages",
-        data=payload,
-        headers={
-            "Content-Type": "application/json",
-            "x-api-key": ANTHROPIC_API_KEY,
-            "anthropic-version": "2023-06-01",
-        },
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=120) as resp:
-        data = json.loads(resp.read())
-    for block in data.get("content", []):
-        if block.get("type") == "text":
-            return block["text"]
-    return ""
+async def _call_claude(prompt: str, max_turns: int = 3) -> str:
+    """Call Claude via the Claude Agent SDK.
 
+    Requires ANTHROPIC_API_KEY environment variable to be set.
+    """
+    from claude_agent_sdk import query, ClaudeAgentOptions, ResultMessage
 
-async def _call_claude(prompt: str) -> str:
-    """Call Claude via SDK or API depending on environment."""
-    if USE_SDK:
-        from claude_code_sdk import query, ClaudeCodeOptions, ResultMessage
-        result = ""
-        async for message in query(
-            prompt=prompt,
-            options=ClaudeCodeOptions(max_turns=3, allowed_tools=[]),
-        ):
-            if isinstance(message, ResultMessage) and message.result:
-                result = message.result
-        return result
-    else:
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, _call_anthropic_api, prompt)
+    result = ""
+    async for message in query(
+        prompt=prompt,
+        options=ClaudeAgentOptions(max_turns=max_turns, allowed_tools=[]),
+    ):
+        if isinstance(message, ResultMessage) and message.result:
+            result = message.result
+    return result
 
 
 # ---------------------------------------------------------------------------
-# Stage 2: Project synthesis
+# Stage 2: Project synthesis (Claude Agent SDK)
 # ---------------------------------------------------------------------------
 
 PROJECT_SCHEMA = {
@@ -247,7 +211,7 @@ PROJECT_SCHEMA = {
 
 
 async def synthesize_projects(themes_data: dict, selected_themes: list[str] | None = None) -> dict:
-    """Generate project ideas from KG themes.
+    """Use Claude Agent SDK to generate project ideas from KG themes.
 
     Args:
         themes_data: output of extract_themes()
@@ -321,11 +285,11 @@ Return ONLY valid JSON — an object with a "projects" array. Each project must 
 
 
 # ---------------------------------------------------------------------------
-# Stage 3: Mockup generation
+# Stage 3: Mockup generation (Claude Agent SDK)
 # ---------------------------------------------------------------------------
 
 async def generate_mockup(project: dict) -> str:
-    """Generate an HTML wireframe mockup for a project.
+    """Use Claude Agent SDK to generate an HTML wireframe mockup for a project.
 
     Args:
         project: a single project dict from synthesize_projects()
@@ -369,14 +333,11 @@ Return ONLY the complete HTML — no markdown fences, no explanation, just the r
 
 
 # ---------------------------------------------------------------------------
-# Stage 4: Full scaffold
+# Stage 4: Full scaffold (Claude Agent SDK with file tools)
 # ---------------------------------------------------------------------------
 
 async def scaffold_project(project: dict, output_dir: str) -> list[dict]:
-    """Scaffold a full project directory.
-
-    In SDK mode, uses Claude Code SDK with file tools to write files directly.
-    In API mode, asks Claude for file contents and writes them ourselves.
+    """Use Claude Agent SDK to scaffold a full project directory.
 
     Args:
         project: a single project dict
@@ -385,17 +346,9 @@ async def scaffold_project(project: dict, output_dir: str) -> list[dict]:
     Returns:
         List of {tool, path} for each file written
     """
+    from claude_agent_sdk import query, ClaudeAgentOptions, AssistantMessage, ToolUseBlock
+
     Path(output_dir).mkdir(parents=True, exist_ok=True)
-
-    if USE_SDK:
-        return await _scaffold_with_sdk(project, output_dir)
-    else:
-        return await _scaffold_with_api(project, output_dir)
-
-
-async def _scaffold_with_sdk(project: dict, output_dir: str) -> list[dict]:
-    """Scaffold using Claude Code SDK (has file write tools)."""
-    from claude_code_sdk import query, ClaudeCodeOptions, AssistantMessage, ToolUseBlock
 
     prompt = f"""Create a project scaffold in {output_dir} for:
 
@@ -420,7 +373,7 @@ Keep it minimal but functional. This should be a real starting point someone can
     files_written = []
     async for message in query(
         prompt=prompt,
-        options=ClaudeCodeOptions(
+        options=ClaudeAgentOptions(
             max_turns=20,
             allowed_tools=["Read", "Write", "Edit", "Bash"],
             permission_mode="acceptEdits",
@@ -436,64 +389,6 @@ Keep it minimal but functional. This should be a real starting point someone can
     return files_written
 
 
-async def _scaffold_with_api(project: dict, output_dir: str) -> list[dict]:
-    """Scaffold using Anthropic API (no file tools — we write files ourselves)."""
-    prompt = f"""Generate a project scaffold for:
-
-**{project['name']}**
-{project['tagline']}
-
-{project['description']}
-
-Tech stack: {', '.join(project.get('tech_stack', []))}
-Key insight: {project.get('key_insight', '')}
-First step: {project.get('first_step', '')}
-
-Return a JSON object with a "files" array. Each file should have:
-- "path": relative file path (e.g., "README.md", "src/main.py")
-- "content": the full file content as a string
-
-Create:
-1. README.md — project overview, getting started, architecture
-2. A main application file appropriate for the tech stack
-3. A configuration file if needed
-4. A simple test or example that proves the core concept works
-5. Any supporting files the project needs
-
-Keep it minimal but functional. Return ONLY valid JSON, no markdown fences."""
-
-    text = await _call_claude(prompt)
-    text = text.strip()
-
-    # Strip markdown fences if present
-    if text.startswith("```"):
-        text = text.split("\n", 1)[1] if "\n" in text else text[3:]
-        text = text.rsplit("```", 1)[0]
-    text = text.strip()
-
-    # Parse the file list
-    try:
-        start = text.find("{")
-        end = text.rfind("}") + 1
-        data = json.loads(text[start:end]) if start >= 0 else json.loads(text)
-    except (json.JSONDecodeError, ValueError):
-        return [{"tool": "error", "path": "Failed to parse scaffold response"}]
-
-    files_written = []
-    for file_spec in data.get("files", []):
-        rel_path = file_spec.get("path", "")
-        content = file_spec.get("content", "")
-        if not rel_path or not content:
-            continue
-
-        full_path = Path(output_dir) / rel_path
-        full_path.parent.mkdir(parents=True, exist_ok=True)
-        full_path.write_text(content)
-        files_written.append({"tool": "Write", "path": str(full_path)})
-
-    return files_written
-
-
 # ---------------------------------------------------------------------------
 # CLI for testing
 # ---------------------------------------------------------------------------
@@ -503,14 +398,9 @@ async def _main():
 
     if len(sys.argv) < 2:
         print("Usage: python forge.py [themes|synthesize|mockup|scaffold]")
-        print(f"\n  Mode: {'SDK' if USE_SDK else 'API'}")
-        if not USE_SDK and not ANTHROPIC_API_KEY:
-            print("  WARNING: No ANTHROPIC_API_KEY set and no claude CLI found.")
-            print("  Set ANTHROPIC_API_KEY or install claude CLI.")
         return
 
     cmd = sys.argv[1]
-    print(f"  Mode: {'Claude Code SDK' if USE_SDK else 'Anthropic API'}")
 
     if cmd == "themes":
         print("Extracting themes from knowledge graph...")
