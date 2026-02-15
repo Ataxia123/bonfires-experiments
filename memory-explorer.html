@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EthBoulder Collective Memory Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================
+   CSS RESET & VARIABLES
+   ============================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-primary: #0d0b0a;
+  --bg-secondary: #151210;
+  --bg-tertiary: #1c1815;
+  --bg-card: #1a1613;
+  --bg-card-hover: #211d19;
+  --border-subtle: #2a2420;
+  --border-warm: #3d2e1e;
+  --border-glow: #c8743040;
+  --text-primary: #f0e6db;
+  --text-secondary: #a8998a;
+  --text-tertiary: #6b5f54;
+  --accent-amber: #e8943a;
+  --accent-amber-dim: #c87430;
+  --accent-orange: #f07028;
+  --accent-ember: #d45020;
+  --accent-warm-white: #fff0e0;
+  --glow-amber: #e8943a30;
+  --glow-orange: #f0702820;
+  --glow-ember: #d4502015;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2);
+  --shadow-glow: 0 0 20px var(--glow-amber), 0 0 60px var(--glow-orange);
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-med: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ============================================
+   EMBER PARTICLE BACKGROUND
+   ============================================ */
+.ember-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.ember {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  animation: ember-rise linear infinite;
+}
+
+@keyframes ember-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(0) scale(1);
+  }
+  10% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-100vh) translateX(var(--drift)) scale(0.2);
+  }
+}
+
+/* Generate ember particles with pure CSS */
+.ember:nth-child(1) { left: 5%; width: 3px; height: 3px; background: #e8943a; animation-duration: 14s; animation-delay: 0s; --drift: 40px; bottom: -10px; }
+.ember:nth-child(2) { left: 15%; width: 2px; height: 2px; background: #f07028; animation-duration: 18s; animation-delay: 2s; --drift: -30px; bottom: -10px; }
+.ember:nth-child(3) { left: 25%; width: 4px; height: 4px; background: #d45020; animation-duration: 12s; animation-delay: 4s; --drift: 60px; bottom: -10px; }
+.ember:nth-child(4) { left: 35%; width: 2px; height: 2px; background: #e8943a; animation-duration: 20s; animation-delay: 1s; --drift: -50px; bottom: -10px; }
+.ember:nth-child(5) { left: 45%; width: 3px; height: 3px; background: #f07028; animation-duration: 15s; animation-delay: 3s; --drift: 35px; bottom: -10px; }
+.ember:nth-child(6) { left: 55%; width: 2px; height: 2px; background: #c87430; animation-duration: 22s; animation-delay: 5s; --drift: -45px; bottom: -10px; }
+.ember:nth-child(7) { left: 65%; width: 3px; height: 3px; background: #e8943a; animation-duration: 16s; animation-delay: 0.5s; --drift: 55px; bottom: -10px; }
+.ember:nth-child(8) { left: 75%; width: 2px; height: 2px; background: #d45020; animation-duration: 19s; animation-delay: 6s; --drift: -25px; bottom: -10px; }
+.ember:nth-child(9) { left: 85%; width: 4px; height: 4px; background: #f07028; animation-duration: 13s; animation-delay: 2.5s; --drift: 30px; bottom: -10px; }
+.ember:nth-child(10) { left: 95%; width: 2px; height: 2px; background: #c87430; animation-duration: 17s; animation-delay: 7s; --drift: -60px; bottom: -10px; }
+.ember:nth-child(11) { left: 10%; width: 2px; height: 2px; background: #e8943a80; animation-duration: 24s; animation-delay: 8s; --drift: 20px; bottom: -10px; }
+.ember:nth-child(12) { left: 30%; width: 3px; height: 3px; background: #f0702860; animation-duration: 21s; animation-delay: 3.5s; --drift: -40px; bottom: -10px; }
+.ember:nth-child(13) { left: 50%; width: 2px; height: 2px; background: #d4502080; animation-duration: 25s; animation-delay: 9s; --drift: 50px; bottom: -10px; }
+.ember:nth-child(14) { left: 70%; width: 3px; height: 3px; background: #c8743060; animation-duration: 23s; animation-delay: 4.5s; --drift: -35px; bottom: -10px; }
+.ember:nth-child(15) { left: 90%; width: 2px; height: 2px; background: #e8943a60; animation-duration: 26s; animation-delay: 6.5s; --drift: 45px; bottom: -10px; }
+
+/* Warm ambient glow at the bottom */
+.ambient-glow {
+  position: fixed;
+  bottom: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120%;
+  height: 400px;
+  background: radial-gradient(ellipse at center, #e8943a08 0%, #f0702805 30%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ============================================
+   LAYOUT
+   ============================================ */
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 20px;
+  min-height: 100vh;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+.header {
+  padding: 48px 0 8px;
+  text-align: center;
+}
+
+.header-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.flame-icon {
+  font-size: 28px;
+  display: inline-block;
+  animation: flame-flicker 2s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 8px #e8943a80);
+}
+
+@keyframes flame-flicker {
+  0%, 100% { transform: scale(1) rotate(-2deg); opacity: 1; }
+  33% { transform: scale(1.05) rotate(1deg); opacity: 0.9; }
+  66% { transform: scale(0.97) rotate(-1deg); opacity: 1; }
+}
+
+.header h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.header-sub {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* ============================================
+   SEARCH AREA
+   ============================================ */
+.search-area {
+  margin: 28px 0 16px;
+  position: relative;
+}
+
+.search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--transition-med), box-shadow var(--transition-med);
+  overflow: hidden;
+}
+
+.search-wrapper:focus-within {
+  border-color: var(--accent-amber-dim);
+  box-shadow: 0 0 0 3px var(--glow-amber), var(--shadow-glow);
+}
+
+.search-icon {
+  position: absolute;
+  left: 18px;
+  color: var(--text-tertiary);
+  font-size: 18px;
+  pointer-events: none;
+  transition: color var(--transition-fast);
+}
+
+.search-wrapper:focus-within .search-icon {
+  color: var(--accent-amber);
+}
+
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 16px 16px 16px 48px;
+  font-size: 1rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  font-weight: 400;
+}
+
+.search-input::placeholder {
+  color: var(--text-tertiary);
+  font-weight: 300;
+}
+
+.search-btn {
+  padding: 10px 20px;
+  margin: 6px;
+  background: linear-gradient(135deg, var(--accent-amber), var(--accent-amber-dim));
+  border: none;
+  border-radius: var(--radius-md);
+  color: #0d0b0a;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.search-btn:hover {
+  background: linear-gradient(135deg, #f0a048, var(--accent-amber));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--glow-amber);
+}
+
+.search-btn:active {
+  transform: translateY(0);
+}
+
+.search-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Action bar under search */
+.action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.random-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.random-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-warm);
+  color: var(--accent-amber);
+}
+
+.random-btn .dice {
+  font-size: 14px;
+}
+
+.stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-count {
+  color: var(--accent-amber);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================
+   LOADING STATE
+   ============================================ */
+.loading-container {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 0;
+  gap: 20px;
+}
+
+.loading-container.active {
+  display: flex;
+}
+
+.loading-embers {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.loading-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-amber);
+  animation: loading-pulse 1.4s ease-in-out infinite;
+}
+
+.loading-dot:nth-child(2) { animation-delay: 0.2s; background: var(--accent-orange); }
+.loading-dot:nth-child(3) { animation-delay: 0.4s; background: var(--accent-ember); }
+.loading-dot:nth-child(4) { animation-delay: 0.6s; background: var(--accent-orange); }
+.loading-dot:nth-child(5) { animation-delay: 0.8s; background: var(--accent-amber); }
+
+@keyframes loading-pulse {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.3;
+  }
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
+    box-shadow: 0 0 12px var(--glow-amber);
+  }
+}
+
+.loading-text {
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+/* ============================================
+   RESULTS
+   ============================================ */
+.results-container {
+  padding-bottom: 80px;
+}
+
+.results-section {
+  margin-top: 28px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.section-icon {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.section-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+}
+
+.section-count {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Episode Cards */
+.episode-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 12px;
+  transition: all var(--transition-med);
+  position: relative;
+  overflow: hidden;
+}
+
+.episode-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  padding: 1px;
+  background: linear-gradient(135deg, var(--accent-amber-dim), transparent, var(--accent-ember));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity var(--transition-med);
+  pointer-events: none;
+}
+
+.episode-card:hover {
+  background: var(--bg-card-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-card), 0 0 30px var(--glow-ember);
+}
+
+.episode-card:hover::before {
+  opacity: 1;
+}
+
+.episode-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  line-height: 1.4;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.episode-name .ep-dot {
+  width: 6px;
+  height: 6px;
+  min-width: 6px;
+  border-radius: 50%;
+  background: var(--accent-amber);
+  margin-top: 7px;
+  box-shadow: 0 0 6px var(--glow-amber);
+}
+
+.episode-content {
+  font-size: 0.85rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  font-weight: 400;
+  max-height: 200px;
+  overflow: hidden;
+  position: relative;
+  transition: max-height var(--transition-slow);
+}
+
+.episode-content.expanded {
+  max-height: none;
+}
+
+.episode-content-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: linear-gradient(transparent, var(--bg-card));
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+}
+
+.episode-card:hover .episode-content-fade {
+  background: linear-gradient(transparent, var(--bg-card-hover));
+}
+
+.episode-content.expanded + .episode-content-fade {
+  opacity: 0;
+}
+
+.episode-source {
+  margin-top: 12px;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.episode-toggle {
+  margin-top: 8px;
+  background: none;
+  border: none;
+  color: var(--accent-amber);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 2px 0;
+  opacity: 0.8;
+  transition: opacity var(--transition-fast);
+}
+
+.episode-toggle:hover {
+  opacity: 1;
+}
+
+/* JSON content styling */
+.json-content {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.8rem;
+}
+
+.json-content .json-key {
+  color: var(--accent-amber);
+}
+
+.json-content .json-value {
+  color: var(--text-secondary);
+}
+
+.json-content .json-string {
+  color: #8abf7a;
+}
+
+/* Entity Chips */
+.entity-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.entity-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 100px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.entity-chip:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-amber-dim);
+  color: var(--accent-amber);
+  box-shadow: 0 0 12px var(--glow-amber);
+  transform: translateY(-1px);
+}
+
+.entity-chip .chip-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-amber-dim);
+}
+
+.entity-chip:hover .chip-dot {
+  background: var(--accent-amber);
+  box-shadow: 0 0 6px var(--accent-amber);
+}
+
+/* Edge / Relationship Cards */
+.edge-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-bottom: 8px;
+  transition: all var(--transition-fast);
+}
+
+.edge-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-warm);
+}
+
+.edge-flow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.edge-node {
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: 2px 10px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.edge-node:hover {
+  border-color: var(--accent-amber-dim);
+  color: var(--accent-amber);
+}
+
+.edge-arrow {
+  color: var(--accent-amber-dim);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.edge-predicate {
+  color: var(--text-secondary);
+  font-weight: 400;
+  font-style: italic;
+}
+
+.edge-fact {
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+  padding-left: 12px;
+  border-left: 2px solid var(--border-warm);
+}
+
+/* ============================================
+   EMPTY / ERROR STATES
+   ============================================ */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.4;
+}
+
+.empty-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.empty-text {
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+  max-width: 400px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.error-banner {
+  display: none;
+  background: #2a1515;
+  border: 1px solid #4a2020;
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-top: 16px;
+  font-size: 0.85rem;
+  color: #e8a0a0;
+  line-height: 1.5;
+}
+
+.error-banner.active {
+  display: block;
+}
+
+.error-banner strong {
+  color: #f0b0b0;
+}
+
+/* ============================================
+   WELCOME STATE
+   ============================================ */
+.welcome-state {
+  text-align: center;
+  padding: 48px 20px 80px;
+}
+
+.welcome-state .welcome-fire {
+  font-size: 56px;
+  margin-bottom: 20px;
+  display: inline-block;
+  filter: drop-shadow(0 0 20px #e8943a40);
+}
+
+.welcome-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.welcome-text {
+  font-size: 0.9rem;
+  color: var(--text-tertiary);
+  max-width: 480px;
+  margin: 0 auto 32px;
+  line-height: 1.65;
+}
+
+.welcome-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.suggestion-chip {
+  padding: 8px 16px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 100px;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.suggestion-chip:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-amber-dim);
+  color: var(--accent-amber);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: fade-in-up 0.35s ease-out both;
+}
+
+/* Stagger children */
+.results-section .episode-card:nth-child(1),
+.results-section .edge-card:nth-child(1) { animation-delay: 0.05s; }
+.results-section .episode-card:nth-child(2),
+.results-section .edge-card:nth-child(2) { animation-delay: 0.1s; }
+.results-section .episode-card:nth-child(3),
+.results-section .edge-card:nth-child(3) { animation-delay: 0.15s; }
+.results-section .episode-card:nth-child(4),
+.results-section .edge-card:nth-child(4) { animation-delay: 0.2s; }
+.results-section .episode-card:nth-child(5),
+.results-section .edge-card:nth-child(5) { animation-delay: 0.25s; }
+.results-section .episode-card:nth-child(6) { animation-delay: 0.3s; }
+.results-section .episode-card:nth-child(7) { animation-delay: 0.35s; }
+.results-section .episode-card:nth-child(8) { animation-delay: 0.4s; }
+.results-section .episode-card:nth-child(9) { animation-delay: 0.45s; }
+.results-section .episode-card:nth-child(10) { animation-delay: 0.5s; }
+
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-warm);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 640px) {
+  .app {
+    padding: 0 14px;
+  }
+
+  .header {
+    padding-top: 32px;
+  }
+
+  .header h1 {
+    font-size: 1.3rem;
+  }
+
+  .search-input {
+    padding: 14px 12px 14px 42px;
+    font-size: 0.95rem;
+  }
+
+  .search-btn {
+    padding: 8px 14px;
+    font-size: 0.8rem;
+  }
+
+  .action-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .stats-bar {
+    justify-content: center;
+  }
+
+  .random-btn {
+    justify-content: center;
+  }
+
+  .episode-card {
+    padding: 16px;
+  }
+
+  .edge-flow {
+    font-size: 0.78rem;
+  }
+
+  .welcome-suggestions {
+    gap: 6px;
+  }
+
+  .suggestion-chip {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+  }
+}
+
+/* ============================================
+   FOCUS VISIBLE STYLES
+   ============================================ */
+:focus-visible {
+  outline: 2px solid var(--accent-amber);
+  outline-offset: 2px;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent-amber);
+  outline-offset: 2px;
+}
+
+.search-input:focus-visible {
+  outline: none;
+}
+</style>
+</head>
+<body>
+
+<!-- Ember particles -->
+<div class="ember-container">
+  <div class="ember"></div><div class="ember"></div><div class="ember"></div>
+  <div class="ember"></div><div class="ember"></div><div class="ember"></div>
+  <div class="ember"></div><div class="ember"></div><div class="ember"></div>
+  <div class="ember"></div><div class="ember"></div><div class="ember"></div>
+  <div class="ember"></div><div class="ember"></div><div class="ember"></div>
+</div>
+<div class="ambient-glow"></div>
+
+<div class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-brand">
+      <span class="flame-icon" aria-hidden="true">&#x1F525;</span>
+      <h1>EthBoulder Collective Memory</h1>
+    </div>
+    <p class="header-sub">Bonfires Knowledge Graph Explorer</p>
+  </header>
+
+  <!-- Search -->
+  <div class="search-area">
+    <div class="search-wrapper">
+      <span class="search-icon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+      </span>
+      <input
+        type="text"
+        class="search-input"
+        id="searchInput"
+        placeholder="What does the collective memory hold?"
+        autocomplete="off"
+        spellcheck="false"
+      >
+      <button class="search-btn" id="searchBtn" type="button">Search</button>
+    </div>
+
+    <div class="action-bar">
+      <button class="random-btn" id="randomBtn" type="button">
+        <span class="dice" aria-hidden="true">&#x2728;</span>
+        Random exploration
+      </button>
+      <div class="stats-bar" id="statsBar" style="display: none;">
+        <span class="stat-item"><span class="stat-count" id="statEpisodes">0</span> episodes</span>
+        <span class="stat-item"><span class="stat-count" id="statEntities">0</span> entities</span>
+        <span class="stat-item"><span class="stat-count" id="statEdges">0</span> relationships</span>
+      </div>
+    </div>
+
+    <div class="error-banner" id="errorBanner"></div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-container" id="loadingState">
+    <div class="loading-embers">
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+    </div>
+    <span class="loading-text">Searching the collective memory...</span>
+  </div>
+
+  <!-- Results -->
+  <div class="results-container" id="resultsContainer"></div>
+
+  <!-- Welcome State -->
+  <div class="welcome-state" id="welcomeState">
+    <div class="welcome-fire" aria-hidden="true">&#x1F3D5;&#xFE0F;</div>
+    <h2 class="welcome-title">Gather around the bonfire</h2>
+    <p class="welcome-text">
+      Explore the collective knowledge graph from EthBoulder. Search for people, projects, ideas, or connections that emerged from the gathering.
+    </p>
+    <div class="welcome-suggestions">
+      <button class="suggestion-chip" data-query="what projects are people building">Projects being built</button>
+      <button class="suggestion-chip" data-query="ethereum infrastructure and tooling">Infrastructure</button>
+      <button class="suggestion-chip" data-query="collaboration and partnerships">Collaborations</button>
+      <button class="suggestion-chip" data-query="decentralized identity and reputation">Identity</button>
+      <button class="suggestion-chip" data-query="emerging themes and patterns">Themes</button>
+      <button class="suggestion-chip" data-query="governance and coordination">Governance</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================
+// CONFIGURATION
+// ============================================
+const CONFIG = {
+  API_BASE_URL: 'https://tnt-v2.api.bonfires.ai',
+  API_KEY: '8n5l-sJnrHjywrTnJ3rJCjo1f1uLyTPYy_yLgq_bf-d',
+  BONFIRE_ID: '698b70002849d936f4259848',
+  NUM_RESULTS: 10,
+};
+
+const RANDOM_PROMPTS = [
+  'surprising connections between people',
+  'emerging themes and patterns',
+  'who is building what',
+  'key insights and takeaways',
+  'community values and principles',
+  'technical innovations discussed',
+  'future plans and roadmaps',
+  'cross-project collaborations',
+  'challenges and problems to solve',
+  'decentralized coordination',
+  'open source projects',
+  'ethereum ecosystem developments',
+];
+
+// ============================================
+// DOM REFS
+// ============================================
+const searchInput = document.getElementById('searchInput');
+const searchBtn = document.getElementById('searchBtn');
+const randomBtn = document.getElementById('randomBtn');
+const loadingState = document.getElementById('loadingState');
+const resultsContainer = document.getElementById('resultsContainer');
+const welcomeState = document.getElementById('welcomeState');
+const errorBanner = document.getElementById('errorBanner');
+const statsBar = document.getElementById('statsBar');
+const statEpisodes = document.getElementById('statEpisodes');
+const statEntities = document.getElementById('statEntities');
+const statEdges = document.getElementById('statEdges');
+
+// ============================================
+// STATE
+// ============================================
+let isLoading = false;
+
+// ============================================
+// API
+// ============================================
+async function searchDelve(query) {
+  const response = await fetch(`${CONFIG.API_BASE_URL}/delve`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${CONFIG.API_KEY}`,
+    },
+    body: JSON.stringify({
+      query: query,
+      bonfire_id: CONFIG.BONFIRE_ID,
+      num_results: CONFIG.NUM_RESULTS,
+    }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    throw new Error(`API returned ${response.status}${text ? ': ' + text : ''}`);
+  }
+
+  return response.json();
+}
+
+// ============================================
+// PARSING HELPERS
+// ============================================
+function tryParseJSON(str) {
+  if (typeof str !== 'string') return null;
+  const trimmed = str.trim();
+  if ((trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+      (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function formatJSONContent(obj, depth = 0) {
+  if (depth > 4) return escapeHTML(JSON.stringify(obj));
+
+  if (Array.isArray(obj)) {
+    if (obj.length === 0) return '<span class="json-value">[]</span>';
+    return obj.map((item, i) => {
+      if (typeof item === 'object' && item !== null) {
+        return formatJSONContent(item, depth + 1);
+      }
+      return `<span class="json-value">${escapeHTML(String(item))}</span>`;
+    }).join('<br>');
+  }
+
+  if (typeof obj === 'object' && obj !== null) {
+    const entries = Object.entries(obj);
+    return entries.map(([key, value]) => {
+      if (typeof value === 'object' && value !== null) {
+        return `<span class="json-key">${escapeHTML(key)}:</span><br>${formatJSONContent(value, depth + 1)}`;
+      }
+      const displayVal = typeof value === 'string' ? value : JSON.stringify(value);
+      return `<span class="json-key">${escapeHTML(key)}:</span> <span class="json-string">${escapeHTML(String(displayVal))}</span>`;
+    }).join('<br>');
+  }
+
+  return `<span class="json-value">${escapeHTML(String(obj))}</span>`;
+}
+
+function renderContent(content) {
+  if (!content) return '<span style="color:var(--text-tertiary);">No content available</span>';
+
+  const parsed = tryParseJSON(content);
+  if (parsed) {
+    return `<div class="json-content">${formatJSONContent(parsed)}</div>`;
+  }
+
+  return escapeHTML(String(content)).replace(/\n/g, '<br>');
+}
+
+// Build an entity map from edges for resolving UUIDs to names
+function buildEntityMap(entities, edges) {
+  const map = {};
+  if (entities) {
+    entities.forEach(e => {
+      if (e.uuid && e.name) map[e.uuid] = e.name;
+    });
+  }
+  return map;
+}
+
+// ============================================
+// RENDER
+// ============================================
+function renderResults(data) {
+  const episodes = data.episodes || [];
+  const entities = data.entities || [];
+  const edges = data.edges || [];
+  const entityMap = buildEntityMap(entities, edges);
+
+  // Update stats
+  statEpisodes.textContent = episodes.length;
+  statEntities.textContent = entities.length;
+  statEdges.textContent = edges.length;
+  statsBar.style.display = (episodes.length || entities.length || edges.length) ? 'flex' : 'none';
+
+  if (!episodes.length && !entities.length && !edges.length) {
+    resultsContainer.innerHTML = `
+      <div class="empty-state animate-in">
+        <div class="empty-icon">&#x1F50D;</div>
+        <div class="empty-title">No memories found</div>
+        <div class="empty-text">Try a different search term, or use the random exploration button to discover what's in the knowledge graph.</div>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+
+  // Entities section
+  if (entities.length) {
+    html += `
+      <div class="results-section animate-in">
+        <div class="section-header">
+          <span class="section-icon">&#x1F4CC;</span>
+          <span class="section-title">Entities</span>
+          <span class="section-count">${entities.length}</span>
+        </div>
+        <div class="entity-grid">
+          ${entities.map(e => `
+            <button class="entity-chip" data-query="${escapeHTML(e.name)}" title="Search for ${escapeHTML(e.name)}">
+              <span class="chip-dot"></span>
+              ${escapeHTML(e.name)}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // Episodes section
+  if (episodes.length) {
+    html += `
+      <div class="results-section">
+        <div class="section-header animate-in">
+          <span class="section-icon">&#x1F4DD;</span>
+          <span class="section-title">Episodes</span>
+          <span class="section-count">${episodes.length}</span>
+        </div>
+        ${episodes.map((ep, i) => {
+          const contentHTML = renderContent(ep.content);
+          const needsExpand = ep.content && String(ep.content).length > 400;
+          return `
+            <div class="episode-card animate-in">
+              <div class="episode-name">
+                <span class="ep-dot"></span>
+                <span>${escapeHTML(ep.name || 'Untitled Episode')}</span>
+              </div>
+              <div class="episode-content${needsExpand ? '' : ' expanded'}" id="ep-content-${i}">
+                ${contentHTML}
+              </div>
+              ${needsExpand ? `<div class="episode-content-fade" id="ep-fade-${i}"></div>` : ''}
+              ${needsExpand ? `<button class="episode-toggle" onclick="toggleEpisode(${i})">Show more</button>` : ''}
+              ${ep.source_description ? `
+                <div class="episode-source">
+                  <span>&#x1F4CE;</span>
+                  ${escapeHTML(ep.source_description)}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  // Edges section
+  if (edges.length) {
+    html += `
+      <div class="results-section">
+        <div class="section-header animate-in">
+          <span class="section-icon">&#x1F517;</span>
+          <span class="section-title">Relationships</span>
+          <span class="section-count">${edges.length}</span>
+        </div>
+        ${edges.map(edge => {
+          const sourceName = entityMap[edge.source_uuid] || edge.source_uuid || '?';
+          const targetName = entityMap[edge.target_uuid] || edge.target_uuid || '?';
+          return `
+            <div class="edge-card animate-in">
+              <div class="edge-flow">
+                <span class="edge-node" data-query="${escapeHTML(sourceName)}" role="button" tabindex="0">${escapeHTML(sourceName)}</span>
+                <span class="edge-arrow">&rarr;</span>
+                <span class="edge-predicate">${escapeHTML(edge.name || 'related to')}</span>
+                <span class="edge-arrow">&rarr;</span>
+                <span class="edge-node" data-query="${escapeHTML(targetName)}" role="button" tabindex="0">${escapeHTML(targetName)}</span>
+              </div>
+              ${edge.fact ? `<div class="edge-fact">${escapeHTML(edge.fact)}</div>` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  resultsContainer.innerHTML = html;
+
+  // Bind clicks on entity chips and edge nodes
+  resultsContainer.querySelectorAll('.entity-chip, .edge-node').forEach(el => {
+    el.addEventListener('click', () => {
+      const query = el.dataset.query;
+      if (query) {
+        searchInput.value = query;
+        performSearch(query);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        el.click();
+      }
+    });
+  });
+}
+
+function toggleEpisode(index) {
+  const content = document.getElementById(`ep-content-${index}`);
+  const fade = document.getElementById(`ep-fade-${index}`);
+  const btn = content.parentElement.querySelector('.episode-toggle');
+
+  if (content.classList.contains('expanded')) {
+    content.classList.remove('expanded');
+    if (fade) fade.style.opacity = '';
+    btn.textContent = 'Show more';
+  } else {
+    content.classList.add('expanded');
+    if (fade) fade.style.opacity = '0';
+    btn.textContent = 'Show less';
+  }
+}
+
+// Make toggleEpisode available globally
+window.toggleEpisode = toggleEpisode;
+
+// ============================================
+// SEARCH LOGIC
+// ============================================
+async function performSearch(query) {
+  if (isLoading || !query.trim()) return;
+
+  isLoading = true;
+  searchBtn.disabled = true;
+  randomBtn.disabled = true;
+  errorBanner.classList.remove('active');
+  welcomeState.style.display = 'none';
+  resultsContainer.innerHTML = '';
+  statsBar.style.display = 'none';
+  loadingState.classList.add('active');
+
+  try {
+    const data = await searchDelve(query.trim());
+
+    if (!data.success && data.success !== undefined) {
+      throw new Error('The API indicated the request was not successful.');
+    }
+
+    renderResults(data);
+  } catch (err) {
+    console.error('Search error:', err);
+    errorBanner.innerHTML = `<strong>Something went wrong.</strong> ${escapeHTML(err.message || 'Could not reach the Bonfires API. Please check your connection and try again.')}`;
+    errorBanner.classList.add('active');
+    resultsContainer.innerHTML = '';
+    statsBar.style.display = 'none';
+  } finally {
+    isLoading = false;
+    searchBtn.disabled = false;
+    randomBtn.disabled = false;
+    loadingState.classList.remove('active');
+  }
+}
+
+// ============================================
+// EVENT LISTENERS
+// ============================================
+searchBtn.addEventListener('click', () => {
+  performSearch(searchInput.value);
+});
+
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    performSearch(searchInput.value);
+  }
+});
+
+randomBtn.addEventListener('click', () => {
+  const prompt = RANDOM_PROMPTS[Math.floor(Math.random() * RANDOM_PROMPTS.length)];
+  searchInput.value = prompt;
+  performSearch(prompt);
+});
+
+// Welcome suggestion chips
+document.querySelectorAll('.suggestion-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const query = chip.dataset.query;
+    if (query) {
+      searchInput.value = query;
+      performSearch(query);
+    }
+  });
+});
+
+// Focus search on load
+searchInput.focus();
+</script>
+
+</body>
+</html>
