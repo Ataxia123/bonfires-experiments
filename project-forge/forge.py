@@ -1,12 +1,12 @@
 """Project Forge — KG theme extraction + Claude project synthesis.
 
-Three-stage pipeline:
-  1. extract_themes()  — query Bonfires KG, cluster into themes
-  2. synthesize()      — Claude generates project ideas from selected themes
-  3. generate_mockup() — Claude generates an HTML wireframe for a project
+Pipeline:
+  1. extract_themes()                      — query Bonfires KG, aggregate material
+  2. synthesize_projects()                 — Claude generates project ideas (initial)
+  3. synthesize_projects_with_existing()   — Claude updates/adds projects (incremental)
+  4. generate_multi_mockup()               — Claude generates 1-3 HTML prototype files
 
 Uses the Claude Agent SDK (claude-agent-sdk) for all Claude interactions.
-Requires ANTHROPIC_API_KEY environment variable to be set.
 """
 
 import asyncio
@@ -14,7 +14,6 @@ import json
 import os
 import urllib.request
 import urllib.error
-from dataclasses import dataclass, field
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -62,27 +61,10 @@ THEME_QUERIES = [
 ]
 
 
-@dataclass
-class Theme:
-    name: str
-    description: str
-    entities: list[str] = field(default_factory=list)
-    episodes: list[str] = field(default_factory=list)
-    edge_types: list[str] = field(default_factory=list)
-    strength: int = 0  # how many queries surfaced this cluster
-
-
 def extract_themes() -> dict:
-    """Query the KG across multiple angles and return raw material for synthesis.
-
-    Returns a dict with:
-      - episodes: list of {name, content_preview}
-      - entities: list of {name, uuid}
-      - edges: list of {name, source, target}
-      - raw_themes: the query labels we used
-    """
-    all_episodes = {}  # uuid -> {name, content}
-    all_entities = {}  # uuid -> name
+    """Query the KG across multiple angles and return raw material for synthesis."""
+    all_episodes = {}
+    all_entities = {}
     all_edges = []
     seen_edges = set()
 
@@ -97,7 +79,6 @@ def extract_themes() -> dict:
             uuid = ep.get("uuid", "")
             if uuid and uuid not in all_episodes:
                 content = ep.get("content", "")
-                # Parse JSON-wrapped content
                 if isinstance(content, str) and content.startswith("{"):
                     try:
                         parsed = json.loads(content)
@@ -140,7 +121,7 @@ def extract_themes() -> dict:
             for uuid, name in all_entities.items()
             if name
         ],
-        "edges": all_edges[:100],  # cap for prompt size
+        "edges": all_edges[:100],
         "query_count": len(THEME_QUERIES),
         "episode_count": len(all_episodes),
         "entity_count": len(all_entities),
@@ -149,14 +130,11 @@ def extract_themes() -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Claude helper — uses Claude Agent SDK
+# Claude helper
 # ---------------------------------------------------------------------------
 
 async def _call_claude(prompt: str, max_turns: int = 3) -> str:
-    """Call Claude via the Claude Agent SDK.
-
-    Requires ANTHROPIC_API_KEY environment variable to be set.
-    """
+    """Call Claude via the Claude Agent SDK."""
     from claude_agent_sdk import query, ClaudeAgentOptions, ResultMessage
 
     result = ""
@@ -169,87 +147,62 @@ async def _call_claude(prompt: str, max_turns: int = 3) -> str:
     return result
 
 
-# ---------------------------------------------------------------------------
-# Stage 2: Project synthesis (Claude Agent SDK)
-# ---------------------------------------------------------------------------
-
-PROJECT_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "projects": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "name": {"type": "string", "description": "Creative project name"},
-                    "tagline": {"type": "string", "description": "One-line hook, under 15 words"},
-                    "description": {"type": "string", "description": "2-3 paragraph description of what this project does and why it matters"},
-                    "themes": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Which KG themes this draws from",
-                    },
-                    "tech_stack": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Key technologies involved",
-                    },
-                    "complexity": {
-                        "type": "string",
-                        "enum": ["weekend", "month", "quarter"],
-                        "description": "How long to build an MVP",
-                    },
-                    "key_insight": {"type": "string", "description": "The novel connection or insight that makes this project interesting"},
-                    "first_step": {"type": "string", "description": "What you'd build in the first 4 hours"},
-                },
-                "required": ["name", "tagline", "description", "themes", "tech_stack", "complexity", "key_insight", "first_step"],
-            },
-        }
-    },
-    "required": ["projects"],
-}
+def _parse_json_response(text: str) -> dict:
+    """Parse JSON from Claude's response, stripping markdown fences."""
+    text = text.strip()
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1] if "\n" in text else text[3:]
+        text = text.rsplit("```", 1)[0]
+    text = text.strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        start = text.find("{")
+        end = text.rfind("}") + 1
+        if start >= 0 and end > start:
+            try:
+                return json.loads(text[start:end])
+            except json.JSONDecodeError:
+                pass
+        return {"projects": [], "error": "Could not parse JSON"}
 
 
-async def synthesize_projects(themes_data: dict, selected_themes: list[str] | None = None) -> dict:
-    """Use Claude Agent SDK to generate project ideas from KG themes.
-
-    Args:
-        themes_data: output of extract_themes()
-        selected_themes: optional filter — if provided, only use episodes/entities
-                        matching these theme keywords
-
-    Returns:
-        Parsed JSON matching PROJECT_SCHEMA
-    """
-    # Build a condensed prompt with the KG material
+def _build_kg_context(themes_data: dict) -> str:
+    """Build the KG material section for prompts."""
     episode_summaries = "\n".join(
         f"- {ep['name']}: {ep['content_preview'][:200]}"
-        for ep in themes_data["episodes"][:40]
+        for ep in themes_data.get("episodes", [])[:40]
     )
     entity_names = ", ".join(
-        ent["name"] for ent in themes_data["entities"][:60]
+        ent["name"] for ent in themes_data.get("entities", [])[:60]
     )
     edge_summary = "\n".join(
-        f"- {e['name']}" for e in themes_data["edges"][:30]
+        f"- {e['name']}" for e in themes_data.get("edges", [])[:30]
     )
-
-    theme_filter = ""
-    if selected_themes:
-        theme_filter = f"\nThe user is particularly interested in these themes: {', '.join(selected_themes)}. Prioritize projects that connect these themes in novel ways.\n"
-
-    prompt = f"""You are Project Forge — a creative engine that synthesizes themes from a collective intelligence knowledge graph into novel, buildable project ideas.
-
-Here is material from the EthBoulder 2026 knowledge graph (a weekend hackathon/unconference about Ethereum, public goods, AI agents, and regenerative systems in Boulder, Colorado):
-
-## Episodes (conversations and events captured)
+    return f"""## Episodes (conversations and events captured)
 {episode_summaries}
 
 ## Key Entities (people, orgs, concepts)
 {entity_names}
 
 ## Relationships
-{edge_summary}
-{theme_filter}
+{edge_summary}"""
+
+
+# ---------------------------------------------------------------------------
+# Stage 2a: Initial project synthesis
+# ---------------------------------------------------------------------------
+
+async def synthesize_projects(themes_data: dict) -> dict:
+    """Generate initial batch of project ideas from KG themes."""
+    kg_context = _build_kg_context(themes_data)
+
+    prompt = f"""You are Project Forge — a creative engine that synthesizes themes from a collective intelligence knowledge graph into novel, buildable project ideas.
+
+Here is material from the EthBoulder 2026 knowledge graph (a weekend hackathon/unconference about Ethereum, public goods, AI agents, and regenerative systems in Boulder, Colorado):
+
+{kg_context}
+
 Generate 5 creative, ambitious but buildable project ideas. Each should:
 1. Cross-pollinate 2-3 themes from the KG in a surprising way
 2. Be technically specific (not vague platitudes)
@@ -262,131 +215,153 @@ Be creative. Find non-obvious connections. The best ideas combine things nobody 
 Return ONLY valid JSON — an object with a "projects" array. Each project must have: name, tagline, description, themes (array), tech_stack (array), complexity ("weekend" or "month" or "quarter"), key_insight, first_step. No markdown fences, no explanation, just raw JSON."""
 
     text = await _call_claude(prompt)
-    text = text.strip()
-
-    # Strip markdown fences if present
-    if text.startswith("```"):
-        text = text.split("\n", 1)[1] if "\n" in text else text[3:]
-        text = text.rsplit("```", 1)[0]
-    text = text.strip()
-
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        # Try to find JSON in the response
-        start = text.find("{")
-        end = text.rfind("}") + 1
-        if start >= 0 and end > start:
-            try:
-                return json.loads(text[start:end])
-            except json.JSONDecodeError:
-                return {"projects": [], "error": "Could not parse JSON from result"}
-        return {"projects": [], "error": "No JSON found in result"}
+    return _parse_json_response(text)
 
 
 # ---------------------------------------------------------------------------
-# Stage 3: Mockup generation (Claude Agent SDK)
+# Stage 2b: Incremental project synthesis (with existing projects)
 # ---------------------------------------------------------------------------
 
-async def generate_mockup(project: dict) -> str:
-    """Use Claude Agent SDK to generate an HTML wireframe mockup for a project.
+async def synthesize_projects_with_existing(
+    themes_data: dict,
+    existing_projects: list[dict],
+    change_summary: str,
+) -> dict:
+    """Update/add projects given new KG data and existing project list.
+
+    Claude sees what already exists and decides per-project:
+      - "unchanged" — no meaningful update needed
+      - "updated" — description/insight refined based on new KG material
+      - "new" — genuinely novel idea that doesn't overlap existing ones
+      - "retired" — now contradicted or irrelevant
+    """
+    kg_context = _build_kg_context(themes_data)
+
+    existing_summary = "\n".join(
+        f"- **{p['name']}**: {p.get('tagline', '')} (key insight: {p.get('key_insight', '')})"
+        for p in existing_projects
+    )
+
+    prompt = f"""You are Project Forge — a creative engine that synthesizes themes from a collective intelligence knowledge graph into novel, buildable project ideas.
+
+Here is UPDATED material from the EthBoulder 2026 knowledge graph:
+
+{kg_context}
+
+## Changes since last generation
+{change_summary}
+
+## Existing projects (previously generated)
+{existing_summary}
+
+Your task — be CONSERVATIVE:
+1. Review each existing project. If the new KG material meaningfully changes its premise, output an UPDATED version with "status": "updated". If not, output it with "status": "unchanged" (include its full data so we preserve it).
+2. If the new material suggests a genuinely NEW project idea that doesn't overlap existing ones, add it with "status": "new". Add at most 1-2 new projects.
+3. If an existing project is now contradicted or irrelevant, mark it "status": "retired".
+4. MOST projects should be "unchanged" — only update when there's a real reason.
+
+Return ONLY valid JSON — an object with a "projects" array. Each project must have: status ("unchanged"|"updated"|"new"|"retired"), name, tagline, description, themes (array), tech_stack (array), complexity ("weekend"|"month"|"quarter"), key_insight, first_step. No markdown fences, just raw JSON."""
+
+    text = await _call_claude(prompt)
+    return _parse_json_response(text)
+
+
+# ---------------------------------------------------------------------------
+# Stage 3: Multi-file mockup generation
+# ---------------------------------------------------------------------------
+
+async def generate_multi_mockup(project: dict, output_dir: str) -> dict:
+    """Generate 1-3 HTML prototype files for a project.
 
     Args:
-        project: a single project dict from synthesize_projects()
+        project: project data dict
+        output_dir: absolute path where to write the HTML files
 
     Returns:
-        HTML string of the wireframe mockup
+        {"files": [{"name": "index.html", "label": "Home", "is_entry": true}, ...]}
     """
-    prompt = f"""Generate a single-page HTML wireframe/mockup for this project:
-
-**{project['name']}**
-{project['tagline']}
-
-{project['description']}
-
-Tech stack: {', '.join(project.get('tech_stack', []))}
-First step: {project.get('first_step', '')}
-
-Requirements for the mockup:
-- Single self-contained HTML file with all CSS inline
-- Show the main UI screens/sections as a scrollable page
-- Use a modern, clean design with good typography
-- Include placeholder content that feels real (not lorem ipsum)
-- Show key interactions as static states (e.g., "before click" and "after click" sections)
-- Use a color scheme that feels appropriate for the project
-- Add annotations/callouts explaining key UI elements (small gray text)
-- Make it look like a polished design prototype, not a wireframe sketch
-- Include a header with the project name and a brief description
-- Mobile-friendly / responsive
-
-Return ONLY the complete HTML — no markdown fences, no explanation, just the raw HTML starting with <!DOCTYPE html>."""
-
-    html_result = await _call_claude(prompt)
-    # Clean up in case it's wrapped in markdown fences
-    if "```html" in html_result:
-        html_result = html_result.split("```html", 1)[1]
-        html_result = html_result.rsplit("```", 1)[0]
-    elif "```" in html_result:
-        html_result = html_result.split("```", 1)[1]
-        html_result = html_result.rsplit("```", 1)[0]
-    return html_result.strip()
-
-
-# ---------------------------------------------------------------------------
-# Stage 4: Full scaffold (Claude Agent SDK with file tools)
-# ---------------------------------------------------------------------------
-
-async def scaffold_project(project: dict, output_dir: str) -> list[dict]:
-    """Use Claude Agent SDK to scaffold a full project directory.
-
-    Args:
-        project: a single project dict
-        output_dir: where to write the files
-
-    Returns:
-        List of {tool, path} for each file written
-    """
-    from claude_agent_sdk import query, ClaudeAgentOptions, AssistantMessage, ToolUseBlock
-
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    prompt = f"""Create a project scaffold in {output_dir} for:
+    prompt = f"""Generate a small HTML prototype for this project — between 1 and 3 HTML files that work together to show how it would function.
 
 **{project['name']}**
-{project['tagline']}
+{project.get('tagline', '')}
 
-{project['description']}
+{project.get('description', '')}
 
 Tech stack: {', '.join(project.get('tech_stack', []))}
 Key insight: {project.get('key_insight', '')}
 First step: {project.get('first_step', '')}
 
-Create:
-1. README.md — project overview, getting started, architecture
-2. A main application file appropriate for the tech stack
-3. A configuration file if needed
-4. A simple test or example that proves the core concept works
-5. Any supporting files the project needs
+Rules:
+- Each file must be self-contained (inline CSS and JS) but can link to sibling files using relative hrefs (e.g., href="dashboard.html")
+- The first file MUST be named "index.html" — it's the main entry point
+- Additional files should show different screens/flows (dashboard, detail view, settings, etc.)
+- Use a consistent design language across all files
+- Include realistic placeholder content (not lorem ipsum)
+- Modern, clean design with good typography
+- Mobile-responsive
+- Make it look like a polished interactive prototype, not a wireframe
 
-Keep it minimal but functional. This should be a real starting point someone can build from, not a toy demo. Focus on the core insight."""
+Return ONLY valid JSON with this structure (no markdown fences):
+{{"files": [{{"name": "index.html", "label": "Home", "html": "<!DOCTYPE html>..."}}, {{"name": "dashboard.html", "label": "Dashboard", "html": "<!DOCTYPE html>..."}}]}}"""
+
+    text = await _call_claude(prompt, max_turns=5)
+    result = _parse_json_response(text)
 
     files_written = []
-    async for message in query(
-        prompt=prompt,
-        options=ClaudeAgentOptions(
-            max_turns=20,
-            allowed_tools=["Read", "Write", "Edit", "Bash"],
-            permission_mode="acceptEdits",
-            cwd=output_dir,
-        ),
-    ):
-        if isinstance(message, AssistantMessage):
-            for block in message.content:
-                if isinstance(block, ToolUseBlock) and block.name in ("Write", "Edit"):
-                    path = block.input.get("file_path", block.input.get("path", ""))
-                    files_written.append({"tool": block.name, "path": path})
+    for file_spec in result.get("files", []):
+        name = file_spec.get("name", "")
+        html = file_spec.get("html", "")
+        label = file_spec.get("label", name)
+        if not name or not html:
+            continue
 
-    return files_written
+        # Clean up HTML if wrapped
+        if "```html" in html:
+            html = html.split("```html", 1)[1]
+            html = html.rsplit("```", 1)[0]
+        elif html.startswith("```"):
+            html = html.split("\n", 1)[1] if "\n" in html else html[3:]
+            html = html.rsplit("```", 1)[0]
+
+        filepath = Path(output_dir) / name
+        filepath.write_text(html.strip())
+        files_written.append({
+            "name": name,
+            "label": label,
+            "is_entry": name == "index.html",
+        })
+
+    # Write manifest
+    manifest = {
+        "project_name": project.get("name", ""),
+        "generated_at": __import__("datetime").datetime.now(
+            __import__("datetime").timezone.utc
+        ).isoformat(),
+        "files": files_written,
+    }
+    (Path(output_dir) / "manifest.json").write_text(json.dumps(manifest, indent=2))
+
+    # If Claude didn't return parseable files, fall back to single-page
+    if not files_written:
+        print("  [forge] Multi-file parse failed, falling back to single-page mockup")
+        html = await _call_claude(
+            f"Generate a single self-contained HTML mockup for: {project['name']} — {project.get('tagline', '')}. "
+            f"{project.get('description', '')} Return ONLY the HTML, starting with <!DOCTYPE html>.",
+            max_turns=3,
+        )
+        if "```html" in html:
+            html = html.split("```html", 1)[1].rsplit("```", 1)[0]
+        elif "```" in html:
+            html = html.split("```", 1)[1].rsplit("```", 1)[0]
+        filepath = Path(output_dir) / "index.html"
+        filepath.write_text(html.strip())
+        files_written = [{"name": "index.html", "label": "Home", "is_entry": True}]
+        manifest["files"] = files_written
+        (Path(output_dir) / "manifest.json").write_text(json.dumps(manifest, indent=2))
+
+    return {"files": files_written}
 
 
 # ---------------------------------------------------------------------------
@@ -397,7 +372,7 @@ async def _main():
     import sys
 
     if len(sys.argv) < 2:
-        print("Usage: python forge.py [themes|synthesize|mockup|scaffold]")
+        print("Usage: python forge.py [themes|synthesize|mockup]")
         return
 
     cmd = sys.argv[1]
@@ -406,70 +381,35 @@ async def _main():
         print("Extracting themes from knowledge graph...")
         data = extract_themes()
         print(f"\n  {data['episode_count']} episodes, {data['entity_count']} entities, {data['edge_count']} edges")
-        print("\n  Top episodes:")
         for ep in data["episodes"][:10]:
             print(f"    - {ep['name']}")
-        print("\n  Top entities:")
-        for ent in data["entities"][:15]:
-            print(f"    - {ent['name']}")
-        # Save to file for later use
         with open("themes_cache.json", "w") as f:
             json.dump(data, f, indent=2)
         print("\n  Saved to themes_cache.json")
 
     elif cmd == "synthesize":
-        # Load cached themes or extract fresh
         try:
             with open("themes_cache.json") as f:
                 data = json.load(f)
-            print("Using cached themes...")
         except FileNotFoundError:
-            print("Extracting themes...")
             data = extract_themes()
-
-        selected = sys.argv[2:] if len(sys.argv) > 2 else None
-        print(f"Synthesizing projects... (themes: {selected or 'all'})")
-        result = await synthesize_projects(data, selected)
+        result = await synthesize_projects(data)
         print(json.dumps(result, indent=2))
 
-        with open("projects_cache.json", "w") as f:
-            json.dump(result, f, indent=2)
-        print("\n  Saved to projects_cache.json")
-
     elif cmd == "mockup":
-        # Load cached projects
         try:
             with open("projects_cache.json") as f:
                 projects = json.load(f)
         except FileNotFoundError:
             print("Run 'synthesize' first")
             return
-
         idx = int(sys.argv[2]) if len(sys.argv) > 2 else 0
         project = projects["projects"][idx]
         print(f"Generating mockup for: {project['name']}...")
-        html = await generate_mockup(project)
-        filename = f"mockup_{idx}.html"
-        with open(filename, "w") as f:
-            f.write(html)
-        print(f"  Saved to {filename}")
-
-    elif cmd == "scaffold":
-        try:
-            with open("projects_cache.json") as f:
-                projects = json.load(f)
-        except FileNotFoundError:
-            print("Run 'synthesize' first")
-            return
-
-        idx = int(sys.argv[2]) if len(sys.argv) > 2 else 0
-        project = projects["projects"][idx]
-        output_dir = f"./scaffolds/{project['name'].lower().replace(' ', '-')}"
-        print(f"Scaffolding: {project['name']} → {output_dir}")
-        files = await scaffold_project(project, output_dir)
-        print(f"  Created {len(files)} files:")
-        for f in files:
-            print(f"    {f['tool']}: {f['path']}")
+        result = await generate_multi_mockup(project, f"./mockups/test-{idx}")
+        print(f"  Created {len(result['files'])} files")
+        for f in result["files"]:
+            print(f"    - {f['name']} ({f['label']})")
 
 
 if __name__ == "__main__":

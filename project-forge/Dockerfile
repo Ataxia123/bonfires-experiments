@@ -19,7 +19,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create directories for generated content
-RUN mkdir -p mockups scaffolds
+RUN mkdir -p mockups
+
+# Pre-create onboarding file so claude CLI doesn't prompt interactively
+RUN mkdir -p /root/.claude && echo '{"hasCompletedOnboarding": true}' > /root/.claude.json
 
 # Expose port (Railway sets PORT env var)
 EXPOSE ${PORT:-9999}

@@ -5,4 +5,5 @@ project-forge/mockups/
 project-forge/scaffolds/
 project-forge/themes_cache.json
 project-forge/projects_cache.json
+project-forge/forge_state.json
 .env

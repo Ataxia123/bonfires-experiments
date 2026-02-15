@@ -1,38 +1,37 @@
 #!/usr/bin/env python3
-"""Project Forge server — serves the UI, proxies to Bonfires API, and runs forge jobs.
+"""Project Forge server — serves pre-generated gallery and manages background worker.
 
 Endpoints:
-  GET  /                     → index.html
-  POST /api/*                → proxy to Bonfires API (CORS bypass)
-  POST /forge/themes         → extract themes from KG
-  POST /forge/synthesize     → generate project ideas (Claude Agent SDK)
-  POST /forge/mockup         → generate HTML mockup for a project
-  POST /forge/scaffold       → scaffold a full project (returns job ID)
-  GET  /forge/jobs/{id}      → check scaffold job status
+  GET  /                                     → index.html
+  GET  /healthz                              → health check
+  GET  /forge/projects                       → all projects (current versions)
+  GET  /forge/projects/{id}                  → single project with all versions
+  GET  /forge/status                         → worker status + poll log
+  GET  /forge/mockups/{id}/v{ver}/{file}     → serve mockup HTML file
+  GET  /forge/mockups/{id}/latest/{file}     → alias for current version
+  POST /forge/trigger                        → force immediate poll cycle
+  POST /api/*                                → proxy to Bonfires API (CORS bypass)
 
 Usage:
   python3 server.py
-  open http://localhost:9999
 """
 
-import asyncio
 import http.server
 import json
 import os
 import socketserver
-import threading
-import traceback
 import urllib.request
 import urllib.error
-import uuid
 from pathlib import Path
+
+from worker import ForgeWorker
 
 PORT = int(os.environ.get("PORT", 9999))
 API_BASE = os.environ.get("DELVE_BASE_URL", "https://tnt-v2.api.bonfires.ai")
 FORGE_DIR = Path(__file__).parent
 
-# Job tracking for async scaffold operations
-jobs: dict[str, dict] = {}
+# Shared worker instance
+worker = ForgeWorker()
 
 
 class ForgeHandler(http.server.SimpleHTTPRequestHandler):
@@ -42,7 +41,7 @@ class ForgeHandler(http.server.SimpleHTTPRequestHandler):
     # -- CORS --
     def _cors_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
     def do_OPTIONS(self):
@@ -55,26 +54,122 @@ class ForgeHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/":
             self.path = "/index.html"
+
         if self.path == "/healthz":
             self._json_response(200, {"status": "ok"})
-        elif self.path.startswith("/forge/jobs/"):
-            self._handle_job_status()
+        elif self.path == "/forge/projects":
+            self._handle_projects_list()
+        elif self.path.startswith("/forge/projects/"):
+            self._handle_project_detail()
         elif self.path.startswith("/forge/mockups/"):
             self._serve_mockup()
+        elif self.path == "/forge/status":
+            self._json_response(200, worker.get_status())
         else:
             super().do_GET()
 
     def do_POST(self):
-        if self.path.startswith("/api/"):
+        if self.path == "/forge/trigger":
+            worker.trigger_now()
+            self._json_response(202, {"status": "triggered"})
+        elif self.path.startswith("/api/"):
             self._proxy_api("POST")
-        elif self.path == "/forge/themes":
-            self._handle_themes()
-        elif self.path == "/forge/synthesize":
-            self._handle_synthesize()
-        elif self.path == "/forge/mockup":
-            self._handle_mockup()
-        elif self.path == "/forge/scaffold":
-            self._handle_scaffold()
+        else:
+            self.send_error(404)
+
+    # -- JSON helpers --
+    def _json_response(self, status: int, data):
+        body = json.dumps(data).encode()
+        self.send_response(status)
+        self._cors_headers()
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    # -- Gallery endpoints --
+    def _handle_projects_list(self):
+        """Return all projects with their current (latest) version data."""
+        state = worker.load_state()
+        projects_out = []
+        for p in state.get("projects", []):
+            if p.get("retired_at"):
+                continue
+            versions = p.get("versions", [])
+            if not versions:
+                continue
+            latest = versions[-1]
+            projects_out.append({
+                "id": p["id"],
+                "current_version": p["current_version"],
+                "version_count": len(versions),
+                "created_at": p.get("created_at"),
+                "updated_at": p.get("updated_at"),
+                "project_data": latest.get("project_data", {}),
+                "mockup_dir": latest.get("mockup_dir", ""),
+                "mockup_files": latest.get("mockup_files", []),
+            })
+        self._json_response(200, {
+            "projects": projects_out,
+            "last_generation_at": state.get("last_generation_at"),
+            "generation_count": state.get("generation_count", 0),
+        })
+
+    def _handle_project_detail(self):
+        """Return a single project with all its versions."""
+        # Parse: /forge/projects/{id}
+        parts = self.path.rstrip("/").split("/")
+        if len(parts) < 4:
+            self.send_error(404)
+            return
+        project_id = parts[3]
+
+        state = worker.load_state()
+        for p in state.get("projects", []):
+            if p["id"] == project_id:
+                self._json_response(200, p)
+                return
+        self._json_response(404, {"error": f"Project '{project_id}' not found"})
+
+    def _serve_mockup(self):
+        """Serve mockup HTML files.
+
+        Paths:
+          /forge/mockups/{project_id}/v{version}/{filename}
+          /forge/mockups/{project_id}/latest/{filename}
+        """
+        # Parse path: /forge/mockups/project-id/v1/index.html
+        parts = self.path.split("/")
+        # parts = ['', 'forge', 'mockups', 'project-id', 'v1', 'index.html']
+        if len(parts) < 6:
+            self.send_error(404)
+            return
+
+        project_id = parts[3]
+        version_part = parts[4]
+        filename = "/".join(parts[5:])  # handle nested paths
+
+        # Resolve "latest" to actual version number
+        if version_part == "latest":
+            state = worker.load_state()
+            for p in state.get("projects", []):
+                if p["id"] == project_id:
+                    version_part = f"v{p['current_version']}"
+                    break
+
+        mockup_path = FORGE_DIR / "mockups" / project_id / version_part / filename
+
+        if mockup_path.exists() and mockup_path.is_file():
+            body = mockup_path.read_bytes()
+            self.send_response(200)
+            self._cors_headers()
+            content_type = "text/html; charset=utf-8"
+            if filename.endswith(".json"):
+                content_type = "application/json"
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
         else:
             self.send_error(404)
 
@@ -108,179 +203,37 @@ class ForgeHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as exc:
             self._json_response(502, {"error": str(exc)})
 
-    # -- Forge endpoints --
-    def _read_json_body(self) -> dict:
-        content_length = int(self.headers.get("Content-Length", 0))
-        if content_length == 0:
-            return {}
-        body = self.rfile.read(content_length)
-        return json.loads(body)
-
-    def _json_response(self, status: int, data: dict):
-        body = json.dumps(data).encode()
-        self.send_response(status)
-        self._cors_headers()
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
-
-    def _handle_themes(self):
-        """Extract themes from the KG — synchronous, takes ~10-20s."""
-        try:
-            from forge import extract_themes
-            data = extract_themes()
-            # Cache for reuse
-            cache_path = FORGE_DIR / "themes_cache.json"
-            cache_path.write_text(json.dumps(data, indent=2))
-            self._json_response(200, data)
-        except Exception as exc:
-            traceback.print_exc()
-            self._json_response(500, {"error": str(exc)})
-
-    def _handle_synthesize(self):
-        """Generate project ideas — async via Claude Agent SDK."""
-        try:
-            body = self._read_json_body()
-            selected_themes = body.get("themes", None)
-
-            # Load themes (from cache or body)
-            themes_data = body.get("themes_data")
-            if not themes_data:
-                cache_path = FORGE_DIR / "themes_cache.json"
-                if cache_path.exists():
-                    themes_data = json.loads(cache_path.read_text())
-                else:
-                    from forge import extract_themes
-                    themes_data = extract_themes()
-
-            from forge import synthesize_projects
-            result = asyncio.run(synthesize_projects(themes_data, selected_themes))
-
-            # Cache
-            cache_path = FORGE_DIR / "projects_cache.json"
-            cache_path.write_text(json.dumps(result, indent=2))
-
-            self._json_response(200, result)
-        except Exception as exc:
-            traceback.print_exc()
-            self._json_response(500, {"error": str(exc)})
-
-    def _handle_mockup(self):
-        """Generate an HTML mockup for a specific project."""
-        try:
-            body = self._read_json_body()
-            project = body.get("project")
-            if not project:
-                self._json_response(400, {"error": "Missing 'project' in body"})
-                return
-
-            from forge import generate_mockup
-            html = asyncio.run(generate_mockup(project))
-
-            # Save the mockup
-            safe_name = project["name"].lower().replace(" ", "-").replace("/", "-")[:40]
-            mockup_dir = FORGE_DIR / "mockups"
-            mockup_dir.mkdir(exist_ok=True)
-            filename = f"{safe_name}.html"
-            (mockup_dir / filename).write_text(html)
-
-            self._json_response(200, {
-                "html": html,
-                "filename": filename,
-                "url": f"/forge/mockups/{filename}",
-            })
-        except Exception as exc:
-            traceback.print_exc()
-            self._json_response(500, {"error": str(exc)})
-
-    def _handle_scaffold(self):
-        """Queue a scaffold job — returns job ID immediately."""
-        try:
-            body = self._read_json_body()
-            project = body.get("project")
-            if not project:
-                self._json_response(400, {"error": "Missing 'project' in body"})
-                return
-
-            job_id = str(uuid.uuid4())[:8]
-            safe_name = project["name"].lower().replace(" ", "-").replace("/", "-")[:40]
-            output_dir = str(FORGE_DIR / "scaffolds" / safe_name)
-
-            jobs[job_id] = {
-                "status": "running",
-                "project": project["name"],
-                "output_dir": output_dir,
-                "files": [],
-                "error": None,
-            }
-
-            # Run scaffold in background thread
-            def run_scaffold():
-                from forge import scaffold_project
-                try:
-                    files = asyncio.run(scaffold_project(project, output_dir))
-                    jobs[job_id]["files"] = files
-                    jobs[job_id]["status"] = "completed"
-                except Exception as exc:
-                    jobs[job_id]["status"] = "failed"
-                    jobs[job_id]["error"] = str(exc)
-                    traceback.print_exc()
-
-            thread = threading.Thread(target=run_scaffold, daemon=True)
-            thread.start()
-
-            self._json_response(202, {"job_id": job_id, "status": "running"})
-        except Exception as exc:
-            traceback.print_exc()
-            self._json_response(500, {"error": str(exc)})
-
-    def _handle_job_status(self):
-        """Check on a scaffold job."""
-        job_id = self.path.split("/")[-1]
-        if job_id in jobs:
-            self._json_response(200, {"job_id": job_id, **jobs[job_id]})
-        else:
-            self._json_response(404, {"error": f"Job {job_id} not found"})
-
-    def _serve_mockup(self):
-        """Serve a generated mockup file."""
-        filename = self.path.split("/")[-1]
-        mockup_path = FORGE_DIR / "mockups" / filename
-        if mockup_path.exists():
-            body = mockup_path.read_bytes()
-            self.send_response(200)
-            self._cors_headers()
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
-        else:
-            self.send_error(404)
-
     # Suppress default logging noise
-    def log_message(self, format, *args):
-        if "/forge/" in (args[0] if args else ""):
-            print(f"  [forge] {args[0]}")
+    def log_message(self, fmt, *args):
+        path = args[0] if args else ""
+        if "/forge/" in path or "/healthz" not in path:
+            print(f"  [{self.command}] {path}")
 
 
 if __name__ == "__main__":
     socketserver.TCPServer.allow_reuse_address = True
+
+    # Start the background worker
+    worker.start()
+
     with socketserver.TCPServer(("0.0.0.0", PORT), ForgeHandler) as httpd:
         print(f"""
   ╔══════════════════════════════════════════╗
-  ║         PROJECT FORGE                    ║
-  ║         EthBoulder 2026                  ║
+  ║         PROJECT FORGE  v2               ║
+  ║         EthBoulder 2026                 ║
   ╚══════════════════════════════════════════╝
 
-  Server:  http://localhost:{PORT}
-  API:     /api/* → {API_BASE}
-  Forge:   /forge/themes, /forge/synthesize,
-           /forge/mockup, /forge/scaffold
+  Server:     http://localhost:{PORT}
+  Gallery:    /forge/projects
+  Status:     /forge/status
+  Trigger:    POST /forge/trigger
+  API proxy:  /api/* → {API_BASE}
 
-  Open:    http://localhost:{PORT}/
+  Worker polling every {worker.lock and 'started' or 'idle'}
+  Open:       http://localhost:{PORT}/
 """)
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
+            worker.stop()
             print("\n  Shutting down.")
