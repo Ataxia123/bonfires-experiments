@@ -205,9 +205,10 @@ class ForgeHandler(http.server.SimpleHTTPRequestHandler):
 
     # Suppress default logging noise
     def log_message(self, fmt, *args):
-        path = args[0] if args else ""
-        if "/forge/" in path or "/healthz" not in path:
-            print(f"  [{self.command}] {path}")
+        path = str(args[0]) if args else ""
+        if "/healthz" in path or "/favicon" in path:
+            return
+        print(f"  [{self.command}] {path}")
 
 
 if __name__ == "__main__":
