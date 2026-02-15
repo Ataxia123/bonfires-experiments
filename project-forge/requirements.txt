@@ -1,1 +1,4 @@
-claude-code-sdk>=0.0.25
+# No external dependencies required for API mode (uses stdlib only).
+# claude-code-sdk is optional — only needed for local dev with `claude` CLI.
+# Uncomment if running locally with the SDK:
+# claude-code-sdk>=0.0.25

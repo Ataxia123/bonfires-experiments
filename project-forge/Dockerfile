@@ -1,20 +1,8 @@
 FROM python:3.12-slim
 
-# Install Node.js (needed for claude CLI)
-RUN apt-get update && apt-get install -y curl && \
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    rm -rf /var/lib/apt/lists/*
-
-# Install claude CLI globally
-RUN npm install -g @anthropic-ai/claude-code
-
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+WORKDIR /app
 
 # Copy application
-WORKDIR /app
 COPY . .
 
 # Create directories for generated content

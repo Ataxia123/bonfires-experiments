@@ -28,7 +28,7 @@ import uuid
 from pathlib import Path
 
 PORT = int(os.environ.get("PORT", 9999))
-API_BASE = "https://tnt-v2.api.bonfires.ai"
+API_BASE = os.environ.get("DELVE_BASE_URL", "https://tnt-v2.api.bonfires.ai")
 FORGE_DIR = Path(__file__).parent
 
 # Job tracking for async scaffold operations
@@ -55,7 +55,9 @@ class ForgeHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/":
             self.path = "/index.html"
-        if self.path.startswith("/forge/jobs/"):
+        if self.path == "/healthz":
+            self._json_response(200, {"status": "ok"})
+        elif self.path.startswith("/forge/jobs/"):
             self._handle_job_status()
         elif self.path.startswith("/forge/mockups/"):
             self._serve_mockup()

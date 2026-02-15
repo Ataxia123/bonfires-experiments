@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+themes_cache.json
+projects_cache.json
+mockups/
+scaffolds/
