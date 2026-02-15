@@ -1,0 +1,2156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Forge — Mine Collective Intelligence</title>
+<style>
+/* ================================================================
+   PROJECT FORGE — GLOBAL STYLES
+   ================================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0d0a07;
+  --bg-raised: #1a1510;
+  --bg-card:   #1e1913;
+  --bg-input:  #15110c;
+  --amber:     #d4952b;
+  --ember:     #c94a1a;
+  --cream:     #f0e6d3;
+  --gold:      #ffbd45;
+  --gold-dim:  #a67c1a;
+  --text:      #e8dcc8;
+  --text-dim:  #9a8b74;
+  --text-faint:#6b5e4e;
+  --green:     #3ddc84;
+  --green-bg:  #1a3d28;
+  --amber-bg:  #3d2e1a;
+  --red:       #e74c3c;
+  --red-bg:    #3d1a1a;
+  --radius:    8px;
+  --radius-lg: 14px;
+  --shadow:    0 4px 24px rgba(0,0,0,0.5);
+  --glow-amber: 0 0 30px rgba(212,149,43,0.25);
+  --glow-ember: 0 0 30px rgba(201,74,26,0.25);
+  --transition: 0.3s ease;
+}
+
+html { font-size: 16px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ================================================================
+   AMBIENT PARTICLE BACKGROUND
+   ================================================================ */
+
+#particle-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ================================================================
+   LAYOUT
+   ================================================================ */
+
+.screen {
+  display: none;
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  padding: 2rem;
+  animation: fadeIn 0.5s ease;
+}
+.screen.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ================================================================
+   TYPOGRAPHY
+   ================================================================ */
+
+h1 {
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, var(--gold), var(--amber), var(--ember));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+h2 {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 700;
+  color: var(--cream);
+}
+
+h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--cream);
+}
+
+.subtitle {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  color: var(--text-dim);
+  margin-top: 0.5rem;
+  font-weight: 400;
+}
+
+/* ================================================================
+   BUTTONS
+   ================================================================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.8rem;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--amber), var(--ember));
+  color: #fff;
+  box-shadow: var(--glow-amber);
+}
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 0 50px rgba(212,149,43,0.45);
+  transform: translateY(-2px);
+}
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-secondary {
+  background: var(--bg-raised);
+  color: var(--gold);
+  border: 1px solid rgba(212,149,43,0.3);
+}
+.btn-secondary:hover {
+  background: rgba(212,149,43,0.12);
+  border-color: var(--amber);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-dim);
+  padding: 0.5rem 1rem;
+}
+.btn-ghost:hover { color: var(--gold); }
+
+.btn-sm {
+  padding: 0.45rem 1rem;
+  font-size: 0.85rem;
+}
+
+/* ================================================================
+   HEADER BAR (screens 2 & 3)
+   ================================================================ */
+
+.header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(212,149,43,0.15);
+}
+
+.header-bar .logo-sm {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, var(--gold), var(--amber));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ================================================================
+   SCREEN 1: THE BONFIRE
+   ================================================================ */
+
+.bonfire-hero {
+  text-align: center;
+  padding: 8vh 2rem 4rem;
+}
+
+.bonfire-hero .icon-fire {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  display: block;
+  animation: fireGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes fireGlow {
+  from { filter: brightness(0.85); transform: scale(0.97); }
+  to   { filter: brightness(1.2);  transform: scale(1.03); }
+}
+
+.bonfire-hero .btn-primary {
+  margin-top: 2.5rem;
+  font-size: 1.15rem;
+  padding: 1rem 2.5rem;
+}
+
+/* Loading state */
+.loading-state {
+  text-align: center;
+  padding: 3rem;
+}
+
+.loading-text {
+  font-size: 1.1rem;
+  color: var(--amber);
+  margin-top: 1.5rem;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+
+/* Campfire animation */
+.campfire-anim {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.campfire-anim .flame {
+  position: absolute;
+  bottom: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 70px;
+  background: radial-gradient(ellipse at bottom, var(--gold) 0%, var(--amber) 40%, var(--ember) 70%, transparent 100%);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  animation: flicker 0.4s ease-in-out infinite alternate;
+  filter: blur(2px);
+}
+.campfire-anim .flame:nth-child(2) {
+  width: 28px; height: 50px;
+  animation-delay: 0.15s;
+  opacity: 0.8;
+}
+.campfire-anim .flame:nth-child(3) {
+  width: 20px; height: 35px;
+  animation-delay: 0.3s;
+  opacity: 0.6;
+}
+.campfire-anim .log {
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%) rotate(-10deg);
+  width: 70px;
+  height: 12px;
+  background: #4a2c0a;
+  border-radius: 6px;
+}
+.campfire-anim .log:nth-child(5) {
+  transform: translateX(-50%) rotate(12deg);
+  bottom: 14%;
+}
+
+@keyframes flicker {
+  0%   { transform: translateX(-50%) scaleY(1)   scaleX(1); }
+  50%  { transform: translateX(-48%) scaleY(1.08) scaleX(0.94); }
+  100% { transform: translateX(-52%) scaleY(0.95) scaleX(1.05); }
+}
+
+/* Constellation canvas */
+.constellation-section {
+  margin-top: 2rem;
+}
+
+#constellation-canvas {
+  display: block;
+  width: 100%;
+  height: 500px;
+  border-radius: var(--radius-lg);
+  background: rgba(13,10,7,0.6);
+  border: 1px solid rgba(212,149,43,0.12);
+  cursor: grab;
+}
+#constellation-canvas:active { cursor: grabbing; }
+
+.constellation-stats {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin: 1.5rem 0;
+  flex-wrap: wrap;
+}
+
+.stat-box {
+  text-align: center;
+}
+.stat-box .stat-num {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--gold);
+}
+.stat-box .stat-label {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Entity chips */
+.chips-section {
+  margin-top: 2rem;
+}
+
+.chips-section h3 {
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+}
+
+.chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  background: rgba(26,21,16,0.5);
+  scrollbar-width: thin;
+  scrollbar-color: var(--amber) transparent;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 100px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all var(--transition);
+  border: 1px solid rgba(212,149,43,0.2);
+  background: var(--bg-raised);
+  color: var(--text-dim);
+  user-select: none;
+}
+.chip:hover {
+  border-color: var(--amber);
+  color: var(--cream);
+}
+.chip.selected {
+  background: rgba(212,149,43,0.2);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.chip .chip-count {
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+
+.forge-action {
+  text-align: center;
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(212,149,43,0.1);
+}
+
+/* ================================================================
+   SCREEN 2: THE FORGE
+   ================================================================ */
+
+.forge-loading {
+  text-align: center;
+  padding: 6vh 2rem;
+}
+
+.anvil-anim {
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 2rem;
+  position: relative;
+}
+
+.anvil-anim .anvil-body {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 40px;
+  background: linear-gradient(to bottom, #5a5045, #3a302a);
+  border-radius: 6px 6px 4px 4px;
+}
+.anvil-anim .anvil-horn {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 25px;
+  background: linear-gradient(to top, #5a5045, #706258);
+  border-radius: 4px 4px 0 0;
+}
+.anvil-anim .hammer {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-20deg);
+  transform-origin: bottom center;
+  animation: hammerStrike 0.8s ease-in-out infinite;
+}
+.anvil-anim .hammer-head {
+  width: 40px;
+  height: 22px;
+  background: linear-gradient(135deg, #7a6a58, #5a4a38);
+  border-radius: 4px;
+}
+.anvil-anim .hammer-handle {
+  width: 8px;
+  height: 50px;
+  background: #4a3520;
+  margin: 0 auto;
+  border-radius: 3px;
+}
+
+@keyframes hammerStrike {
+  0%, 100% { transform: translateX(-50%) rotate(-30deg); }
+  50%      { transform: translateX(-50%) rotate(5deg); }
+}
+
+.anvil-anim .sparks {
+  position: absolute;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px; height: 4px;
+  background: var(--gold);
+  border-radius: 50%;
+  animation: sparkFly 0.8s ease-out infinite;
+  box-shadow: 0 0 6px var(--gold);
+}
+.anvil-anim .sparks:nth-child(4) { animation-delay: 0.2s; left: 45%; }
+.anvil-anim .sparks:nth-child(5) { animation-delay: 0.4s; left: 55%; }
+.anvil-anim .sparks:nth-child(6) { animation-delay: 0.1s; left: 40%; }
+
+@keyframes sparkFly {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(calc(-50% + var(--sx, 15px))) translateY(var(--sy, -40px)); }
+}
+
+.rotating-quote {
+  font-style: italic;
+  color: var(--text-dim);
+  max-width: 600px;
+  margin: 1.5rem auto 0;
+  min-height: 3em;
+  transition: opacity 0.4s ease;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Project grid */
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .projects-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.project-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(212,149,43,0.1);
+  border-radius: var(--radius-lg);
+  padding: 1.8rem;
+  transition: all var(--transition);
+  animation: cardIn 0.5s ease backwards;
+  position: relative;
+  overflow: hidden;
+}
+
+.project-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  opacity: 0;
+  transition: opacity var(--transition);
+  background: radial-gradient(ellipse at center, rgba(212,149,43,0.06), transparent 70%);
+  pointer-events: none;
+}
+
+.project-card:hover {
+  border-color: rgba(212,149,43,0.3);
+  box-shadow: var(--glow-amber);
+  transform: translateY(-3px);
+}
+.project-card:hover::before { opacity: 1; }
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.project-card .card-name {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--cream);
+  margin-bottom: 0.25rem;
+}
+
+.project-card .card-tagline {
+  font-style: italic;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+.card-themes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.theme-tag {
+  font-size: 0.72rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 100px;
+  background: rgba(212,149,43,0.12);
+  color: var(--amber);
+  border: 1px solid rgba(212,149,43,0.2);
+}
+
+.complexity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+.complexity-badge.weekend {
+  background: var(--green-bg);
+  color: var(--green);
+  border: 1px solid rgba(61,220,132,0.3);
+}
+.complexity-badge.month {
+  background: var(--amber-bg);
+  color: var(--gold);
+  border: 1px solid rgba(255,189,69,0.3);
+}
+.complexity-badge.quarter {
+  background: var(--red-bg);
+  color: var(--red);
+  border: 1px solid rgba(231,76,60,0.3);
+}
+
+.card-insight {
+  background: rgba(212,149,43,0.08);
+  border-left: 3px solid var(--amber);
+  padding: 0.8rem 1rem;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--cream);
+}
+.card-insight .insight-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--amber);
+  margin-bottom: 0.3rem;
+  font-weight: 700;
+}
+
+.card-tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.tech-tag {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(240,230,211,0.06);
+  color: var(--text-dim);
+  border: 1px solid rgba(240,230,211,0.08);
+}
+
+.card-first-step {
+  background: rgba(240,230,211,0.04);
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-bottom: 1.2rem;
+  line-height: 1.4;
+}
+.card-first-step .step-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+.card-actions .btn { flex: 1; justify-content: center; }
+
+/* ================================================================
+   SCREEN 3A: THE BLUEPRINT (MOCKUP)
+   ================================================================ */
+
+.blueprint-header {
+  margin-bottom: 2rem;
+}
+
+.blueprint-header .proj-name {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--cream);
+}
+.blueprint-header .proj-tagline {
+  font-style: italic;
+  color: var(--text-dim);
+  margin-top: 0.25rem;
+}
+
+.mockup-frame {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 8px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,149,43,0.15);
+  position: relative;
+}
+
+.mockup-frame .frame-bar {
+  background: #2a2520;
+  padding: 0.6rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.mockup-frame .frame-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #5a4a38;
+}
+.mockup-frame .frame-dot.red { background: #e74c3c; }
+.mockup-frame .frame-dot.yellow { background: #f1c40f; }
+.mockup-frame .frame-dot.green { background: #3ddc84; }
+.mockup-frame .frame-url {
+  flex: 1;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  font-family: monospace;
+}
+
+.mockup-frame iframe {
+  width: 100%;
+  height: 600px;
+  border: none;
+  display: block;
+}
+
+.blueprint-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* ================================================================
+   SCREEN 3B: SCAFFOLD STATUS
+   ================================================================ */
+
+.scaffold-status {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.job-id-badge {
+  display: inline-block;
+  font-family: monospace;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.8rem;
+  background: var(--bg-raised);
+  border: 1px solid rgba(212,149,43,0.2);
+  border-radius: var(--radius);
+  color: var(--amber);
+  margin-bottom: 1.5rem;
+}
+
+.scaffold-progress {
+  margin: 2rem 0;
+}
+
+.progress-bar-track {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-raised);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--amber), var(--gold));
+  border-radius: 3px;
+  transition: width 0.5s ease;
+  position: relative;
+}
+.progress-bar-fill.running {
+  animation: progressShimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes progressShimmer {
+  0%   { opacity: 0.7; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+.file-list {
+  list-style: none;
+  margin-top: 1rem;
+}
+
+.file-list li {
+  padding: 0.5rem 0.8rem;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  border-left: 2px solid rgba(212,149,43,0.15);
+  margin-bottom: 0.3rem;
+  animation: fileAppear 0.3s ease backwards;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.file-list li .file-icon {
+  color: var(--amber);
+  font-size: 0.75rem;
+}
+
+@keyframes fileAppear {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.output-dir {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-raised);
+  border-radius: var(--radius);
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  word-break: break-all;
+}
+.output-dir .dir-label {
+  font-family: inherit;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  margin-bottom: 0.3rem;
+  display: block;
+  font-weight: 600;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 100px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.status-badge.running {
+  background: var(--amber-bg);
+  color: var(--gold);
+  border: 1px solid rgba(255,189,69,0.3);
+}
+.status-badge.completed {
+  background: var(--green-bg);
+  color: var(--green);
+  border: 1px solid rgba(61,220,132,0.3);
+}
+.status-badge.failed {
+  background: var(--red-bg);
+  color: var(--red);
+  border: 1px solid rgba(231,76,60,0.3);
+}
+
+.status-badge .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.status-badge.running .dot {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+/* ================================================================
+   FOOTER
+   ================================================================ */
+
+.footer {
+  text-align: center;
+  padding: 3rem 2rem 1.5rem;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  position: relative;
+  z-index: 1;
+}
+.footer a {
+  color: var(--text-dim);
+  text-decoration: none;
+}
+.footer a:hover { color: var(--gold); }
+
+/* ================================================================
+   ERROR TOAST
+   ================================================================ */
+
+.error-toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: var(--red-bg);
+  border: 1px solid rgba(231,76,60,0.4);
+  color: var(--red);
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  z-index: 1000;
+  max-width: 400px;
+  animation: slideIn 0.3s ease;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ================================================================
+   JOB TRAY (persistent across all screens)
+   ================================================================ */
+
+.job-tray {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  background: linear-gradient(180deg, transparent 0%, rgba(13,10,7,0.95) 20%);
+  pointer-events: none;
+  padding: 2rem 1.5rem 1rem;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+.job-tray.has-jobs { opacity: 1; pointer-events: auto; }
+.job-tray-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.job-tray-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  margin-right: 0.5rem;
+}
+.job-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  background: var(--bg-raised);
+  border: 1px solid rgba(212,149,43,0.25);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.job-chip:hover {
+  border-color: var(--amber);
+  background: rgba(212,149,43,0.1);
+  transform: translateY(-1px);
+}
+.job-chip .job-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.job-chip .job-dot.running { background: var(--amber); animation: pulse 1.5s ease infinite; }
+.job-chip .job-dot.completed { background: #27ae60; }
+.job-chip .job-dot.failed { background: var(--red); }
+.job-chip .job-dot.mockup-loading { background: var(--gold); animation: pulse 1.5s ease infinite; }
+.job-chip .job-dot.mockup-done { background: #27ae60; }
+.job-chip .job-type {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  padding: 0.1rem 0.35rem;
+  background: rgba(255,255,255,0.05);
+  border-radius: 3px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Give screens bottom padding so content isn't hidden by the tray */
+.screen { padding-bottom: 5rem !important; }
+
+/* ================================================================
+   SCROLLBAR
+   ================================================================ */
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(212,149,43,0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(212,149,43,0.5); }
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
+@media (max-width: 768px) {
+  .screen { padding: 1rem; padding-bottom: 5rem !important; }
+  .projects-grid { grid-template-columns: 1fr; }
+  .constellation-stats { gap: 1rem; }
+  .card-actions { flex-direction: column; }
+  #constellation-canvas { height: 350px; }
+  .job-chip { max-width: 200px; font-size: 0.75rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Ambient particles -->
+<canvas id="particle-canvas"></canvas>
+
+<!-- ============================================================
+     SCREEN 1: THE BONFIRE
+     ============================================================ -->
+<section id="screen-bonfire" class="screen active">
+  <div class="container">
+
+    <!-- Hero -->
+    <div class="bonfire-hero" id="bonfire-hero">
+      <span class="icon-fire">&#128293;</span>
+      <h1>PROJECT FORGE</h1>
+      <p class="subtitle">Mine collective intelligence. Synthesize what to build.</p>
+      <button class="btn btn-primary" id="btn-light-bonfire" onclick="lightBonfire()">
+        <span>&#9876;</span> Light the Bonfire
+      </button>
+    </div>
+
+    <!-- Loading state -->
+    <div class="loading-state" id="bonfire-loading" style="display:none">
+      <div class="campfire-anim">
+        <div class="flame"></div>
+        <div class="flame"></div>
+        <div class="flame"></div>
+        <div class="log"></div>
+        <div class="log"></div>
+      </div>
+      <p class="loading-text">Mining the knowledge graph...</p>
+    </div>
+
+    <!-- Constellation + chips (after load) -->
+    <div id="bonfire-results" style="display:none">
+      <div class="constellation-stats" id="constellation-stats"></div>
+
+      <div class="constellation-section">
+        <canvas id="constellation-canvas"></canvas>
+      </div>
+
+      <div class="chips-section">
+        <h3>Themes &amp; Entities <span style="font-weight:400;color:var(--text-faint)">— click to filter</span></h3>
+        <div class="chips-container" id="chips-container"></div>
+      </div>
+
+      <div class="forge-action">
+        <button class="btn btn-primary" id="btn-forge" onclick="goToForge()">
+          <span>&#9881;</span> Forge Projects
+        </button>
+      </div>
+    </div>
+
+  </div>
+  <div class="footer">Powered by <a href="#">Bonfires.ai</a> + Claude Agent SDK</div>
+</section>
+
+<!-- ============================================================
+     SCREEN 2: THE FORGE
+     ============================================================ -->
+<section id="screen-forge" class="screen">
+  <div class="container">
+
+    <div class="header-bar">
+      <span class="logo-sm">PROJECT FORGE</span>
+      <button class="btn btn-ghost" onclick="showScreen('bonfire')">&#8592; Back to Bonfire</button>
+    </div>
+
+    <!-- Loading state -->
+    <div class="forge-loading" id="forge-loading">
+      <div class="anvil-anim">
+        <div class="hammer">
+          <div class="hammer-head"></div>
+          <div class="hammer-handle"></div>
+        </div>
+        <div class="anvil-horn"></div>
+        <div class="anvil-body"></div>
+        <div class="sparks" style="--sx:-25px;--sy:-45px"></div>
+        <div class="sparks" style="--sx:20px;--sy:-55px"></div>
+        <div class="sparks" style="--sx:30px;--sy:-35px"></div>
+      </div>
+      <h2 id="forge-loading-text">Forging projects...</h2>
+      <p class="rotating-quote" id="rotating-quote">&nbsp;</p>
+    </div>
+
+    <!-- Results -->
+    <div id="forge-results" style="display:none">
+      <h2>Forged Projects</h2>
+      <p class="subtitle" id="forge-results-subtitle"></p>
+      <div class="projects-grid" id="projects-grid"></div>
+    </div>
+
+  </div>
+  <div class="footer">Powered by <a href="#">Bonfires.ai</a> + Claude Agent SDK</div>
+</section>
+
+<!-- ============================================================
+     SCREEN 3A: THE BLUEPRINT (MOCKUP)
+     ============================================================ -->
+<section id="screen-blueprint" class="screen">
+  <div class="container">
+
+    <div class="header-bar">
+      <span class="logo-sm">PROJECT FORGE</span>
+      <button class="btn btn-ghost" onclick="showScreen('forge')">&#8592; Back to Projects</button>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" id="blueprint-loading">
+      <div class="campfire-anim">
+        <div class="flame"></div>
+        <div class="flame"></div>
+        <div class="flame"></div>
+        <div class="log"></div>
+        <div class="log"></div>
+      </div>
+      <p class="loading-text">Generating design mockup...</p>
+    </div>
+
+    <!-- Result -->
+    <div id="blueprint-result" style="display:none">
+      <div class="blueprint-header">
+        <div class="proj-name" id="bp-proj-name"></div>
+        <div class="proj-tagline" id="bp-proj-tagline"></div>
+      </div>
+
+      <div class="mockup-frame">
+        <div class="frame-bar">
+          <div class="frame-dot red"></div>
+          <div class="frame-dot yellow"></div>
+          <div class="frame-dot green"></div>
+          <div class="frame-url" id="bp-frame-url">mockup.html</div>
+        </div>
+        <iframe id="bp-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+
+      <div class="blueprint-actions">
+        <a class="btn btn-secondary" id="bp-open-tab" href="#" target="_blank">Open in New Tab</a>
+        <button class="btn btn-primary" id="bp-scaffold-btn" onclick="scaffoldCurrent()">
+          <span>&#9881;</span> Scaffold This Project
+        </button>
+        <button class="btn btn-ghost" onclick="showScreen('forge')">&#8592; Back to Projects</button>
+      </div>
+    </div>
+
+  </div>
+  <div class="footer">Powered by <a href="#">Bonfires.ai</a> + Claude Agent SDK</div>
+</section>
+
+<!-- ============================================================
+     SCREEN 3B: SCAFFOLD STATUS
+     ============================================================ -->
+<section id="screen-scaffold" class="screen">
+  <div class="container">
+
+    <div class="header-bar">
+      <span class="logo-sm">PROJECT FORGE</span>
+      <button class="btn btn-ghost" onclick="showScreen('forge')">&#8592; Back to Projects</button>
+    </div>
+
+    <div class="scaffold-status">
+      <h2>Scaffolding Project</h2>
+      <p class="subtitle" id="scaffold-proj-name" style="margin-bottom:1.5rem"></p>
+
+      <div>
+        <span class="status-badge" id="scaffold-status-badge">
+          <span class="dot"></span>
+          <span id="scaffold-status-text">Starting...</span>
+        </span>
+        <span class="job-id-badge" id="scaffold-job-id" style="margin-left:0.75rem"></span>
+      </div>
+
+      <div class="scaffold-progress">
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill running" id="scaffold-progress-bar" style="width:15%"></div>
+        </div>
+
+        <h3 style="margin-bottom:0.75rem;color:var(--text-dim);font-size:0.85rem;text-transform:uppercase;letter-spacing:0.08em">Files Created</h3>
+        <ul class="file-list" id="scaffold-file-list"></ul>
+      </div>
+
+      <div class="output-dir" id="scaffold-output-dir" style="display:none">
+        <span class="dir-label">Output Directory</span>
+        <span id="scaffold-output-path"></span>
+      </div>
+
+      <div style="margin-top:2rem" id="scaffold-done-actions" style="display:none">
+        <button class="btn btn-secondary" id="btn-open-folder" style="display:none">Open Folder Path</button>
+      </div>
+    </div>
+
+  </div>
+  <div class="footer">Powered by <a href="#">Bonfires.ai</a> + Claude Agent SDK</div>
+</section>
+
+<!-- ============================================================
+     JOB TRAY (persistent, bottom of page)
+     ============================================================ -->
+<div class="job-tray" id="job-tray">
+  <div class="job-tray-inner">
+    <span class="job-tray-label">Active Jobs</span>
+    <div id="job-tray-chips"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+// ================================================================
+// STATE
+// ================================================================
+
+const state = {
+  themes: null,            // response from /forge/themes
+  selectedChips: new Set(),
+  projects: null,          // response from /forge/synthesize
+  currentProject: null,    // project being viewed/scaffolded
+  currentMockup: null,     // mockup response
+  scaffoldJobId: null,
+  scaffoldPollTimer: null,
+  // Job tray: tracks all running/completed jobs
+  jobs: [],  // [{id, type:'mockup'|'scaffold', name, status, projectIdx, data}]
+};
+
+// API base - same origin for localhost
+const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+  ? '' : location.origin;
+
+// ================================================================
+// UTILITIES
+// ================================================================
+
+async function apiFetch(path, options = {}) {
+  const url = API_BASE + path;
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options,
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`API ${res.status}: ${text}`);
+  }
+  return res.json();
+}
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const id = 'screen-' + name;
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+function showError(msg) {
+  const existing = document.querySelector('.error-toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = 'error-toast';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 6000);
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ================================================================
+// JOB TRAY
+// ================================================================
+
+function addJob(type, name, projectIdx) {
+  const id = type + '-' + Date.now();
+  const job = { id, type, name, status: 'running', projectIdx, data: null };
+  state.jobs.push(job);
+  renderJobTray();
+  return job;
+}
+
+function updateJob(id, updates) {
+  const job = state.jobs.find(j => j.id === id);
+  if (job) Object.assign(job, updates);
+  renderJobTray();
+}
+
+function renderJobTray() {
+  const tray = document.getElementById('job-tray');
+  const container = document.getElementById('job-tray-chips');
+  if (!state.jobs.length) {
+    tray.classList.remove('has-jobs');
+    return;
+  }
+  tray.classList.add('has-jobs');
+  container.innerHTML = state.jobs.map(job => {
+    const dotClass = job.type === 'mockup'
+      ? (job.status === 'running' ? 'mockup-loading' : 'mockup-done')
+      : job.status;
+    const typeLabel = job.type === 'mockup' ? 'mockup' : 'scaffold';
+    const statusIcon = job.status === 'completed' ? ' ✓' : job.status === 'failed' ? ' ✗' : '';
+    return `<span class="job-chip" onclick="jumpToJob('${job.id}')" title="${escapeHtml(job.name)} — ${job.status}">
+      <span class="job-dot ${dotClass}"></span>
+      <span class="job-type">${typeLabel}</span>
+      ${escapeHtml(job.name)}${statusIcon}
+    </span>`;
+  }).join('');
+}
+
+function jumpToJob(jobId) {
+  const job = state.jobs.find(j => j.id === jobId);
+  if (!job) return;
+  if (job.type === 'mockup') {
+    if (job.status === 'completed' && job.data) {
+      // Re-show the mockup
+      const proj = state.projects.projects[job.projectIdx];
+      state.currentProject = proj;
+      state.currentMockup = job.data;
+      showScreen('blueprint');
+      renderMockupResult(job.data);
+    }
+  } else if (job.type === 'scaffold') {
+    // Navigate to the scaffold screen
+    const proj = state.projects.projects[job.projectIdx];
+    state.currentProject = proj;
+    showScreen('scaffold');
+    // Don't re-init if the same job is showing — the poll is already running
+  }
+}
+
+// ================================================================
+// AMBIENT PARTICLES
+// ================================================================
+
+(function initParticles() {
+  const canvas = document.getElementById('particle-canvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  const COUNT = 60;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  for (let i = 0; i < COUNT; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: -Math.random() * 0.5 - 0.1,
+      r: Math.random() * 2 + 0.5,
+      alpha: Math.random() * 0.5 + 0.1,
+      hue: Math.random() * 40 + 15, // amber range
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const p of particles) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.alpha += (Math.random() - 0.5) * 0.02;
+      p.alpha = Math.max(0.05, Math.min(0.5, p.alpha));
+
+      if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
+      if (p.x < -10) p.x = canvas.width + 10;
+      if (p.x > canvas.width + 10) p.x = -10;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${p.hue}, 80%, 55%, ${p.alpha})`;
+      ctx.fill();
+
+      // glow
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${p.hue}, 80%, 55%, ${p.alpha * 0.15})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ================================================================
+// SCREEN 1: THE BONFIRE
+// ================================================================
+
+async function lightBonfire() {
+  const btn = document.getElementById('btn-light-bonfire');
+  btn.disabled = true;
+
+  document.getElementById('bonfire-hero').style.display = 'none';
+  document.getElementById('bonfire-loading').style.display = 'block';
+
+  try {
+    const data = await apiFetch('/forge/themes', { method: 'POST' });
+    state.themes = data;
+    renderBonfireResults(data);
+  } catch (err) {
+    showError('Failed to mine themes: ' + err.message);
+    document.getElementById('bonfire-hero').style.display = 'block';
+    document.getElementById('bonfire-loading').style.display = 'none';
+    btn.disabled = false;
+  }
+}
+
+function renderBonfireResults(data) {
+  document.getElementById('bonfire-loading').style.display = 'none';
+  document.getElementById('bonfire-results').style.display = 'block';
+
+  // Stats
+  const statsEl = document.getElementById('constellation-stats');
+  statsEl.innerHTML = `
+    <div class="stat-box"><div class="stat-num">${data.episode_count || data.episodes.length}</div><div class="stat-label">Episodes</div></div>
+    <div class="stat-box"><div class="stat-num">${data.entity_count || data.entities.length}</div><div class="stat-label">Entities</div></div>
+    <div class="stat-box"><div class="stat-num">${data.edge_count || data.edges.length}</div><div class="stat-label">Connections</div></div>
+  `;
+
+  // Entity chips (sorted by connection count)
+  renderChips(data);
+
+  // Constellation
+  initConstellation(data);
+}
+
+function renderChips(data) {
+  const container = document.getElementById('chips-container');
+  container.innerHTML = '';
+
+  // Count connections per entity
+  const connCount = {};
+  for (const ent of data.entities) {
+    connCount[ent.uuid || ent.name] = 0;
+  }
+  for (const edge of data.edges) {
+    if (connCount[edge.source_uuid] !== undefined) connCount[edge.source_uuid]++;
+    if (connCount[edge.target_uuid] !== undefined) connCount[edge.target_uuid]++;
+  }
+
+  // Sort entities by frequency
+  const sorted = [...data.entities].sort((a, b) => {
+    const ca = connCount[a.uuid || a.name] || 0;
+    const cb = connCount[b.uuid || b.name] || 0;
+    return cb - ca;
+  });
+
+  for (const ent of sorted) {
+    const count = connCount[ent.uuid || ent.name] || 0;
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.dataset.name = ent.name;
+    chip.innerHTML = `${escapeHtml(ent.name)} <span class="chip-count">${count}</span>`;
+    chip.addEventListener('click', () => {
+      chip.classList.toggle('selected');
+      if (state.selectedChips.has(ent.name)) {
+        state.selectedChips.delete(ent.name);
+      } else {
+        state.selectedChips.add(ent.name);
+      }
+      highlightConstellationEntity(ent.name);
+    });
+    container.appendChild(chip);
+  }
+}
+
+// ================================================================
+// CONSTELLATION VISUALIZATION
+// ================================================================
+
+let constellationState = null;
+
+function initConstellation(data) {
+  const canvas = document.getElementById('constellation-canvas');
+  const ctx = canvas.getContext('2d');
+
+  // High DPI
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+
+  const W = rect.width;
+  const H = rect.height;
+
+  // Build nodes
+  const nodes = [];
+  const nodeMap = {};
+
+  // Episode nodes (small)
+  for (const ep of data.episodes) {
+    const node = {
+      id: 'ep_' + ep.name,
+      label: ep.name,
+      type: 'episode',
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: 0, vy: 0,
+      r: 3,
+      color: '#c94a1a',
+      preview: ep.content_preview || '',
+    };
+    nodes.push(node);
+    nodeMap[node.id] = node;
+  }
+
+  // Entity nodes (larger)
+  for (const ent of data.entities) {
+    const node = {
+      id: ent.uuid || ent.name,
+      label: ent.name,
+      type: 'entity',
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: 0, vy: 0,
+      r: 8,
+      color: '#d4952b',
+      uuid: ent.uuid,
+    };
+    nodes.push(node);
+    nodeMap[node.id] = node;
+  }
+
+  // Build edges
+  const edges = [];
+  for (const edge of data.edges) {
+    const src = nodeMap[edge.source_uuid];
+    const tgt = nodeMap[edge.target_uuid];
+    if (src && tgt) {
+      edges.push({ source: src, target: tgt, label: edge.name });
+    }
+  }
+
+  // Interaction state
+  let dragNode = null;
+  let hoveredNode = null;
+  let highlightedEntity = null;
+  let mouseX = 0, mouseY = 0;
+  let offsetX = 0, offsetY = 0;
+
+  constellationState = {
+    nodes, edges, nodeMap, highlightedEntity: null,
+    setHighlight(name) {
+      highlightedEntity = name;
+      this.highlightedEntity = name;
+    }
+  };
+
+  // Mouse events
+  canvas.addEventListener('mousemove', (e) => {
+    const r = canvas.getBoundingClientRect();
+    mouseX = e.clientX - r.left;
+    mouseY = e.clientY - r.top;
+
+    if (dragNode) {
+      dragNode.x = mouseX - offsetX;
+      dragNode.y = mouseY - offsetY;
+      dragNode.vx = 0;
+      dragNode.vy = 0;
+      return;
+    }
+
+    hoveredNode = null;
+    for (const n of nodes) {
+      const dx = n.x - mouseX;
+      const dy = n.y - mouseY;
+      const hitR = n.type === 'entity' ? n.r + 6 : n.r + 3;
+      if (dx * dx + dy * dy < hitR * hitR) {
+        hoveredNode = n;
+        break;
+      }
+    }
+    canvas.style.cursor = hoveredNode ? 'pointer' : 'grab';
+  });
+
+  canvas.addEventListener('mousedown', (e) => {
+    if (hoveredNode) {
+      dragNode = hoveredNode;
+      const r = canvas.getBoundingClientRect();
+      offsetX = (e.clientX - r.left) - hoveredNode.x;
+      offsetY = (e.clientY - r.top) - hoveredNode.y;
+      canvas.style.cursor = 'grabbing';
+    }
+  });
+
+  canvas.addEventListener('mouseup', () => {
+    dragNode = null;
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    dragNode = null;
+    hoveredNode = null;
+  });
+
+  canvas.addEventListener('click', () => {
+    if (hoveredNode && hoveredNode.type === 'entity') {
+      if (highlightedEntity === hoveredNode.label) {
+        highlightedEntity = null;
+        constellationState.highlightedEntity = null;
+      } else {
+        highlightedEntity = hoveredNode.label;
+        constellationState.highlightedEntity = hoveredNode.label;
+      }
+    }
+  });
+
+  // Physics simulation
+  function simulate() {
+    const alpha = 0.3;
+    const repulse = 800;
+    const edgeStrength = 0.005;
+    const damping = 0.92;
+    const centerGravity = 0.001;
+
+    // Node repulsion
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i], b = nodes[j];
+        let dx = a.x - b.x;
+        let dy = a.y - b.y;
+        let dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const minDist = a.r + b.r + 20;
+        if (dist < 200) {
+          const force = repulse / (dist * dist);
+          const fx = (dx / dist) * force;
+          const fy = (dy / dist) * force;
+          a.vx += fx * alpha;
+          a.vy += fy * alpha;
+          b.vx -= fx * alpha;
+          b.vy -= fy * alpha;
+        }
+      }
+    }
+
+    // Edge attraction
+    for (const e of edges) {
+      const dx = e.target.x - e.source.x;
+      const dy = e.target.y - e.source.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      const desiredDist = 80;
+      const force = (dist - desiredDist) * edgeStrength;
+      const fx = (dx / dist) * force;
+      const fy = (dy / dist) * force;
+      e.source.vx += fx;
+      e.source.vy += fy;
+      e.target.vx -= fx;
+      e.target.vy -= fy;
+    }
+
+    // Center gravity & bounds
+    for (const n of nodes) {
+      if (n === dragNode) continue;
+
+      n.vx += (W / 2 - n.x) * centerGravity;
+      n.vy += (H / 2 - n.y) * centerGravity;
+
+      n.vx *= damping;
+      n.vy *= damping;
+
+      n.x += n.vx;
+      n.y += n.vy;
+
+      // Keep in bounds
+      const pad = 20;
+      if (n.x < pad) { n.x = pad; n.vx *= -0.5; }
+      if (n.x > W - pad) { n.x = W - pad; n.vx *= -0.5; }
+      if (n.y < pad) { n.y = pad; n.vy *= -0.5; }
+      if (n.y > H - pad) { n.y = H - pad; n.vy *= -0.5; }
+    }
+  }
+
+  // Render
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Determine highlighted connections
+    const hlConnected = new Set();
+    if (highlightedEntity) {
+      for (const e of edges) {
+        if (e.source.label === highlightedEntity || e.target.label === highlightedEntity) {
+          hlConnected.add(e.source.id);
+          hlConnected.add(e.target.id);
+        }
+      }
+    }
+
+    // Draw edges
+    for (const e of edges) {
+      const isHl = highlightedEntity && (e.source.label === highlightedEntity || e.target.label === highlightedEntity);
+      ctx.beginPath();
+      ctx.moveTo(e.source.x, e.source.y);
+      ctx.lineTo(e.target.x, e.target.y);
+      ctx.strokeStyle = isHl
+        ? 'rgba(255,189,69,0.5)'
+        : 'rgba(212,149,43,0.08)';
+      ctx.lineWidth = isHl ? 1.5 : 0.5;
+      ctx.stroke();
+    }
+
+    // Draw nodes
+    for (const n of nodes) {
+      const isHighlighted = highlightedEntity && (n.label === highlightedEntity || hlConnected.has(n.id));
+      const isHovered = n === hoveredNode;
+      const isDimmed = highlightedEntity && !isHighlighted;
+
+      let alpha = isDimmed ? 0.15 : 1;
+      let r = n.r;
+      if (isHovered) r *= 1.4;
+      if (isHighlighted && n.type === 'entity') r *= 1.3;
+
+      // Glow
+      if (n.type === 'entity' && !isDimmed) {
+        const glowR = r * 3;
+        const grad = ctx.createRadialGradient(n.x, n.y, r * 0.5, n.x, n.y, glowR);
+        const glowAlpha = isHighlighted ? 0.25 : (isHovered ? 0.2 : 0.08);
+        grad.addColorStop(0, `rgba(212,149,43,${glowAlpha * alpha})`);
+        grad.addColorStop(1, 'rgba(212,149,43,0)');
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, glowR, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+      }
+
+      // Node circle
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+      if (n.type === 'entity') {
+        ctx.fillStyle = isHighlighted
+          ? `rgba(255,189,69,${alpha})`
+          : `rgba(212,149,43,${alpha * 0.9})`;
+      } else {
+        ctx.fillStyle = `rgba(201,74,26,${alpha * 0.6})`;
+      }
+      ctx.fill();
+
+      // Label for entities
+      if (n.type === 'entity' && !isDimmed) {
+        ctx.font = `${isHighlighted || isHovered ? '600 11px' : '400 10px'} -apple-system, sans-serif`;
+        ctx.fillStyle = `rgba(240,230,211,${alpha * 0.85})`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        const labelY = n.y + r + 4;
+        ctx.fillText(n.label.length > 20 ? n.label.slice(0, 18) + '...' : n.label, n.x, labelY);
+      }
+    }
+
+    // Tooltip for hovered node
+    if (hoveredNode) {
+      const n = hoveredNode;
+      const tipX = n.x + 15;
+      const tipY = n.y - 15;
+      let text = n.label;
+      if (n.type === 'episode' && n.preview) {
+        text += ': ' + n.preview.slice(0, 80) + (n.preview.length > 80 ? '...' : '');
+      }
+
+      ctx.font = '500 11px -apple-system, sans-serif';
+      const tm = ctx.measureText(text);
+      const pw = Math.min(tm.width + 16, 350);
+
+      // Wrap text
+      const lines = wrapText(ctx, text, pw - 16);
+      const ph = lines.length * 16 + 12;
+
+      const tx = Math.min(tipX, W - pw - 10);
+      const ty = Math.max(tipY - ph, 10);
+
+      ctx.fillStyle = 'rgba(26,21,16,0.95)';
+      ctx.beginPath();
+      roundRect(ctx, tx, ty, pw, ph, 6);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(212,149,43,0.3)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = '#f0e6d3';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      for (let i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], tx + 8, ty + 6 + i * 16);
+      }
+    }
+
+    simulate();
+    requestAnimationFrame(render);
+  }
+
+  render();
+}
+
+function wrapText(ctx, text, maxWidth) {
+  const words = text.split(' ');
+  const lines = [];
+  let line = '';
+  for (const w of words) {
+    const test = line ? line + ' ' + w : w;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = w;
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+  return lines.slice(0, 3);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h);
+  ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x, y, x + r, y, r);
+}
+
+function highlightConstellationEntity(name) {
+  if (constellationState) {
+    if (state.selectedChips.has(name)) {
+      constellationState.setHighlight(name);
+    } else {
+      if (constellationState.highlightedEntity === name) {
+        constellationState.setHighlight(null);
+      }
+    }
+  }
+}
+
+// ================================================================
+// SCREEN 2: THE FORGE
+// ================================================================
+
+async function goToForge() {
+  showScreen('forge');
+  document.getElementById('forge-loading').style.display = 'block';
+  document.getElementById('forge-results').style.display = 'none';
+
+  // Update loading text
+  const themes = state.themes;
+  const epCount = themes.episode_count || themes.episodes.length;
+  const entCount = themes.entity_count || themes.entities.length;
+  document.getElementById('forge-loading-text').textContent =
+    `Forging projects from ${epCount} episodes, ${entCount} entities...`;
+
+  // Start rotating quotes
+  const quoteEl = document.getElementById('rotating-quote');
+  let quoteIdx = 0;
+  const episodeNames = themes.episodes.map(e => e.content_preview || e.name).filter(Boolean);
+  let quoteTimer = null;
+  if (episodeNames.length > 0) {
+    function showQuote() {
+      quoteEl.style.opacity = '0';
+      setTimeout(() => {
+        quoteEl.textContent = '"' + episodeNames[quoteIdx % episodeNames.length] + '"';
+        quoteEl.style.opacity = '1';
+        quoteIdx++;
+      }, 400);
+    }
+    showQuote();
+    quoteTimer = setInterval(showQuote, 3500);
+  }
+
+  try {
+    const body = {};
+    if (state.selectedChips.size > 0) {
+      body.themes = Array.from(state.selectedChips);
+    }
+    const data = await apiFetch('/forge/synthesize', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    state.projects = data;
+    renderProjects(data);
+  } catch (err) {
+    showError('Failed to forge projects: ' + err.message);
+  } finally {
+    if (quoteTimer) clearInterval(quoteTimer);
+  }
+}
+
+function renderProjects(data) {
+  document.getElementById('forge-loading').style.display = 'none';
+  document.getElementById('forge-results').style.display = 'block';
+
+  const count = data.projects.length;
+  document.getElementById('forge-results-subtitle').textContent =
+    `${count} project${count !== 1 ? 's' : ''} forged from the knowledge graph`;
+
+  const grid = document.getElementById('projects-grid');
+  grid.innerHTML = '';
+
+  data.projects.forEach((proj, i) => {
+    const card = document.createElement('div');
+    card.className = 'project-card';
+    card.style.animationDelay = (i * 0.1) + 's';
+
+    const complexityClass = (proj.complexity || 'month').toLowerCase();
+    const complexityIcon = complexityClass === 'weekend' ? '&#9889;' : complexityClass === 'month' ? '&#9202;' : '&#127959;';
+
+    card.innerHTML = `
+      <div class="card-name">${escapeHtml(proj.name)}</div>
+      <div class="card-tagline">${escapeHtml(proj.tagline)}</div>
+
+      <div class="card-themes">
+        ${(proj.themes || []).map(t => `<span class="theme-tag">${escapeHtml(t)}</span>`).join('')}
+      </div>
+
+      <span class="complexity-badge ${complexityClass}">
+        ${complexityIcon} ${escapeHtml(proj.complexity || 'month')}
+      </span>
+
+      <div class="card-insight">
+        <div class="insight-label">Key Insight</div>
+        ${escapeHtml(proj.key_insight || '')}
+      </div>
+
+      <div class="card-tech">
+        ${(proj.tech_stack || []).map(t => `<span class="tech-tag">${escapeHtml(t)}</span>`).join('')}
+      </div>
+
+      <div class="card-first-step">
+        <div class="step-label">First Step</div>
+        ${escapeHtml(proj.first_step || '')}
+      </div>
+
+      <div class="card-actions">
+        <button class="btn btn-secondary btn-sm" onclick="viewMockup(${i})">View Mockup</button>
+        <button class="btn btn-primary btn-sm" onclick="scaffoldProject(${i})">
+          <span>&#9881;</span> Scaffold It
+        </button>
+      </div>
+    `;
+
+    grid.appendChild(card);
+  });
+}
+
+// ================================================================
+// SCREEN 3A: THE BLUEPRINT (MOCKUP)
+// ================================================================
+
+async function viewMockup(idx) {
+  const proj = state.projects.projects[idx];
+  state.currentProject = proj;
+
+  showScreen('blueprint');
+  document.getElementById('blueprint-loading').style.display = 'block';
+  document.getElementById('blueprint-result').style.display = 'none';
+
+  const job = addJob('mockup', proj.name, idx);
+
+  try {
+    const data = await apiFetch('/forge/mockup', {
+      method: 'POST',
+      body: JSON.stringify({ project: proj }),
+    });
+    state.currentMockup = data;
+    updateJob(job.id, { status: 'completed', data });
+    renderBlueprint(proj, data);
+  } catch (err) {
+    updateJob(job.id, { status: 'failed' });
+    showError('Failed to generate mockup: ' + err.message);
+    showScreen('forge');
+  }
+}
+
+function renderMockupResult(data) {
+  // Re-render a cached mockup (used when jumping back from job tray)
+  document.getElementById('blueprint-loading').style.display = 'none';
+  document.getElementById('blueprint-result').style.display = 'block';
+  renderBlueprint(state.currentProject, data);
+}
+
+function renderBlueprint(proj, data) {
+  document.getElementById('blueprint-loading').style.display = 'none';
+  document.getElementById('blueprint-result').style.display = 'block';
+
+  document.getElementById('bp-proj-name').textContent = proj.name;
+  document.getElementById('bp-proj-tagline').textContent = proj.tagline;
+
+  // URL bar
+  const mockupUrl = data.url || data.filename || 'mockup.html';
+  document.getElementById('bp-frame-url').textContent = mockupUrl;
+
+  // Iframe
+  const iframe = document.getElementById('bp-iframe');
+  iframe.srcdoc = data.html;
+
+  // Open in new tab
+  const openLink = document.getElementById('bp-open-tab');
+  if (data.url) {
+    openLink.href = API_BASE + data.url;
+    openLink.style.display = 'inline-flex';
+  } else {
+    // Create blob URL
+    const blob = new Blob([data.html], { type: 'text/html' });
+    openLink.href = URL.createObjectURL(blob);
+    openLink.style.display = 'inline-flex';
+  }
+}
+
+function scaffoldCurrent() {
+  if (state.currentProject) {
+    const idx = state.projects.projects.indexOf(state.currentProject);
+    scaffoldProject(idx >= 0 ? idx : 0);
+  }
+}
+
+// ================================================================
+// SCREEN 3B: SCAFFOLD
+// ================================================================
+
+async function scaffoldProject(idx) {
+  const proj = state.projects.projects[idx];
+  state.currentProject = proj;
+
+  showScreen('scaffold');
+
+  document.getElementById('scaffold-proj-name').textContent = proj.name;
+  document.getElementById('scaffold-job-id').textContent = '...';
+  document.getElementById('scaffold-file-list').innerHTML = '';
+  document.getElementById('scaffold-output-dir').style.display = 'none';
+  document.getElementById('btn-open-folder').style.display = 'none';
+
+  const uiBadge = document.getElementById('scaffold-status-badge');
+  uiBadge.className = 'status-badge running';
+  document.getElementById('scaffold-status-text').textContent = 'Starting...';
+  document.getElementById('scaffold-progress-bar').style.width = '15%';
+  document.getElementById('scaffold-progress-bar').classList.add('running');
+
+  // Clear any existing poll timer
+  if (state.scaffoldPollTimer) {
+    clearInterval(state.scaffoldPollTimer);
+    state.scaffoldPollTimer = null;
+  }
+
+  const job = addJob('scaffold', proj.name, idx);
+
+  try {
+    const data = await apiFetch('/forge/scaffold', {
+      method: 'POST',
+      body: JSON.stringify({ project: proj }),
+    });
+    state.scaffoldJobId = data.job_id;
+    job.backendJobId = data.job_id;
+    document.getElementById('scaffold-job-id').textContent = 'Job: ' + data.job_id;
+    document.getElementById('scaffold-status-text').textContent = 'Running';
+
+    // Start polling
+    pollScaffoldStatus(data.job_id, job.id);
+  } catch (err) {
+    updateJob(job.id, { status: 'failed' });
+    showError('Failed to start scaffold: ' + err.message);
+    uiBadge.className = 'status-badge failed';
+    document.getElementById('scaffold-status-text').textContent = 'Failed';
+    document.getElementById('scaffold-progress-bar').classList.remove('running');
+  }
+}
+
+function pollScaffoldStatus(backendJobId, trayJobId) {
+  let seenFiles = 0;
+
+  async function poll() {
+    try {
+      const data = await apiFetch(`/forge/jobs/${backendJobId}`);
+      const files = data.files || [];
+      const status = data.status;
+
+      // Update job tray
+      updateJob(trayJobId, { status });
+
+      // Update status badge
+      const badge = document.getElementById('scaffold-status-badge');
+      badge.className = 'status-badge ' + status;
+      document.getElementById('scaffold-status-text').textContent =
+        status.charAt(0).toUpperCase() + status.slice(1);
+
+      // Update files list (append new ones)
+      if (files.length > seenFiles) {
+        const listEl = document.getElementById('scaffold-file-list');
+        for (let i = seenFiles; i < files.length; i++) {
+          const li = document.createElement('li');
+          li.style.animationDelay = ((i - seenFiles) * 0.1) + 's';
+          li.innerHTML = `<span class="file-icon">&#9654;</span> ${escapeHtml(files[i])}`;
+          listEl.appendChild(li);
+        }
+        seenFiles = files.length;
+      }
+
+      // Progress bar
+      const progressBar = document.getElementById('scaffold-progress-bar');
+      if (status === 'completed') {
+        progressBar.style.width = '100%';
+        progressBar.classList.remove('running');
+      } else if (status === 'failed') {
+        progressBar.classList.remove('running');
+      } else {
+        // Estimate progress
+        const pct = Math.min(90, 15 + files.length * 8);
+        progressBar.style.width = pct + '%';
+      }
+
+      // Output directory
+      if (data.output_dir) {
+        document.getElementById('scaffold-output-dir').style.display = 'block';
+        document.getElementById('scaffold-output-path').textContent = data.output_dir;
+        document.getElementById('btn-open-folder').style.display = 'inline-flex';
+        document.getElementById('btn-open-folder').onclick = () => {
+          alert('Output directory:\n' + data.output_dir);
+        };
+      }
+
+      // Stop polling if done
+      if (status === 'completed' || status === 'failed') {
+        if (state.scaffoldPollTimer) {
+          clearInterval(state.scaffoldPollTimer);
+          state.scaffoldPollTimer = null;
+        }
+        return;
+      }
+    } catch (err) {
+      console.error('Poll error:', err);
+    }
+  }
+
+  // Initial poll
+  poll();
+  // Then every 3 seconds
+  state.scaffoldPollTimer = setInterval(poll, 3000);
+}
+
+// ================================================================
+// WINDOW RESIZE HANDLER FOR CONSTELLATION
+// ================================================================
+
+window.addEventListener('resize', () => {
+  // Re-init constellation if themes loaded
+  if (state.themes && document.getElementById('bonfire-results').style.display !== 'none') {
+    // Debounce
+    clearTimeout(window._constResizeTimer);
+    window._constResizeTimer = setTimeout(() => {
+      initConstellation(state.themes);
+    }, 300);
+  }
+});
+</script>
+</body>
+</html>

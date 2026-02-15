@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+project-forge/__pycache__/
+project-forge/mockups/
+project-forge/scaffolds/
+project-forge/themes_cache.json
+project-forge/projects_cache.json
+.env

@@ -699,7 +699,7 @@ body::before {
 // CONFIGURATION
 // ═══════════════════════════════════════════════════
 const CONFIG = {
-  API_BASE:    'https://tnt-v2.api.bonfires.ai',
+  API_BASE:    location.hostname === 'localhost' ? '/api' : 'https://tnt-v2.api.bonfires.ai',
   API_KEY:     '8n5l-sJnrHjywrTnJ3rJCjo1f1uLyTPYy_yLgq_bf-d',
   BONFIRE_ID:  '698b70002849d936f4259848',
   REFRESH_SEC: 60,
