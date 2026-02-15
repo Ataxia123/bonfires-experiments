@@ -27,5 +27,8 @@ RUN mkdir -p /root/.claude && echo '{"hasCompletedOnboarding": true}' > /root/.c
 # Expose port (Railway sets PORT env var)
 EXPOSE ${PORT:-9999}
 
+# Ensure Python output is unbuffered (visible in Railway logs)
+ENV PYTHONUNBUFFERED=1
+
 # Start the server
 CMD ["python3", "server.py"]
