@@ -1,20 +1,21 @@
-"""Project Forge — KG theme extraction + Claude project synthesis.
+"""Project Forge — KG theme extraction + LLM project synthesis via OpenRouter.
 
 Pipeline:
   1. extract_themes()                      — query Bonfires KG, aggregate material
-  2. synthesize_projects()                 — Claude generates project ideas (initial)
-  3. synthesize_projects_with_existing()   — Claude updates/adds projects (incremental)
-  4. generate_multi_mockup()               — Claude generates 1-3 HTML prototype files
+  2. synthesize_projects()                 — LLM generates project ideas (initial)
+  3. synthesize_projects_with_existing()   — LLM updates/adds projects (incremental)
+  4. generate_multi_mockup()               — LLM generates 1-3 HTML prototype files
 
-Uses the Claude Agent SDK (claude-agent-sdk) for all Claude interactions.
+Uses OpenRouter (openai-compatible API) for all LLM interactions.
 """
 
 import asyncio
 import json
 import os
 import urllib.request
-import urllib.error
 from pathlib import Path
+
+import openai
 
 # ---------------------------------------------------------------------------
 # Config
@@ -22,6 +23,16 @@ from pathlib import Path
 DELVE_API_KEY = os.environ.get("DELVE_API_KEY", "8n5l-sJnrHjywrTnJ3rJCjo1f1uLyTPYy_yLgq_bf-d")
 BONFIRE_ID = os.environ.get("BONFIRE_ID", "698b70002849d936f4259848")
 BASE_URL = os.environ.get("DELVE_BASE_URL", "https://tnt-v2.api.bonfires.ai")
+
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+if not OPENROUTER_API_KEY:
+    raise OSError("OPENROUTER_API_KEY environment variable is required")
+OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "anthropic/claude-sonnet-4-5")
+
+_llm_client = openai.AsyncOpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=OPENROUTER_API_KEY,
+)
 
 # ---------------------------------------------------------------------------
 # KG client
@@ -130,25 +141,20 @@ def extract_themes(bonfire_id: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Claude helper
+# LLM helper
 # ---------------------------------------------------------------------------
 
-async def _call_claude(prompt: str, max_turns: int = 3) -> str:
-    """Call Claude via the Claude Agent SDK."""
-    from claude_agent_sdk import query, ClaudeAgentOptions, ResultMessage
-
-    result = ""
-    async for message in query(
-        prompt=prompt,
-        options=ClaudeAgentOptions(max_turns=max_turns, allowed_tools=[]),
-    ):
-        if isinstance(message, ResultMessage) and message.result:
-            result = message.result
-    return result
+async def _call_llm(prompt: str) -> str:
+    """Call LLM via OpenRouter (OpenAI-compatible API)."""
+    response = await _llm_client.chat.completions.create(
+        model=OPENROUTER_MODEL,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return response.choices[0].message.content or ""
 
 
 def _parse_json_response(text: str) -> dict:
-    """Parse JSON from Claude's response, stripping markdown fences."""
+    """Parse JSON from LLM response, stripping markdown fences."""
     text = text.strip()
     if text.startswith("```"):
         text = text.split("\n", 1)[1] if "\n" in text else text[3:]
@@ -214,7 +220,7 @@ Be creative. Find non-obvious connections. The best ideas combine things nobody 
 
 Return ONLY valid JSON — an object with a "projects" array. Each project must have: name, tagline, description, themes (array), tech_stack (array), complexity ("weekend" or "month" or "quarter"), key_insight, first_step. No markdown fences, no explanation, just raw JSON."""
 
-    text = await _call_claude(prompt)
+    text = await _call_llm(prompt)
     return _parse_json_response(text)
 
 
@@ -229,7 +235,7 @@ async def synthesize_projects_with_existing(
 ) -> dict:
     """Update/add projects given new KG data and existing project list.
 
-    Claude sees what already exists and decides per-project:
+    The LLM sees what already exists and decides per-project:
       - "unchanged" — no meaningful update needed
       - "updated" — description/insight refined based on new KG material
       - "new" — genuinely novel idea that doesn't overlap existing ones
@@ -262,7 +268,7 @@ Your task — be CONSERVATIVE:
 
 Return ONLY valid JSON — an object with a "projects" array. Each project must have: status ("unchanged"|"updated"|"new"|"retired"), name, tagline, description, themes (array), tech_stack (array), complexity ("weekend"|"month"|"quarter"), key_insight, first_step. No markdown fences, just raw JSON."""
 
-    text = await _call_claude(prompt)
+    text = await _call_llm(prompt)
     return _parse_json_response(text)
 
 
@@ -306,7 +312,7 @@ Rules:
 Return ONLY valid JSON with this structure (no markdown fences):
 {{"files": [{{"name": "index.html", "label": "Home", "html": "<!DOCTYPE html>..."}}, {{"name": "dashboard.html", "label": "Dashboard", "html": "<!DOCTYPE html>..."}}]}}"""
 
-    text = await _call_claude(prompt, max_turns=5)
+    text = await _call_llm(prompt)
     result = _parse_json_response(text)
 
     files_written = []
@@ -343,13 +349,12 @@ Return ONLY valid JSON with this structure (no markdown fences):
     }
     (Path(output_dir) / "manifest.json").write_text(json.dumps(manifest, indent=2))
 
-    # If Claude didn't return parseable files, fall back to single-page
+    # If the LLM didn't return parseable files, fall back to single-page
     if not files_written:
         print("  [forge] Multi-file parse failed, falling back to single-page mockup")
-        html = await _call_claude(
+        html = await _call_llm(
             f"Generate a single self-contained HTML mockup for: {project['name']} — {project.get('tagline', '')}. "
-            f"{project.get('description', '')} Return ONLY the HTML, starting with <!DOCTYPE html>.",
-            max_turns=3,
+            f"{project.get('description', '')} Return ONLY the HTML, starting with <!DOCTYPE html>."
         )
         if "```html" in html:
             html = html.split("```html", 1)[1].rsplit("```", 1)[0]
