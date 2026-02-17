@@ -2,15 +2,16 @@
 """Project Forge server — serves pre-generated gallery and manages background worker.
 
 Endpoints:
-  GET  /                                     → index.html
-  GET  /healthz                              → health check
-  GET  /forge/projects                       → all projects (current versions)
-  GET  /forge/projects/{id}                  → single project with all versions
-  GET  /forge/status                         → worker status + poll log
-  GET  /forge/mockups/{id}/v{ver}/{file}     → serve mockup HTML file
-  GET  /forge/mockups/{id}/latest/{file}     → alias for current version
-  POST /forge/trigger                        → force immediate poll cycle
-  POST /api/*                                → proxy to Bonfires API (CORS bypass)
+  GET  /                                              → index.html
+  GET  /healthz                                       → health check
+  GET  /forge/projects?bonfire_id=X                   → all projects (current versions)
+  GET  /forge/projects/{id}?bonfire_id=X              → single project with all versions
+  GET  /forge/status?bonfire_id=X                     → worker status + poll log
+  GET  /forge/mockups/{bf}/{id}/v{ver}/{file}         → serve mockup HTML file
+  GET  /forge/mockups/{bf}/{id}/latest/{file}         → alias for current version
+  POST /forge/trigger?bonfire_id=X                    → force immediate poll cycle
+  GET  /api/*                                         → proxy to Bonfires API (CORS bypass)
+  POST /api/*                                         → proxy to Bonfires API (CORS bypass)
 
 Usage:
   python3 server.py
@@ -18,8 +19,10 @@ Usage:
 
 import http.server
 import json
+import logging
 import os
 import socketserver
+import urllib.parse
 import urllib.request
 import urllib.error
 from pathlib import Path
@@ -30,8 +33,60 @@ PORT = int(os.environ.get("PORT", 9999))
 API_BASE = os.environ.get("DELVE_BASE_URL", "https://tnt-v2.api.bonfires.ai")
 FORGE_DIR = Path(__file__).parent
 
+log = logging.getLogger("forge.server")
+
 # Shared worker instance
 worker = ForgeWorker()
+
+# In-memory current bonfire tracker
+current_bonfire_id: str | None = None
+
+
+def _update_current_bonfire(bonfire_id: str):
+    """Update the global current bonfire and notify the worker."""
+    global current_bonfire_id
+    current_bonfire_id = bonfire_id
+    worker.set_current_bonfire(bonfire_id)
+
+
+def _validate_public_bonfire(bonfire_id: str) -> bool:
+    """Check if bonfire_id is a public bonfire via the Bonfires API.
+
+    Returns True if valid, or True on API failure (best-effort mode).
+    """
+    try:
+        req = urllib.request.Request(
+            f"{API_BASE}/bonfires",
+            headers={"Content-Type": "application/json"},
+            method="GET",
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+        bonfires = data if isinstance(data, list) else data.get("bonfires", [])
+        for bf in bonfires:
+            bf_id = bf.get("id") or bf.get("_id") or bf.get("bonfire_id", "")
+            if str(bf_id) == bonfire_id:
+                return True
+        return False
+    except Exception as exc:
+        log.warning("Could not validate bonfire %s: %s — allowing (best-effort)", bonfire_id, exc)
+        return True
+
+
+def _restore_current_bonfire():
+    """Restore current_bonfire_id from the most recently modified state file."""
+    global current_bonfire_id
+    best_mtime = 0.0
+    best_bid: str | None = None
+    for f in FORGE_DIR.glob("forge_state_*.json"):
+        bid = f.stem[len("forge_state_"):]
+        if bid and f.stat().st_mtime > best_mtime:
+            best_mtime = f.stat().st_mtime
+            best_bid = bid
+    if best_bid:
+        current_bonfire_id = best_bid
+        worker.set_current_bonfire(best_bid)
+        print(f"  [server] Restored current_bonfire_id={best_bid}")
 
 
 class ForgeHandler(http.server.SimpleHTTPRequestHandler):
@@ -50,29 +105,52 @@ class ForgeHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Max-Age", "600")
         self.end_headers()
 
+    def _parse_bonfire_id(self) -> str | None:
+        """Extract bonfire_id from query string."""
+        parsed = urllib.parse.urlparse(self.path)
+        qs = urllib.parse.parse_qs(parsed.query)
+        values = qs.get("bonfire_id", [])
+        return values[0] if values else None
+
+    def _strip_path(self) -> str:
+        """Return path without query string."""
+        return urllib.parse.urlparse(self.path).path
+
     # -- Routing --
     def do_GET(self):
-        if self.path == "/":
-            self.path = "/index.html"
+        path = self._strip_path()
 
-        if self.path == "/healthz":
+        if path == "/":
+            self.path = "/index.html"
+            path = "/index.html"
+
+        if path == "/healthz":
             self._json_response(200, {"status": "ok"})
-        elif self.path == "/forge/projects":
+        elif path == "/forge/projects":
             self._handle_projects_list()
-        elif self.path.startswith("/forge/projects/"):
+        elif path.startswith("/forge/projects/"):
             self._handle_project_detail()
-        elif self.path.startswith("/forge/mockups/"):
+        elif path.startswith("/forge/mockups/"):
             self._serve_mockup()
-        elif self.path == "/forge/status":
-            self._json_response(200, worker.get_status())
+        elif path == "/forge/status":
+            bonfire_id = self._parse_bonfire_id()
+            if bonfire_id:
+                if not _validate_public_bonfire(bonfire_id):
+                    self._json_response(403, {"error": f"Bonfire '{bonfire_id}' is not public"})
+                    return
+                _update_current_bonfire(bonfire_id)
+            self._json_response(200, worker.get_status(bonfire_id))
+        elif path.startswith("/api/"):
+            self._proxy_api("GET")
         else:
             super().do_GET()
 
     def do_POST(self):
-        if self.path == "/forge/trigger":
-            worker.trigger_now()
-            self._json_response(202, {"status": "triggered"})
-        elif self.path.startswith("/api/"):
+        path = self._strip_path()
+
+        if path == "/forge/trigger":
+            self._handle_trigger()
+        elif path.startswith("/api/"):
             self._proxy_api("POST")
         else:
             self.send_error(404)
@@ -90,7 +168,14 @@ class ForgeHandler(http.server.SimpleHTTPRequestHandler):
     # -- Gallery endpoints --
     def _handle_projects_list(self):
         """Return all projects with their current (latest) version data."""
-        state = worker.load_state()
+        bonfire_id = self._parse_bonfire_id()
+        if bonfire_id:
+            if not _validate_public_bonfire(bonfire_id):
+                self._json_response(403, {"error": f"Bonfire '{bonfire_id}' is not public"})
+                return
+            _update_current_bonfire(bonfire_id)
+
+        state = worker.load_state(bonfire_id)
         projects_out = []
         for p in state.get("projects", []):
             if p.get("retired_at"):
@@ -117,47 +202,70 @@ class ForgeHandler(http.server.SimpleHTTPRequestHandler):
 
     def _handle_project_detail(self):
         """Return a single project with all its versions."""
-        # Parse: /forge/projects/{id}
-        parts = self.path.rstrip("/").split("/")
+        bonfire_id = self._parse_bonfire_id()
+        if bonfire_id:
+            if not _validate_public_bonfire(bonfire_id):
+                self._json_response(403, {"error": f"Bonfire '{bonfire_id}' is not public"})
+                return
+            _update_current_bonfire(bonfire_id)
+
+        path = self._strip_path()
+        parts = path.rstrip("/").split("/")
         if len(parts) < 4:
             self.send_error(404)
             return
         project_id = parts[3]
 
-        state = worker.load_state()
+        state = worker.load_state(bonfire_id)
         for p in state.get("projects", []):
             if p["id"] == project_id:
                 self._json_response(200, p)
                 return
         self._json_response(404, {"error": f"Project '{project_id}' not found"})
 
+    def _handle_trigger(self):
+        """Force an immediate poll cycle, optionally for a specific bonfire."""
+        bonfire_id = self._parse_bonfire_id()
+        if bonfire_id:
+            if not _validate_public_bonfire(bonfire_id):
+                self._json_response(403, {"error": f"Bonfire '{bonfire_id}' is not public"})
+                return
+            _update_current_bonfire(bonfire_id)
+            worker.trigger_now(bonfire_id)
+        elif current_bonfire_id:
+            worker.trigger_now(current_bonfire_id)
+        else:
+            self._json_response(400, {"error": "No bonfire_id provided and no current bonfire set"})
+            return
+        self._json_response(202, {"status": "triggered", "bonfire_id": bonfire_id or current_bonfire_id})
+
     def _serve_mockup(self):
         """Serve mockup HTML files.
 
         Paths:
-          /forge/mockups/{project_id}/v{version}/{filename}
-          /forge/mockups/{project_id}/latest/{filename}
+          /forge/mockups/{bonfire_id}/{project_id}/v{version}/{filename}
+          /forge/mockups/{bonfire_id}/{project_id}/latest/{filename}
         """
-        # Parse path: /forge/mockups/project-id/v1/index.html
-        parts = self.path.split("/")
-        # parts = ['', 'forge', 'mockups', 'project-id', 'v1', 'index.html']
-        if len(parts) < 6:
+        path = self._strip_path()
+        parts = path.split("/")
+        # parts = ['', 'forge', 'mockups', 'bonfire-id', 'project-id', 'v1', 'index.html']
+        if len(parts) < 7:
             self.send_error(404)
             return
 
-        project_id = parts[3]
-        version_part = parts[4]
-        filename = "/".join(parts[5:])  # handle nested paths
+        bonfire_id = parts[3]
+        project_id = parts[4]
+        version_part = parts[5]
+        filename = "/".join(parts[6:])
 
-        # Resolve "latest" to actual version number
         if version_part == "latest":
-            state = worker.load_state()
+            state = worker.load_state(bonfire_id)
             for p in state.get("projects", []):
                 if p["id"] == project_id:
                     version_part = f"v{p['current_version']}"
                     break
 
-        mockup_path = FORGE_DIR / "mockups" / project_id / version_part / filename
+        mockup_path = FORGE_DIR / "mockups" / bonfire_id / project_id / version_part / filename
 
         if mockup_path.exists() and mockup_path.is_file():
             body = mockup_path.read_bytes()
@@ -174,8 +282,9 @@ class ForgeHandler(http.server.SimpleHTTPRequestHandler):
             self.send_error(404)
 
     # -- API Proxy --
-    def _proxy_api(self, method):
-        target = API_BASE + self.path[4:]
+    def _proxy_api(self, method: str):
+        api_path = urllib.parse.urlparse(self.path).path
+        target = API_BASE + api_path[4:]
         content_length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(content_length) if content_length else None
         headers = {}
@@ -214,20 +323,24 @@ class ForgeHandler(http.server.SimpleHTTPRequestHandler):
 if __name__ == "__main__":
     socketserver.TCPServer.allow_reuse_address = True
 
+    # Restore current bonfire from most recent state file
+    _restore_current_bonfire()
+
     # Start the background worker
     worker.start()
 
     with socketserver.TCPServer(("0.0.0.0", PORT), ForgeHandler) as httpd:
+        bonfire_display = current_bonfire_id or "(none — waiting for selection)"
         print(f"""
   ╔══════════════════════════════════════════╗
   ║         PROJECT FORGE  v2               ║
-  ║         EthBoulder 2026                 ║
   ╚══════════════════════════════════════════╝
 
   Server:     http://localhost:{PORT}
-  Gallery:    /forge/projects
-  Status:     /forge/status
-  Trigger:    POST /forge/trigger
+  Bonfire:    {bonfire_display}
+  Gallery:    /forge/projects?bonfire_id=...
+  Status:     /forge/status?bonfire_id=...
+  Trigger:    POST /forge/trigger?bonfire_id=...
   API proxy:  /api/* → {API_BASE}
 
   Worker polling every {worker.lock and 'started' or 'idle'}

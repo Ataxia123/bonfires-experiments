@@ -27,11 +27,11 @@ BASE_URL = os.environ.get("DELVE_BASE_URL", "https://tnt-v2.api.bonfires.ai")
 # KG client
 # ---------------------------------------------------------------------------
 
-def delve(query: str, num_results: int = 20) -> dict:
+def delve(query: str, bonfire_id: str, num_results: int = 20) -> dict:
     """Synchronous /delve call."""
     payload = json.dumps({
         "query": query,
-        "bonfire_id": BONFIRE_ID,
+        "bonfire_id": bonfire_id,
         "num_results": num_results,
     }).encode()
     req = urllib.request.Request(
@@ -61,7 +61,7 @@ THEME_QUERIES = [
 ]
 
 
-def extract_themes() -> dict:
+def extract_themes(bonfire_id: str) -> dict:
     """Query the KG across multiple angles and return raw material for synthesis."""
     all_episodes = {}
     all_entities = {}
@@ -70,7 +70,7 @@ def extract_themes() -> dict:
 
     for q in THEME_QUERIES:
         try:
-            data = delve(q, num_results=20)
+            data = delve(q, bonfire_id=bonfire_id, num_results=20)
         except Exception as e:
             print(f"  [warn] query failed: {q[:40]}... — {e}")
             continue
@@ -379,7 +379,7 @@ async def _main():
 
     if cmd == "themes":
         print("Extracting themes from knowledge graph...")
-        data = extract_themes()
+        data = extract_themes(bonfire_id=BONFIRE_ID)
         print(f"\n  {data['episode_count']} episodes, {data['entity_count']} entities, {data['edge_count']} edges")
         for ep in data["episodes"][:10]:
             print(f"    - {ep['name']}")
@@ -392,7 +392,7 @@ async def _main():
             with open("themes_cache.json") as f:
                 data = json.load(f)
         except FileNotFoundError:
-            data = extract_themes()
+            data = extract_themes(bonfire_id=BONFIRE_ID)
         result = await synthesize_projects(data)
         print(json.dumps(result, indent=2))
 
