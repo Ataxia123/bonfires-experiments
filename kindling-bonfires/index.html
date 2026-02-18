@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kindling Bonfires — G2G Agreement</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0d0d0d;color:#e8e8e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:48px 16px}
+a{color:inherit;text-decoration:none}
+
+.logo{font-size:13px;letter-spacing:.12em;color:#666;text-transform:uppercase;margin-bottom:40px;user-select:none}
+
+/* ---------- Cards & layout ---------- */
+.card{background:#161616;border:1px solid #2a2a2a;border-radius:12px;padding:36px;width:100%;max-width:520px}
+.page{width:100%;max-width:680px}
+h1{font-size:22px;font-weight:600;margin-bottom:6px}
+h2{font-size:20px;font-weight:600;margin-bottom:20px}
+.subtitle{font-size:13px;color:#888;margin-bottom:32px}
+
+/* ---------- Fields ---------- */
+.field{margin-bottom:20px}
+.field label{display:block;font-size:12px;color:#aaa;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.field input{width:100%;background:#0d0d0d;border:1px solid #333;border-radius:8px;padding:10px 14px;color:#e8e8e8;font-size:14px;font-family:monospace;outline:none;transition:border-color .2s}
+.field input:focus{border-color:#e8630a}
+
+/* ---------- Badges ---------- */
+.role-badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle}
+.donor-badge{background:#1a2a1a;color:#6fcf6f;border:1px solid #2d4a2d}
+.applicant-badge{background:#1a1a2a;color:#6f9fcf;border:1px solid #2d2d4a}
+.system-badge{background:#2a2a1a;color:#cfcf6f;border:1px solid #4a4a2d}
+
+/* ---------- Buttons ---------- */
+.btn-primary{width:100%;padding:12px;background:#e8630a;border:none;border-radius:8px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;transition:opacity .2s}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed}
+.btn-primary:not(:disabled):hover{opacity:.88}
+.btn-row{display:flex;gap:12px;margin:28px 0}
+.btn-row .btn-primary{flex:1;margin-top:0}
+.btn-secondary{flex:1;padding:11px;background:transparent;border:1px solid #333;border-radius:8px;color:#aaa;font-size:14px;cursor:pointer;transition:border-color .2s}
+.btn-secondary:hover{border-color:#666}
+
+/* ---------- Divider ---------- */
+.divider{border:none;border-top:1px solid #222;margin:28px 0 20px}
+
+/* ---------- History strip ---------- */
+.history-label{font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+.run-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1e1e1e;cursor:pointer;transition:background .15s}
+.run-row:last-child{border-bottom:none}
+.run-row:hover{background:#1a1a1a}
+.run-row.active .run-preview{color:#6fcf6f}
+.run-time{font-size:11px;color:#555;min-width:90px;flex-shrink:0}
+.run-preview{font-size:12px;color:#aaa;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{font-size:10px;padding:2px 7px;border-radius:4px;flex-shrink:0}
+.badge-done{background:#1a2a1a;color:#6fcf6f}
+.badge-failed{background:#2a1a1a;color:#cf6f6f}
+.badge-running{background:#1a1a2a;color:#6f9fcf}
+.badge-current{background:#1a2a1a;color:#6fcf6f}
+
+/* ---------- Loading view ---------- */
+.spinner-wrap{display:flex;flex-direction:column;align-items:center;gap:20px;padding-top:80px}
+.flame{font-size:52px;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.92)}}
+.loading-label{font-size:18px;font-weight:500}
+.pair-label{font-size:12px;color:#555;font-family:monospace;margin-top:4px}
+.cancel-link{margin-top:32px;font-size:12px;color:#444;cursor:pointer;text-decoration:underline;transition:color .15s}
+.cancel-link:hover{color:#888}
+.error-box{margin-top:20px;background:#2a1a1a;border:1px solid #4a2d2d;border-radius:8px;padding:16px;text-align:center}
+.error-box p{font-size:13px;color:#cf6f6f;margin-bottom:12px}
+.error-box button{padding:8px 20px;background:#e8630a;border:none;border-radius:6px;color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+
+/* ---------- Results view ---------- */
+.back-link{font-size:12px;color:#555;cursor:pointer;margin-bottom:24px;display:inline-block;transition:color .15s}
+.back-link:hover{color:#aaa}
+.pair-label-results{font-size:11px;color:#555;font-family:monospace;margin-bottom:8px}
+
+.agreement-card{background:#111a11;border:1px solid #2d4a2d;border-radius:10px;padding:24px;margin-bottom:32px}
+.agreement-card .tag{font-size:10px;color:#6fcf6f;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.agreement-card p{font-size:14px;line-height:1.7;color:#d4e8d4;white-space:pre-wrap}
+
+.section-title{font-size:13px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}
+
+.step-card{background:#161616;border:1px solid #2a2a2a;border-radius:10px;padding:20px;margin-bottom:12px}
+.step-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.step-num{font-size:11px;color:#555}
+.step-name{font-size:14px;font-weight:500}
+.step-header .role-badge{margin-left:auto}
+
+.entity-group{margin-bottom:10px}
+.entity-group-label{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11px;background:#1e1e1e;border:1px solid #333;border-radius:4px;padding:3px 8px;color:#aaa;font-family:monospace;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.proposal-text{font-size:13px;color:#aaa;line-height:1.6;background:#111;border-radius:6px;padding:12px;margin-top:10px;white-space:pre-wrap}
+
+.publish-detail{margin-top:6px;font-size:12px;color:#888;font-family:monospace;line-height:1.6}
+.publish-detail .pub-ok{color:#6fcf6f}
+.publish-detail .pub-err{color:#cf6f6f}
+
+.history-section{border-top:1px solid #1e1e1e;padding-top:24px}
+.no-history{font-size:12px;color:#444;font-style:italic}
+
+/* ---------- View management ---------- */
+.view{display:none}
+.view.active{display:block}
+</style>
+</head>
+<body>
+
+<div class="logo">🔥 Bonfires Experiments</div>
+
+<!-- ======== SETUP VIEW ======== -->
+<div id="view-setup" class="view active">
+  <div class="card">
+    <h1>Kindle an Agreement</h1>
+    <p class="subtitle">Two bonfires. One formal agreement. Fully LLM-driven.</p>
+
+    <div class="field">
+      <label>Donor Bonfire ID <span class="role-badge donor-badge">reads applicant</span></label>
+      <input type="text" id="input-donor" placeholder="e.g. bf_a1b2c3d4" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Applicant Bonfire ID <span class="role-badge applicant-badge">proposes deal</span></label>
+      <input type="text" id="input-applicant" placeholder="e.g. bf_e5f6g7h8" autocomplete="off">
+    </div>
+    <button class="btn-primary" id="btn-kindle" disabled>Kindle Agreement →</button>
+
+    <div id="setup-history" style="display:none">
+      <hr class="divider">
+      <div class="history-label">Recent runs</div>
+      <div id="setup-history-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== LOADING VIEW ======== -->
+<div id="view-loading" class="view">
+  <div class="spinner-wrap">
+    <div class="flame">🔥</div>
+    <div style="text-align:center">
+      <div class="loading-label">Kindling agreement…</div>
+      <div class="pair-label" id="loading-pair"></div>
+    </div>
+    <div class="cancel-link" id="btn-cancel">Cancel</div>
+    <div id="loading-error" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ======== RESULTS VIEW ======== -->
+<div id="view-results" class="view">
+  <div class="page">
+    <div class="back-link" id="btn-back">← New Agreement</div>
+    <div class="pair-label-results" id="results-pair"></div>
+    <h2>Formal Agreement</h2>
+
+    <div class="agreement-card">
+      <div class="tag">✦ Agreement reached</div>
+      <p id="results-agreement"></p>
+    </div>
+
+    <div class="section-title">How this agreement was reached</div>
+    <div id="results-steps"></div>
+
+    <div class="btn-row">
+      <button class="btn-primary" id="btn-run-again">Run Again ↺</button>
+      <button class="btn-secondary" id="btn-new-agreement">New Agreement</button>
+    </div>
+
+    <div class="history-section">
+      <div class="section-title">Past runs for this pair</div>
+      <div id="results-history"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var donorInput = document.getElementById("input-donor");
+  var applicantInput = document.getElementById("input-applicant");
+  var kindleBtn = document.getElementById("btn-kindle");
+  var cancelBtn = document.getElementById("btn-cancel");
+  var backBtn = document.getElementById("btn-back");
+  var runAgainBtn = document.getElementById("btn-run-again");
+  var newAgreementBtn = document.getElementById("btn-new-agreement");
+
+  var viewSetup = document.getElementById("view-setup");
+  var viewLoading = document.getElementById("view-loading");
+  var viewResults = document.getElementById("view-results");
+
+  var currentRunId = null;
+  var currentDonorId = "";
+  var currentApplicantId = "";
+  var pollTimer = null;
+
+  // ---- View transitions ----
+
+  function showView(view) {
+    viewSetup.classList.remove("active");
+    viewLoading.classList.remove("active");
+    viewResults.classList.remove("active");
+    view.classList.add("active");
+  }
+
+  // ---- Input validation ----
+
+  function updateKindleBtn() {
+    kindleBtn.disabled = !(donorInput.value.trim() && applicantInput.value.trim());
+  }
+  donorInput.addEventListener("input", updateKindleBtn);
+  applicantInput.addEventListener("input", updateKindleBtn);
+
+  // ---- Time formatting ----
+
+  function timeAgo(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    var now = Date.now();
+    var diff = Math.max(0, now - d.getTime());
+    var sec = Math.floor(diff / 1000);
+    if (sec < 60) return "just now";
+    var min = Math.floor(sec / 60);
+    if (min < 60) return min + " min ago";
+    var hr = Math.floor(min / 60);
+    if (hr < 24) return hr + " hr ago";
+    var days = Math.floor(hr / 24);
+    return days + " day" + (days > 1 ? "s" : "") + " ago";
+  }
+
+  // ---- API helpers ----
+
+  function api(method, path, body) {
+    var opts = { method: method, headers: { "Content-Type": "application/json" } };
+    if (body) opts.body = JSON.stringify(body);
+    return fetch(path, opts).then(function (r) { return r.json(); });
+  }
+
+  // ---- History rendering ----
+
+  function renderHistoryRow(run, isActive) {
+    var row = document.createElement("div");
+    row.className = "run-row" + (isActive ? " active" : "");
+    var status = run.status || "";
+    var badgeClass = status === "completed" ? "badge-done"
+      : status === "failed" ? "badge-failed"
+      : status === "running" ? "badge-running" : "badge-done";
+    var badgeText = isActive ? "current" : status === "completed" ? "done" : status;
+    var preview = run.agreement_preview || run.formal_agreement || "—";
+    if (preview.length > 100) preview = preview.substring(0, 100) + "…";
+
+    row.innerHTML =
+      '<span class="run-time">' + timeAgo(run.started_at) + "</span>" +
+      '<span class="run-preview">' + escapeHtml(preview) + "</span>" +
+      '<span class="badge ' + badgeClass + '">' + badgeText + "</span>";
+
+    row.addEventListener("click", function () { loadRunResults(run.run_id); });
+    return row;
+  }
+
+  function loadSetupHistory() {
+    api("GET", "/kindle/history/recent?limit=5").then(function (data) {
+      var runs = data.runs || [];
+      var wrap = document.getElementById("setup-history");
+      var list = document.getElementById("setup-history-list");
+      list.innerHTML = "";
+      if (runs.length === 0) {
+        wrap.style.display = "none";
+        return;
+      }
+      wrap.style.display = "block";
+      runs.forEach(function (r) { list.appendChild(renderHistoryRow(r, false)); });
+    }).catch(function () {
+      document.getElementById("setup-history").style.display = "none";
+    });
+  }
+
+  function loadPairHistory(donorId, applicantId, currentId) {
+    api("GET", "/kindle/history?donor_id=" + encodeURIComponent(donorId) + "&applicant_id=" + encodeURIComponent(applicantId))
+      .then(function (data) {
+        var runs = data.runs || [];
+        var el = document.getElementById("results-history");
+        el.innerHTML = "";
+        if (runs.length === 0) {
+          el.innerHTML = '<div class="no-history">No previous runs</div>';
+          return;
+        }
+        runs.forEach(function (r) {
+          el.appendChild(renderHistoryRow(r, r.run_id === currentId));
+        });
+      })
+      .catch(function () {
+        document.getElementById("results-history").innerHTML = '<div class="no-history">Could not load history</div>';
+      });
+  }
+
+  // ---- HTML escaping ----
+
+  function escapeHtml(str) {
+    var div = document.createElement("div");
+    div.appendChild(document.createTextNode(str || ""));
+    return div.innerHTML;
+  }
+
+  // ---- Start pipeline ----
+
+  function startRun(donorId, applicantId) {
+    currentDonorId = donorId;
+    currentApplicantId = applicantId;
+
+    document.getElementById("loading-pair").textContent = donorId + " ↔ " + applicantId;
+    document.getElementById("loading-error").style.display = "none";
+    showView(viewLoading);
+
+    api("POST", "/kindle/run", { donor_id: donorId, applicant_id: applicantId })
+      .then(function (data) {
+        if (data.error) {
+          showLoadingError(data.error);
+          return;
+        }
+        currentRunId = data.run_id;
+        startPolling();
+      })
+      .catch(function (err) { showLoadingError(String(err)); });
+  }
+
+  // ---- Polling ----
+
+  function startPolling() {
+    stopPolling();
+    poll();
+  }
+
+  function stopPolling() {
+    if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+  }
+
+  function poll() {
+    if (!currentRunId) return;
+    api("GET", "/kindle/run/" + currentRunId).then(function (run) {
+      if (run.status === "completed") {
+        stopPolling();
+        renderResults(run);
+        return;
+      }
+      if (run.status === "failed") {
+        stopPolling();
+        var errMsg = (run.errors && run.errors.length > 0) ? run.errors.join("; ") : "Pipeline failed";
+        showLoadingError(errMsg);
+        return;
+      }
+      pollTimer = setTimeout(poll, 3000);
+    }).catch(function () {
+      pollTimer = setTimeout(poll, 3000);
+    });
+  }
+
+  function showLoadingError(msg) {
+    var box = document.getElementById("loading-error");
+    box.style.display = "block";
+    box.innerHTML =
+      '<div class="error-box">' +
+      "<p>" + escapeHtml(msg) + "</p>" +
+      '<button id="btn-try-again">Try Again</button>' +
+      "</div>";
+    document.getElementById("btn-try-again").addEventListener("click", function () {
+      startRun(currentDonorId, currentApplicantId);
+    });
+  }
+
+  // ---- Load existing run results ----
+
+  function loadRunResults(runId) {
+    api("GET", "/kindle/run/" + runId).then(function (run) {
+      if (run.error) return;
+      currentRunId = run.run_id;
+      currentDonorId = run.donor_id || "";
+      currentApplicantId = run.applicant_id || "";
+      renderResults(run);
+    });
+  }
+
+  // ---- Render results ----
+
+  function renderResults(run) {
+    showView(viewResults);
+
+    var donorId = run.donor_id || "";
+    var applicantId = run.applicant_id || "";
+    document.getElementById("results-pair").textContent =
+      donorId + " (donor) ↔ " + applicantId + " (applicant)";
+    document.getElementById("results-agreement").textContent = run.formal_agreement || "(no agreement)";
+
+    var stepsEl = document.getElementById("results-steps");
+    stepsEl.innerHTML = "";
+
+    var steps = run.steps || [];
+    var STEP_META = [
+      { num: 1, name: "Donor reads Applicant's bonfire", role: "donor" },
+      { num: 2, name: "Applicant reads Donor's bonfire", role: "applicant" },
+      { num: 3, name: "Applicant proposes deal", role: "applicant" },
+      { num: 4, name: "Donor formalises agreement", role: "donor" },
+      { num: 5, name: "Publish agreement to stacks", role: "system" }
+    ];
+
+    STEP_META.forEach(function (meta) {
+      var stepData = null;
+      for (var i = 0; i < steps.length; i++) {
+        if (steps[i].step === meta.num) { stepData = steps[i]; break; }
+      }
+      stepsEl.appendChild(buildStepCard(meta, stepData));
+    });
+
+    loadPairHistory(donorId, applicantId, run.run_id);
+  }
+
+  function buildStepCard(meta, data) {
+    var card = document.createElement("div");
+    card.className = "step-card";
+
+    var badgeClass = meta.role === "donor" ? "donor-badge"
+      : meta.role === "applicant" ? "applicant-badge" : "system-badge";
+    var roleLabel = meta.role.charAt(0).toUpperCase() + meta.role.slice(1);
+
+    var html =
+      '<div class="step-header">' +
+      '<span class="step-num">STEP ' + meta.num + "</span>" +
+      '<span class="step-name">' + escapeHtml(meta.name) + "</span>" +
+      '<span class="role-badge ' + badgeClass + '">' + roleLabel + "</span>" +
+      "</div>";
+
+    if (!data) {
+      html += '<div style="font-size:12px;color:#555;font-style:italic">No data for this step</div>';
+      card.innerHTML = html;
+      return card;
+    }
+
+    if (meta.num === 1 || meta.num === 2) {
+      html += renderChipGroups(data);
+    } else if (meta.num === 3) {
+      html += '<div class="proposal-text">' + escapeHtml(data.llm_output || "") + "</div>";
+    } else if (meta.num === 4) {
+      html += renderStep4(data);
+    } else if (meta.num === 5) {
+      html += renderStep5(data);
+    }
+
+    card.innerHTML = html;
+    return card;
+  }
+
+  function renderChipGroups(data) {
+    var html = "";
+    var groups = [
+      { key: "entities", label: "Entities", field: "name" },
+      { key: "episodes", label: "Episodes", field: "name" },
+      { key: "edges", label: "Edges", field: "name" }
+    ];
+    groups.forEach(function (g) {
+      var items = data[g.key] || [];
+      if (items.length === 0) return;
+      html += '<div class="entity-group">';
+      html += '<div class="entity-group-label">' + g.label + "</div>";
+      html += '<div class="chip-row">';
+      items.forEach(function (item) {
+        var text = item[g.field] || item.content_preview || JSON.stringify(item);
+        if (g.key === "edges" && item.source_uuid && item.target_uuid) {
+          text = (item.name || "relates") + " (" + item.source_uuid.substring(0, 8) + " → " + item.target_uuid.substring(0, 8) + ")";
+        }
+        html += '<span class="chip" title="' + escapeHtml(text) + '">' + escapeHtml(text) + "</span>";
+      });
+      html += "</div></div>";
+    });
+    return html;
+  }
+
+  function renderStep4(data) {
+    var html = "";
+    var entities = data.entities || [];
+    var episodes = data.episodes || [];
+    if (entities.length > 0) {
+      html += '<div class="entity-group">';
+      html += '<div class="entity-group-label">Entities used</div>';
+      html += '<div class="chip-row">';
+      entities.forEach(function (e) {
+        html += '<span class="chip">' + escapeHtml(e.name || "") + "</span>";
+      });
+      html += "</div></div>";
+    }
+    if (episodes.length > 0) {
+      html += '<div class="entity-group">';
+      html += '<div class="entity-group-label">Episodes used</div>';
+      html += '<div class="chip-row">';
+      episodes.forEach(function (e) {
+        html += '<span class="chip">' + escapeHtml(e.name || "") + "</span>";
+      });
+      html += "</div></div>";
+    }
+    if (data.llm_output) {
+      html += '<div class="proposal-text">' + escapeHtml(data.llm_output) + "</div>";
+    }
+    return html;
+  }
+
+  function renderStep5(data) {
+    var sp = data.stack_publish || {};
+    var html = '<div class="publish-detail">';
+
+    if (sp.status === "ok") {
+      html += '<div class="pub-ok">✓ Published to both stacks</div>';
+    } else if (sp.status === "partial") {
+      html += '<div class="pub-ok">⚠ Partially published</div>';
+    } else {
+      html += '<div class="pub-err">✗ Publishing failed</div>';
+    }
+
+    if (sp.donor_agent_id) {
+      html += "<div>Donor agent: " + escapeHtml(sp.donor_agent_id) + "</div>";
+    }
+    if (sp.applicant_agent_id) {
+      html += "<div>Applicant agent: " + escapeHtml(sp.applicant_agent_id) + "</div>";
+    }
+    if (sp.donor_message_ids && sp.donor_message_ids.length > 0) {
+      html += "<div>Donor message IDs: " + sp.donor_message_ids.map(escapeHtml).join(", ") + "</div>";
+    }
+    if (sp.applicant_message_ids && sp.applicant_message_ids.length > 0) {
+      html += "<div>Applicant message IDs: " + sp.applicant_message_ids.map(escapeHtml).join(", ") + "</div>";
+    }
+    if (sp.error) {
+      html += '<div class="pub-err">Error: ' + escapeHtml(sp.error) + "</div>";
+    }
+
+    html += "</div>";
+    return html;
+  }
+
+  // ---- Event handlers ----
+
+  kindleBtn.addEventListener("click", function () {
+    var d = donorInput.value.trim();
+    var a = applicantInput.value.trim();
+    if (!d || !a) return;
+    startRun(d, a);
+  });
+
+  cancelBtn.addEventListener("click", function () {
+    stopPolling();
+    showView(viewSetup);
+    loadSetupHistory();
+  });
+
+  backBtn.addEventListener("click", function () {
+    donorInput.value = "";
+    applicantInput.value = "";
+    updateKindleBtn();
+    showView(viewSetup);
+    loadSetupHistory();
+  });
+
+  newAgreementBtn.addEventListener("click", function () {
+    donorInput.value = "";
+    applicantInput.value = "";
+    updateKindleBtn();
+    showView(viewSetup);
+    loadSetupHistory();
+  });
+
+  runAgainBtn.addEventListener("click", function () {
+    startRun(currentDonorId, currentApplicantId);
+  });
+
+  // ---- Init ----
+
+  loadSetupHistory();
+})();
+</script>
+</body>
+</html>
