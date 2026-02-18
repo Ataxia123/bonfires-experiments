@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Project Forge — EthBoulder 2026</title>
+<title>Project Forge</title>
 <style>
   :root {
     --bg: #0d0a07;
@@ -50,10 +50,57 @@
     background: linear-gradient(135deg, var(--amber), var(--ember));
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text; cursor: pointer;
+    flex-shrink: 0;
   }
+
+  /* ── Bonfire selector ── */
+  .bonfire-selector {
+    position: relative; flex-shrink: 0;
+  }
+  .bonfire-selector select {
+    appearance: none;
+    padding: 6px 32px 6px 12px;
+    background: rgba(212, 149, 43, 0.1);
+    border: 1px solid rgba(212, 149, 43, 0.3);
+    border-radius: 4px;
+    color: var(--cream);
+    font-size: 13px;
+    font-family: var(--font);
+    cursor: pointer;
+    min-width: 180px;
+    transition: border-color 0.2s, background 0.2s, opacity 0.2s;
+  }
+  .bonfire-selector select:hover:not(:disabled) {
+    border-color: rgba(212, 149, 43, 0.5);
+    background: rgba(212, 149, 43, 0.15);
+  }
+  .bonfire-selector select:focus {
+    outline: none;
+    border-color: var(--amber);
+  }
+  .bonfire-selector select:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .bonfire-selector select.error-state {
+    border-color: rgba(231, 76, 60, 0.5);
+    background: rgba(231, 76, 60, 0.08);
+  }
+  .bonfire-selector::after {
+    content: '\25BC';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: var(--cream-dim);
+    pointer-events: none;
+  }
+
   .header-status {
     display: flex; align-items: center; gap: 8px;
     margin-left: auto; font-size: 12px; color: var(--cream-dim);
+    flex-shrink: 0;
   }
   .status-dot {
     width: 8px; height: 8px; border-radius: 50%;
@@ -67,12 +114,124 @@
   .header-back {
     background: none; border: 1px solid rgba(212, 149, 43, 0.3);
     color: var(--cream-dim); padding: 4px 12px; border-radius: 4px;
-    cursor: pointer; font-size: 12px;
+    cursor: pointer; font-size: 12px; flex-shrink: 0;
   }
   .header-back:hover { color: var(--cream); border-color: var(--amber); }
 
   /* ── Main content ── */
   .content { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+  /* ── Welcome screen ── */
+  .welcome-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    padding: 40px 24px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .welcome-screen h1 {
+    font-size: 32px;
+    margin-bottom: 16px;
+    color: var(--amber);
+  }
+  .welcome-screen p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--cream-dim);
+    margin-bottom: 32px;
+  }
+  .welcome-select-container {
+    width: 100%;
+    max-width: 400px;
+  }
+  .welcome-select-container label {
+    display: block;
+    font-size: 14px;
+    color: var(--cream);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .welcome-select-container select {
+    width: 100%;
+    appearance: none;
+    padding: 12px 36px 12px 16px;
+    background: var(--bg-card);
+    border: 2px solid rgba(212, 149, 43, 0.3);
+    border-radius: 6px;
+    color: var(--cream);
+    font-size: 15px;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .welcome-select-container select:hover {
+    border-color: rgba(212, 149, 43, 0.5);
+  }
+  .welcome-select-container select:focus {
+    outline: none;
+    border-color: var(--amber);
+  }
+
+  /* ── Error screen ── */
+  .error-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    padding: 40px 24px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  .error-screen .error-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: var(--red);
+  }
+  .error-screen h2 {
+    font-size: 24px;
+    margin-bottom: 12px;
+  }
+  .error-screen p {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--cream-dim);
+    margin-bottom: 24px;
+  }
+  .retry-btn {
+    padding: 10px 24px;
+    background: rgba(212, 149, 43, 0.2);
+    border: 1px solid rgba(212, 149, 43, 0.5);
+    border-radius: 6px;
+    color: var(--cream);
+    font-size: 14px;
+    font-family: var(--font);
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .retry-btn:hover {
+    background: rgba(212, 149, 43, 0.3);
+    border-color: var(--amber);
+  }
+
+  /* ── Warning banner ── */
+  .warning-banner {
+    display: none;
+    padding: 8px 16px;
+    background: rgba(212, 149, 43, 0.1);
+    border: 1px solid rgba(212, 149, 43, 0.3);
+    border-radius: 6px;
+    color: var(--cream-dim);
+    font-size: 13px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
 
   /* ── Warming screen ── */
   .warming {
@@ -109,12 +268,80 @@
 
   /* ── Gallery grid ── */
   .gallery-meta {
-    display: flex; align-items: baseline; gap: 12px; margin-bottom: 24px;
+    display: flex; align-items: center; gap: 12px; margin-bottom: 24px;
     flex-wrap: wrap;
   }
   .gallery-meta h1 { font-size: 24px; }
+  .gallery-meta .bonfire-name { color: var(--amber); font-size: 24px; font-weight: 500; }
   .gallery-meta .count { color: var(--cream-dim); font-size: 14px; }
   .gallery-meta .updated { color: var(--cream-dim); font-size: 12px; margin-left: auto; }
+
+  /* ── Trigger button ── */
+  .trigger-btn {
+    background: none;
+    border: 1px solid rgba(212, 149, 43, 0.3);
+    color: var(--cream-dim);
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+    flex-shrink: 0;
+  }
+  .trigger-btn:hover:not(:disabled) {
+    border-color: var(--amber);
+    color: var(--cream);
+    background: rgba(212, 149, 43, 0.1);
+  }
+  .trigger-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .trigger-btn .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--cream-dim);
+    border-top-color: var(--amber);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Toast ── */
+  .toast-container {
+    position: fixed;
+    top: 64px;
+    right: 24px;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .toast {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--cream);
+    animation: toast-in 0.3s ease, toast-out 0.3s ease 3.7s forwards;
+    max-width: 320px;
+  }
+  .toast.error {
+    background: rgba(231, 76, 60, 0.9);
+    border: 1px solid var(--red);
+  }
+  .toast.success {
+    background: rgba(61, 220, 132, 0.15);
+    border: 1px solid var(--green);
+  }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes toast-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
 
   .projects-grid {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
@@ -261,6 +488,11 @@
 
 <div class="header">
   <div class="header-logo" onclick="showGallery()">PROJECT FORGE</div>
+  <div class="bonfire-selector">
+    <select id="header-bonfire-select" onchange="onHeaderBonfireChange(this)" disabled>
+      <option value="">Loading bonfires...</option>
+    </select>
+  </div>
   <button class="header-back" id="back-btn" style="display: none" onclick="showGallery()">Back to Gallery</button>
   <div class="header-status">
     <div class="status-dot" id="status-dot"></div>
@@ -268,9 +500,38 @@
   </div>
 </div>
 
+<div class="toast-container" id="toast-container"></div>
+
 <div class="content">
+  <!-- Welcome screen (first visit) -->
+  <div id="screen-welcome" class="welcome-screen">
+    <h1>Welcome to Project Forge</h1>
+    <p>
+      Project Forge synthesizes themes from knowledge graphs into buildable project ideas.
+      Select a public bonfire to explore creative projects generated from community knowledge.
+    </p>
+    <div class="welcome-select-container">
+      <label for="welcome-bonfire-select">Choose a Bonfire</label>
+      <select id="welcome-bonfire-select" onchange="onWelcomeBonfireChange(this)">
+        <option value="">Select a bonfire...</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Error screen (bonfire list failure, no saved bonfire) -->
+  <div id="screen-error" class="error-screen">
+    <div class="error-icon">&#9888;</div>
+    <h2>Unable to Load Bonfires</h2>
+    <p id="error-message">
+      We couldn't fetch the list of available bonfires. Please check your connection and try again.
+    </p>
+    <button class="retry-btn" onclick="retryInit()">Retry</button>
+  </div>
+
   <!-- Gallery screen -->
-  <div id="screen-gallery">
+  <div id="screen-gallery" style="display: none">
+    <div id="warning-banner" class="warning-banner"></div>
+
     <div class="warming" id="warming" style="display: none">
       <div class="campfire">
         <div class="flame"></div>
@@ -286,7 +547,11 @@
 
     <div id="gallery-content" style="display: none">
       <div class="gallery-meta">
-        <h1>Projects</h1>
+        <h1>Projects from</h1>
+        <span class="bonfire-name" id="gallery-bonfire-name"></span>
+        <button class="trigger-btn" id="trigger-btn" onclick="onManualTrigger()" title="Regenerate projects">
+          &#x21bb;
+        </button>
         <span class="count" id="project-count"></span>
         <span class="updated" id="last-updated"></span>
       </div>
@@ -330,6 +595,8 @@
 </div>
 
 <script>
+const STORAGE_KEY = 'project_forge_selected_bonfire';
+
 const state = {
   projects: [],
   activeProject: null,
@@ -337,71 +604,295 @@ const state = {
   activeMockupFile: null,
   lastGenerationAt: null,
   workerStatus: 'idle',
+  selectedBonfire: null,
+  bonfires: [],
+  bonfireListError: false,
+  isPollingGeneration: false,
+  updateInterval: null,
 };
 
 // ── API ──
-async function apiFetch(path) {
-  const resp = await fetch(path);
+async function apiFetch(path, options) {
+  const resp = await fetch(path, options);
   if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
   return resp.json();
 }
 
-// ── Init ──
-async function init() {
-  initParticles();
-  await refreshData();
-  setInterval(checkForUpdates, 30000);
+async function apiPost(path) {
+  const resp = await fetch(path, { method: 'POST' });
+  if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
+  return resp.json();
 }
 
-async function refreshData() {
+// ── Toast ──
+function showToast(message, type) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+// ── localStorage ──
+function loadSavedBonfire() {
   try {
-    const data = await apiFetch('/forge/projects');
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    localStorage.removeItem(STORAGE_KEY);
+    return null;
+  }
+}
+
+function saveBonfire(id, name) {
+  const data = { id, name, selected_at: new Date().toISOString() };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  return data;
+}
+
+function clearSavedBonfire() {
+  localStorage.removeItem(STORAGE_KEY);
+  state.selectedBonfire = null;
+}
+
+// ── Bonfire list ──
+async function fetchBonfires() {
+  const data = await apiFetch('/api/bonfires');
+  const list = Array.isArray(data) ? data : (data.bonfires || []);
+  return list.filter(bf => bf.is_public !== false);
+}
+
+function populateHeaderDropdown(bonfires, selectedId) {
+  const sel = document.getElementById('header-bonfire-select');
+  sel.innerHTML = '<option value="">Select a bonfire...</option>';
+  for (const bf of bonfires) {
+    const id = bf.id || bf._id || bf.bonfire_id || '';
+    const name = bf.name || id;
+    const opt = document.createElement('option');
+    opt.value = String(id);
+    opt.textContent = name;
+    if (String(id) === String(selectedId)) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  sel.disabled = false;
+  sel.classList.remove('error-state');
+}
+
+function populateWelcomeDropdown(bonfires) {
+  const sel = document.getElementById('welcome-bonfire-select');
+  sel.innerHTML = '<option value="">Select a bonfire...</option>';
+  for (const bf of bonfires) {
+    const id = bf.id || bf._id || bf.bonfire_id || '';
+    const name = bf.name || id;
+    const opt = document.createElement('option');
+    opt.value = String(id);
+    opt.textContent = name;
+    sel.appendChild(opt);
+  }
+}
+
+function setHeaderDropdownError() {
+  const sel = document.getElementById('header-bonfire-select');
+  sel.innerHTML = '<option value="">Unable to load bonfires</option>';
+  sel.disabled = true;
+  sel.classList.add('error-state');
+}
+
+function setHeaderDropdownLoading() {
+  const sel = document.getElementById('header-bonfire-select');
+  sel.innerHTML = '<option value="">Loading bonfires...</option>';
+  sel.disabled = true;
+  sel.classList.remove('error-state');
+}
+
+function findBonfireInList(bonfires, targetId) {
+  return bonfires.find(bf => {
+    const id = bf.id || bf._id || bf.bonfire_id || '';
+    return String(id) === String(targetId);
+  });
+}
+
+function getBonfireName(bf) {
+  return bf.name || bf.id || bf._id || bf.bonfire_id || 'Unknown';
+}
+
+// ── Screen management ──
+function hideAllScreens() {
+  document.getElementById('screen-welcome').style.display = 'none';
+  document.getElementById('screen-error').style.display = 'none';
+  document.getElementById('screen-gallery').style.display = 'none';
+  document.getElementById('screen-detail').classList.remove('active');
+  document.getElementById('back-btn').style.display = 'none';
+  document.getElementById('warning-banner').style.display = 'none';
+}
+
+function showWelcome() {
+  hideAllScreens();
+  document.getElementById('screen-welcome').style.display = 'flex';
+}
+
+function showError(message) {
+  hideAllScreens();
+  if (message) {
+    document.getElementById('error-message').textContent = message;
+  }
+  document.getElementById('screen-error').style.display = 'flex';
+}
+
+function showWarming() {
+  hideAllScreens();
+  document.getElementById('screen-gallery').style.display = 'block';
+  document.getElementById('warming').style.display = 'flex';
+  document.getElementById('gallery-content').style.display = 'none';
+}
+
+function showGalleryContent() {
+  hideAllScreens();
+  document.getElementById('screen-gallery').style.display = 'block';
+  document.getElementById('warming').style.display = 'none';
+  document.getElementById('gallery-content').style.display = 'block';
+  renderGallery();
+}
+
+function showGallery() {
+  if (!state.selectedBonfire) {
+    showWelcome();
+    return;
+  }
+  document.getElementById('screen-detail').classList.remove('active');
+  document.getElementById('screen-gallery').style.display = 'block';
+  document.getElementById('back-btn').style.display = 'none';
+  document.getElementById('mockup-iframe').src = 'about:blank';
+}
+
+function showWarningBanner(message) {
+  const banner = document.getElementById('warning-banner');
+  banner.textContent = message;
+  banner.style.display = 'block';
+}
+
+// ── Bonfire selection ──
+function onHeaderBonfireChange(selectEl) {
+  const id = selectEl.value;
+  if (!id) return;
+  const bf = findBonfireInList(state.bonfires, id);
+  if (!bf) return;
+  selectBonfire(id, getBonfireName(bf));
+}
+
+function onWelcomeBonfireChange(selectEl) {
+  const id = selectEl.value;
+  if (!id) return;
+  const bf = findBonfireInList(state.bonfires, id);
+  if (!bf) return;
+  selectBonfire(id, getBonfireName(bf));
+}
+
+async function selectBonfire(id, name) {
+  state.selectedBonfire = saveBonfire(id, name);
+
+  const headerSel = document.getElementById('header-bonfire-select');
+  headerSel.value = String(id);
+
+  const isOnDetail = document.getElementById('screen-detail').classList.contains('active');
+  if (isOnDetail) {
+    document.getElementById('mockup-iframe').src = 'about:blank';
+  }
+
+  await loadProjectsForBonfire(id);
+}
+
+// ── Project loading ──
+async function loadProjectsForBonfire(bonfireId) {
+  showWarming();
+  document.getElementById('warming-status').textContent = 'Loading projects...';
+
+  try {
+    const data = await apiFetch(`/forge/projects?bonfire_id=${encodeURIComponent(bonfireId)}`);
     state.projects = data.projects || [];
     state.lastGenerationAt = data.last_generation_at;
 
     if (state.projects.length === 0) {
-      showWarming();
-      pollUntilReady();
+      await triggerGeneration(bonfireId);
     } else {
       showGalleryContent();
     }
     updateStatus();
   } catch (e) {
     console.error('Failed to load projects:', e);
-    showWarming();
-    pollUntilReady();
+    showToast('Failed to load projects. Retrying...', 'error');
+    await triggerGeneration(bonfireId);
   }
 }
 
-async function checkForUpdates() {
-  try {
-    const status = await apiFetch('/forge/status');
-    state.workerStatus = status.status;
-    updateStatusDot(status.status);
+// ── Trigger ──
+async function triggerGeneration(bonfireId) {
+  showWarming();
+  document.getElementById('warming-status').textContent = 'Triggering project generation...';
 
-    if (status.last_generation_at && status.last_generation_at !== state.lastGenerationAt) {
-      state.lastGenerationAt = status.last_generation_at;
-      await refreshData();
-    }
-  } catch (e) { /* silent */ }
+  try {
+    await apiPost(`/forge/trigger?bonfire_id=${encodeURIComponent(bonfireId)}`);
+  } catch (e) {
+    console.error('Trigger failed:', e);
+    showToast('Failed to trigger generation. Will retry on next poll.', 'error');
+  }
+
+  pollUntilReady(bonfireId);
 }
 
-function pollUntilReady() {
+function pollUntilReady(bonfireId) {
+  if (state.isPollingGeneration) return;
+  state.isPollingGeneration = true;
+
   const poll = async () => {
+    if (!state.selectedBonfire || state.selectedBonfire.id !== bonfireId) {
+      state.isPollingGeneration = false;
+      return;
+    }
+
     try {
-      const status = await apiFetch('/forge/status');
+      const status = await apiFetch(`/forge/status?bonfire_id=${encodeURIComponent(bonfireId)}`);
       document.getElementById('warming-status').textContent =
         `Worker: ${status.status} | Polls: ${status.poll_count} | Projects: ${status.project_count}`;
       updateStatusDot(status.status);
 
       if (status.project_count > 0) {
-        await refreshData();
+        state.isPollingGeneration = false;
+        await loadProjectsForBonfire(bonfireId);
         return;
       }
-    } catch (e) { /* keep polling */ }
+    } catch (e) {
+      console.error('Poll error:', e);
+    }
+
     setTimeout(poll, 5000);
   };
-  setTimeout(poll, 5000);
+
+  setTimeout(poll, 3000);
+}
+
+// ── Manual trigger ──
+async function onManualTrigger() {
+  if (!state.selectedBonfire) return;
+
+  const btn = document.getElementById('trigger-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    await apiPost(`/forge/trigger?bonfire_id=${encodeURIComponent(state.selectedBonfire.id)}`);
+    showToast('Generation triggered. Refreshing...', 'success');
+    showWarming();
+    pollUntilReady(state.selectedBonfire.id);
+  } catch (e) {
+    console.error('Manual trigger failed:', e);
+    showToast('Failed to trigger regeneration.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '&#x21bb;';
+  }
 }
 
 // ── Status ──
@@ -420,33 +911,35 @@ function updateStatusDot(status) {
   else if (status === 'error') dot.classList.add('error');
 }
 
+// ── Background check for updates ──
+async function checkForUpdates() {
+  if (!state.selectedBonfire) return;
+  try {
+    const bonfireId = state.selectedBonfire.id;
+    const status = await apiFetch(`/forge/status?bonfire_id=${encodeURIComponent(bonfireId)}`);
+    state.workerStatus = status.status;
+    updateStatusDot(status.status);
+
+    if (status.last_generation_at && status.last_generation_at !== state.lastGenerationAt) {
+      state.lastGenerationAt = status.last_generation_at;
+      const data = await apiFetch(`/forge/projects?bonfire_id=${encodeURIComponent(bonfireId)}`);
+      state.projects = data.projects || [];
+      state.lastGenerationAt = data.last_generation_at;
+      if (state.projects.length > 0 && document.getElementById('gallery-content').style.display !== 'none') {
+        renderGallery();
+      }
+      updateStatus();
+    }
+  } catch (e) {
+    console.error('Update check failed:', e);
+  }
+}
+
 // ── Gallery ──
-function showWarming() {
-  document.getElementById('warming').style.display = 'flex';
-  document.getElementById('gallery-content').style.display = 'none';
-  document.getElementById('screen-detail').classList.remove('active');
-  document.getElementById('screen-gallery').style.display = 'block';
-  document.getElementById('back-btn').style.display = 'none';
-}
-
-function showGalleryContent() {
-  document.getElementById('warming').style.display = 'none';
-  document.getElementById('gallery-content').style.display = 'block';
-  document.getElementById('screen-detail').classList.remove('active');
-  document.getElementById('screen-gallery').style.display = 'block';
-  document.getElementById('back-btn').style.display = 'none';
-  renderGallery();
-}
-
-function showGallery() {
-  document.getElementById('screen-detail').classList.remove('active');
-  document.getElementById('screen-gallery').style.display = 'block';
-  document.getElementById('back-btn').style.display = 'none';
-  document.getElementById('mockup-iframe').src = 'about:blank';
-}
-
 function renderGallery() {
   const grid = document.getElementById('projects-grid');
+  const bonfireName = state.selectedBonfire ? state.selectedBonfire.name : '';
+  document.getElementById('gallery-bonfire-name').textContent = bonfireName;
   document.getElementById('project-count').textContent = `${state.projects.length} forged`;
   document.getElementById('last-updated').textContent = state.lastGenerationAt
     ? `Last updated: ${timeAgo(state.lastGenerationAt)}` : '';
@@ -473,8 +966,10 @@ function renderGallery() {
 
 // ── Detail view ──
 async function openProject(projectId) {
+  if (!state.selectedBonfire) return;
   try {
-    const project = await apiFetch(`/forge/projects/${projectId}`);
+    const bonfireId = state.selectedBonfire.id;
+    const project = await apiFetch(`/forge/projects/${projectId}?bonfire_id=${encodeURIComponent(bonfireId)}`);
     state.activeProject = project;
     showProjectVersion(project.versions.length - 1);
 
@@ -484,6 +979,7 @@ async function openProject(projectId) {
     window.scrollTo(0, 0);
   } catch (e) {
     console.error('Failed to load project:', e);
+    showToast('Failed to load project details.', 'error');
   }
 }
 
@@ -543,15 +1039,17 @@ function switchMockupTab(projectId, versionNum, fileIdx) {
     tab.classList.toggle('active', i === fileIdx);
   });
 
-  const url = `/forge/mockups/${projectId}/v${versionNum}/${file.name}`;
+  const bonfireId = state.selectedBonfire ? state.selectedBonfire.id : '';
+  const url = `/forge/mockups/${encodeURIComponent(bonfireId)}/${projectId}/v${versionNum}/${file.name}`;
   document.getElementById('mockup-iframe').src = url;
   document.getElementById('frame-url').textContent = file.name;
 }
 
 function openMockupInTab() {
-  if (!state.activeMockupFile) return;
+  if (!state.activeMockupFile || !state.selectedBonfire) return;
   const { projectId, versionNum, file } = state.activeMockupFile;
-  window.open(`/forge/mockups/${projectId}/v${versionNum}/${file.name}`, '_blank');
+  const bonfireId = state.selectedBonfire.id;
+  window.open(`/forge/mockups/${encodeURIComponent(bonfireId)}/${projectId}/v${versionNum}/${file.name}`, '_blank');
 }
 
 function renderVersionList(versions, activeIdx) {
@@ -565,6 +1063,71 @@ function renderVersionList(versions, activeIdx) {
         <span class="v-trigger">${esc(v.change_summary || v.trigger || '')}</span>
       </div>`;
   }).join('');
+}
+
+// ── Init ──
+async function init() {
+  initParticles();
+  setHeaderDropdownLoading();
+
+  const saved = loadSavedBonfire();
+  let bonfires = [];
+  let bonfireListLoaded = false;
+
+  try {
+    bonfires = await fetchBonfires();
+    state.bonfires = bonfires;
+    bonfireListLoaded = true;
+  } catch (e) {
+    console.error('Failed to fetch bonfire list:', e);
+    state.bonfireListError = true;
+  }
+
+  if (bonfireListLoaded) {
+    if (saved) {
+      const match = findBonfireInList(bonfires, saved.id);
+      if (match) {
+        state.selectedBonfire = saved;
+        populateHeaderDropdown(bonfires, saved.id);
+        populateWelcomeDropdown(bonfires);
+        await loadProjectsForBonfire(saved.id);
+      } else {
+        clearSavedBonfire();
+        populateHeaderDropdown(bonfires, null);
+        populateWelcomeDropdown(bonfires);
+        showWelcome();
+      }
+    } else {
+      populateHeaderDropdown(bonfires, null);
+      populateWelcomeDropdown(bonfires);
+      showWelcome();
+    }
+  } else {
+    if (saved) {
+      state.selectedBonfire = saved;
+      setHeaderDropdownError();
+      showWarningBanner('Unable to load bonfire list. Using saved bonfire.');
+      await loadProjectsForBonfire(saved.id);
+    } else {
+      setHeaderDropdownError();
+      showError('We couldn\'t fetch the list of available bonfires. Please check your connection and try again.');
+    }
+  }
+
+  state.updateInterval = setInterval(checkForUpdates, 30000);
+}
+
+async function retryInit() {
+  if (state.updateInterval) {
+    clearInterval(state.updateInterval);
+    state.updateInterval = null;
+  }
+  state.bonfireListError = false;
+  state.isPollingGeneration = false;
+  hideAllScreens();
+  setHeaderDropdownLoading();
+  document.getElementById('status-text').textContent = 'Loading...';
+  await init();
 }
 
 // ── Utilities ──

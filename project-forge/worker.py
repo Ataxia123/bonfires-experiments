@@ -1,12 +1,10 @@
 """Background polling worker for Project Forge.
 
 Runs as a daemon thread started by server.py on boot.
-Polls the Bonfires KG every POLL_INTERVAL seconds, computes a change score,
-and regenerates projects + mockups when changes are significant.
+Invokes the LangGraph forge pipeline on each poll cycle and persists results.
 """
 
 import asyncio
-import hashlib
 import json
 import os
 import tempfile
@@ -16,19 +14,15 @@ import traceback
 from datetime import datetime, timezone
 from pathlib import Path
 
+from forge_graph import forge_graph
+
 FORGE_DIR = Path(__file__).parent
-STATE_FILE = FORGE_DIR / "forge_state.json"
 MOCKUPS_DIR = FORGE_DIR / "mockups"
 
 POLL_INTERVAL = int(os.environ.get("POLL_INTERVAL", 6 * 60 * 60))  # 6 hours
 CHANGE_THRESHOLD = float(os.environ.get("CHANGE_THRESHOLD", 0.3))
 MAX_VERSIONS = int(os.environ.get("MAX_VERSIONS", 10))
 MAX_POLL_LOG = 50
-
-# Weights for change score
-W_EPISODE = float(os.environ.get("EPISODE_WEIGHT", 0.5))
-W_ENTITY = float(os.environ.get("ENTITY_WEIGHT", 0.3))
-W_EDGE = float(os.environ.get("EDGE_WEIGHT", 0.2))
 
 
 def _now_iso() -> str:
@@ -37,59 +31,6 @@ def _now_iso() -> str:
 
 def _slugify(name: str) -> str:
     return name.lower().replace(" ", "-").replace("/", "-").replace("'", "")[:60]
-
-
-def compute_change_score(old_snapshot: dict, new_snapshot: dict) -> tuple[float, str]:
-    """Deterministic diff between two KG snapshots. Returns (score, reason)."""
-    old_eps = set(old_snapshot.get("episode_hashes", []))
-    new_eps = set(new_snapshot.get("episode_hashes", []))
-    old_ents = set(old_snapshot.get("entity_uuids", []))
-    new_ents = set(new_snapshot.get("entity_uuids", []))
-    old_edges = set(old_snapshot.get("edge_fingerprints", []))
-    new_edges = set(new_snapshot.get("edge_fingerprints", []))
-
-    added_eps = new_eps - old_eps
-    added_ents = new_ents - old_ents
-    added_edges = new_edges - old_edges
-
-    # Weighted scoring — 5 new episodes = max episode component, etc.
-    ep_score = min(len(added_eps) / 5.0, 1.0)
-    ent_score = min(len(added_ents) / 10.0, 1.0)
-    edge_score = min(len(added_edges) / 15.0, 1.0)
-
-    score = (ep_score * W_EPISODE) + (ent_score * W_ENTITY) + (edge_score * W_EDGE)
-
-    reasons = []
-    if added_eps:
-        reasons.append(f"{len(added_eps)} new episodes")
-    if added_ents:
-        reasons.append(f"{len(added_ents)} new entities")
-    if added_edges:
-        reasons.append(f"{len(added_edges)} new edges")
-
-    return round(score, 3), ", ".join(reasons) if reasons else "no changes"
-
-
-def _build_snapshot(themes_data: dict) -> dict:
-    """Build a diffable snapshot from raw themes data."""
-    return {
-        "polled_at": _now_iso(),
-        "episode_count": len(themes_data.get("episodes", [])),
-        "entity_count": len(themes_data.get("entities", [])),
-        "edge_count": len(themes_data.get("edges", [])),
-        "episode_hashes": sorted(set(
-            hashlib.md5(ep["name"].encode()).hexdigest()[:12]
-            for ep in themes_data.get("episodes", [])
-        )),
-        "entity_uuids": sorted(set(
-            ent.get("uuid", ent["name"])
-            for ent in themes_data.get("entities", [])
-        )),
-        "edge_fingerprints": sorted(set(
-            f"{e.get('source_uuid', '')}|{e.get('target_uuid', '')}|{e.get('name', '')}"
-            for e in themes_data.get("edges", [])
-        )),
-    }
 
 
 def _find_project(state: dict, project_id: str) -> dict | None:
@@ -116,20 +57,53 @@ class ForgeWorker:
     def __init__(self):
         self.lock = threading.Lock()
         self.running = False
-        self.thread = None
+        self.thread: threading.Thread | None = None
         self.status = "idle"  # idle | polling | generating | error
-        self.last_error = None
+        self.last_error: str | None = None
+        self.current_bonfire_id: str | None = None
 
-    def load_state(self) -> dict:
+    def _state_file(self, bonfire_id: str | None = None) -> Path:
+        """Return the state file path for a given bonfire."""
+        bid = bonfire_id or self.current_bonfire_id
+        if not bid:
+            return FORGE_DIR / "forge_state.json"
+        return FORGE_DIR / f"forge_state_{bid}.json"
+
+    def _restore_current_bonfire(self):
+        """Restore current_bonfire_id from the most recently modified state file."""
+        best_mtime = 0.0
+        best_bid: str | None = None
+        for f in FORGE_DIR.glob("forge_state_*.json"):
+            stem = f.stem  # e.g. forge_state_abc123
+            bid = stem[len("forge_state_"):]
+            if bid and f.stat().st_mtime > best_mtime:
+                best_mtime = f.stat().st_mtime
+                best_bid = bid
+        if best_bid:
+            self.current_bonfire_id = best_bid
+            print(f"  [worker] Restored current_bonfire_id={best_bid}")
+
+    def set_current_bonfire(self, bonfire_id: str):
+        """Update the current bonfire and log the switch."""
+        if bonfire_id != self.current_bonfire_id:
+            print(f"  [worker] Switching bonfire: {self.current_bonfire_id} → {bonfire_id}")
+            self.current_bonfire_id = bonfire_id
+
+    def load_state(self, bonfire_id: str | None = None) -> dict:
+        state_path = self._state_file(bonfire_id)
         with self.lock:
-            if STATE_FILE.exists():
+            if state_path.exists():
                 try:
-                    return json.loads(STATE_FILE.read_text())
+                    return json.loads(state_path.read_text())
                 except (json.JSONDecodeError, OSError):
                     return _default_state()
             return _default_state()
 
-    def save_state(self, state: dict):
+    def save_state(self, state: dict, bonfire_id: str | None = None):
+        state_path = self._state_file(bonfire_id)
+        bid = bonfire_id or self.current_bonfire_id
+        if bid:
+            state["bonfire_id"] = bid
         with self.lock:
             FORGE_DIR.mkdir(parents=True, exist_ok=True)
             tmp = tempfile.NamedTemporaryFile(
@@ -138,7 +112,7 @@ class ForgeWorker:
             try:
                 json.dump(state, tmp, indent=2)
                 tmp.close()
-                os.rename(tmp.name, str(STATE_FILE))
+                os.rename(tmp.name, str(state_path))
             except Exception:
                 tmp.close()
                 try:
@@ -150,6 +124,7 @@ class ForgeWorker:
     def start(self):
         if self.running:
             return
+        self._restore_current_bonfire()
         self.running = True
         self.thread = threading.Thread(target=self._poll_loop, daemon=True)
         self.thread.start()
@@ -158,14 +133,17 @@ class ForgeWorker:
     def stop(self):
         self.running = False
 
-    def trigger_now(self):
+    def trigger_now(self, bonfire_id: str | None = None):
         """Force a poll cycle immediately (admin endpoint)."""
+        if bonfire_id:
+            self.set_current_bonfire(bonfire_id)
         threading.Thread(target=self._do_poll_cycle, daemon=True).start()
 
-    def get_status(self) -> dict:
-        state = self.load_state()
+    def get_status(self, bonfire_id: str | None = None) -> dict:
+        state = self.load_state(bonfire_id)
         return {
             "status": self.status,
+            "current_bonfire_id": self.current_bonfire_id,
             "last_error": self.last_error,
             "last_poll_at": state.get("last_poll_at"),
             "last_generation_at": state.get("last_generation_at"),
@@ -180,72 +158,158 @@ class ForgeWorker:
     # -- Internal --
 
     def _poll_loop(self):
-        # On first boot, run immediately if no projects exist
-        state = self.load_state()
-        if not state.get("projects"):
-            print("  [worker] First boot — running initial generation")
-            self._do_poll_cycle()
+        if not self.current_bonfire_id:
+            self._restore_current_bonfire()
+
+        if self.current_bonfire_id:
+            state = self.load_state()
+            if not state.get("projects"):
+                print("  [worker] First boot — running initial generation")
+                self._do_poll_cycle()
+        else:
+            print("  [worker] No current bonfire set — waiting for first request")
 
         while self.running:
             time.sleep(POLL_INTERVAL)
-            if self.running:
+            if self.running and self.current_bonfire_id:
                 self._do_poll_cycle()
 
     def _do_poll_cycle(self):
+        if not self.current_bonfire_id:
+            print("  [worker] Skipping poll — no current bonfire set")
+            return
+
+        bonfire_id = self.current_bonfire_id
         try:
             self.status = "polling"
-            print(f"  [worker] Polling KG at {_now_iso()}")
-            state = self.load_state()
+            print(f"  [worker] Polling KG for bonfire={bonfire_id} at {_now_iso()}")
+            state = self.load_state(bonfire_id)
 
-            # Step 1: Extract fresh KG data
-            from forge import extract_themes
-            new_themes_data = extract_themes()
-            new_snapshot = _build_snapshot(new_themes_data)
+            # 1. Extract inputs from state file
+            old_kg_snapshot = state.get("kg_snapshot", {})
+            existing_projects: list[dict] = []
+            project_versions: dict[str, int] = {}
+            for p in state.get("projects", []):
+                if p.get("versions"):
+                    existing_projects.append(p["versions"][-1]["project_data"])
+                project_versions[p["id"]] = p.get("current_version", 0)
 
-            print(f"  [worker] KG: {new_snapshot['episode_count']} episodes, "
-                  f"{new_snapshot['entity_count']} entities, {new_snapshot['edge_count']} edges")
+            is_first_run = len(state.get("projects", [])) == 0
 
-            # Step 2: Compare with existing snapshot
-            old_snapshot = state.get("kg_snapshot", {})
-            score, reason = compute_change_score(old_snapshot, new_snapshot)
-
-            # Step 3: Record the poll
-            poll_entry = {
-                "polled_at": _now_iso(),
-                "episode_count": new_snapshot["episode_count"],
-                "entity_count": new_snapshot["entity_count"],
-                "edge_count": new_snapshot["edge_count"],
-                "new_episodes": len(set(new_snapshot.get("episode_hashes", [])) - set(old_snapshot.get("episode_hashes", []))),
-                "new_entities": len(set(new_snapshot.get("entity_uuids", [])) - set(old_snapshot.get("entity_uuids", []))),
-                "new_edges": len(set(new_snapshot.get("edge_fingerprints", [])) - set(old_snapshot.get("edge_fingerprints", []))),
-                "change_score": score,
-                "decision": "skip",
-                "reason": reason,
+            # 2. Build ForgeState input for the graph
+            initial_state = {
+                "bonfire_id": bonfire_id,
+                "is_first_run": is_first_run,
+                "existing_projects": existing_projects,
+                "old_kg_snapshot": old_kg_snapshot,
+                "change_threshold": CHANGE_THRESHOLD,
+                "project_versions": project_versions,
             }
 
-            # Step 4: Always update snapshot (so next diff is against latest)
-            new_snapshot["raw_themes_data"] = new_themes_data
-            state["kg_snapshot"] = new_snapshot
+            # 3. Invoke the LangGraph pipeline
+            self.status = "generating"
+            print(f"  [worker] Invoking forge graph (first_run={is_first_run})...")
+            result = asyncio.run(forge_graph.ainvoke(initial_state))
+
+            # 4. Read outputs from graph result
+            new_kg_snapshot: dict = result.get("new_kg_snapshot", {})
+            change_score: float = result.get("change_score", 0.0)
+            change_summary: str = result.get("change_summary", "no changes")
+            synthesized_projects: list[dict] = result.get("synthesized_projects", [])
+            mockup_results: list[dict] = result.get("mockup_results", [])
+
+            print(f"  [worker] Graph complete: score={change_score}, "
+                  f"{len(synthesized_projects)} synthesized, {len(mockup_results)} mockups")
+
+            # 5. Update state with new snapshot
+            state["kg_snapshot"] = new_kg_snapshot
             state["last_poll_at"] = _now_iso()
             state["poll_count"] = state.get("poll_count", 0) + 1
 
-            # Step 5: Decide whether to regenerate
-            is_first_run = len(state.get("projects", [])) == 0
-            if is_first_run or score >= CHANGE_THRESHOLD:
+            # 6. Build poll log entry
+            poll_entry = {
+                "polled_at": _now_iso(),
+                "bonfire_id": bonfire_id,
+                "episode_count": new_kg_snapshot.get("episode_count", 0),
+                "entity_count": new_kg_snapshot.get("entity_count", 0),
+                "edge_count": new_kg_snapshot.get("edge_count", 0),
+                "new_episodes": len(
+                    set(new_kg_snapshot.get("episode_hashes", []))
+                    - set(old_kg_snapshot.get("episode_hashes", []))
+                ),
+                "new_entities": len(
+                    set(new_kg_snapshot.get("entity_uuids", []))
+                    - set(old_kg_snapshot.get("entity_uuids", []))
+                ),
+                "new_edges": len(
+                    set(new_kg_snapshot.get("edge_fingerprints", []))
+                    - set(old_kg_snapshot.get("edge_fingerprints", []))
+                ),
+                "change_score": change_score,
+                "decision": "skip",
+                "reason": change_summary,
+            }
+
+            # 7. Merge mockup_results into state file as versioned project entries
+            if mockup_results:
                 poll_entry["decision"] = "regenerate"
-                print(f"  [worker] Change score {score} >= {CHANGE_THRESHOLD} — regenerating")
-                self.status = "generating"
-                self._regenerate(state, new_themes_data, reason, is_first_run)
+                for mr in mockup_results:
+                    proj_id: str = mr["project_id"]
+                    project_data: dict = mr["project_data"]
+                    mockup_dir: str = mr["mockup_dir"]
+                    mockup_files: list[dict] = mr.get("mockup_files", [])
+
+                    existing = _find_project(state, proj_id)
+                    if existing:
+                        new_ver = existing["current_version"] + 1
+                    else:
+                        new_ver = 1
+                        existing = {
+                            "id": proj_id,
+                            "current_version": 0,
+                            "created_at": _now_iso(),
+                            "updated_at": _now_iso(),
+                            "versions": [],
+                        }
+                        state["projects"].append(existing)
+
+                    version_entry = {
+                        "version": new_ver,
+                        "generated_at": _now_iso(),
+                        "trigger": "initial_generation" if is_first_run else "kg_change",
+                        "change_summary": "first generation" if is_first_run else change_summary,
+                        "kg_snapshot_summary": {
+                            "episode_count": new_kg_snapshot.get("episode_count", 0),
+                            "entity_count": new_kg_snapshot.get("entity_count", 0),
+                            "edge_count": new_kg_snapshot.get("edge_count", 0),
+                        },
+                        "project_data": project_data,
+                        "mockup_dir": mockup_dir,
+                        "mockup_files": mockup_files,
+                    }
+                    existing["versions"].append(version_entry)
+                    existing["current_version"] = new_ver
+                    existing["updated_at"] = _now_iso()
+
+                    if len(existing["versions"]) > MAX_VERSIONS:
+                        existing["versions"] = existing["versions"][-MAX_VERSIONS:]
+
                 state["last_generation_at"] = _now_iso()
                 state["generation_count"] = state.get("generation_count", 0) + 1
-            else:
-                print(f"  [worker] Change score {score} < {CHANGE_THRESHOLD} — skipping")
 
-            # Step 6: Append poll log (capped)
+            # Handle retired projects from synthesized output
+            for proj in synthesized_projects:
+                if proj.get("status") == "retired":
+                    proj_id = _slugify(proj.get("name", "unnamed"))
+                    existing = _find_project(state, proj_id)
+                    if existing:
+                        existing["retired_at"] = _now_iso()
+
+            # 8. Append poll log and save state
             state.setdefault("poll_log", []).append(poll_entry)
             state["poll_log"] = state["poll_log"][-MAX_POLL_LOG:]
 
-            self.save_state(state)
+            self.save_state(state, bonfire_id)
             self.status = "idle"
             self.last_error = None
             print(f"  [worker] Poll cycle complete. {len(state.get('projects', []))} projects.")
@@ -255,93 +319,3 @@ class ForgeWorker:
             self.last_error = str(e)
             print(f"  [worker] ERROR: {e}")
             traceback.print_exc()
-
-    def _regenerate(self, state: dict, themes_data: dict, change_summary: str, is_first_run: bool):
-        """Run Claude synthesis + mockup generation."""
-        from forge import synthesize_projects, synthesize_projects_with_existing, generate_multi_mockup
-
-        # Gather existing project data for Claude context
-        existing_projects = []
-        for p in state.get("projects", []):
-            if p.get("versions"):
-                existing_projects.append(p["versions"][-1]["project_data"])
-
-        # Call Claude
-        if is_first_run or not existing_projects:
-            print("  [worker] Generating initial project batch...")
-            result = asyncio.run(synthesize_projects(themes_data))
-            # On first run, all projects are "new"
-            for proj in result.get("projects", []):
-                proj["status"] = "new"
-        else:
-            print(f"  [worker] Updating with context of {len(existing_projects)} existing projects...")
-            result = asyncio.run(
-                synthesize_projects_with_existing(themes_data, existing_projects, change_summary)
-            )
-
-        # Process each project result
-        for proj_result in result.get("projects", []):
-            status = proj_result.get("status", "new")
-            proj_id = _slugify(proj_result.get("name", "unnamed"))
-
-            if status == "unchanged":
-                continue
-
-            if status == "retired":
-                existing = _find_project(state, proj_id)
-                if existing:
-                    existing["retired_at"] = _now_iso()
-                continue
-
-            # "new" or "updated" — generate mockup and store version
-            existing = _find_project(state, proj_id)
-            if existing:
-                new_ver = existing["current_version"] + 1
-            else:
-                new_ver = 1
-                existing = {
-                    "id": proj_id,
-                    "current_version": 0,
-                    "created_at": _now_iso(),
-                    "updated_at": _now_iso(),
-                    "versions": [],
-                }
-                state["projects"].append(existing)
-
-            # Clean project data (remove the status field)
-            project_data = {k: v for k, v in proj_result.items() if k != "status"}
-
-            # Generate multi-file mockup
-            mockup_rel_dir = f"mockups/{proj_id}/v{new_ver}"
-            mockup_abs_dir = str(FORGE_DIR / mockup_rel_dir)
-            print(f"  [worker] Generating mockup for '{proj_result.get('name', '?')}' v{new_ver}...")
-
-            try:
-                mockup_result = asyncio.run(generate_multi_mockup(project_data, mockup_abs_dir))
-                mockup_files = mockup_result.get("files", [])
-            except Exception as e:
-                print(f"  [worker] Mockup generation failed: {e}")
-                mockup_files = []
-
-            # Store version
-            version_entry = {
-                "version": new_ver,
-                "generated_at": _now_iso(),
-                "trigger": "initial_generation" if is_first_run else "kg_change",
-                "change_summary": change_summary if not is_first_run else "first generation",
-                "kg_snapshot_summary": {
-                    "episode_count": state["kg_snapshot"].get("episode_count", 0),
-                    "entity_count": state["kg_snapshot"].get("entity_count", 0),
-                    "edge_count": state["kg_snapshot"].get("edge_count", 0),
-                },
-                "project_data": project_data,
-                "mockup_dir": mockup_rel_dir,
-                "mockup_files": mockup_files,
-            }
-            existing["versions"].append(version_entry)
-            existing["current_version"] = new_ver
-            existing["updated_at"] = _now_iso()
-
-            # Prune old versions if needed
-            if len(existing["versions"]) > MAX_VERSIONS:
-                existing["versions"] = existing["versions"][-MAX_VERSIONS:]
