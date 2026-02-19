@@ -6,8 +6,9 @@ Pattern mirrors project-forge/forge.py.
 
 import json
 import os
+import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import openai
 
@@ -261,7 +262,7 @@ def add_agreement_message_to_stack(
     """
     header = "[Kindling Agreement]\n\n"
     text = header + agreement_text
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     payload = {
         "text": text,
         "chatId": f"kindling:{run_id}",
