@@ -260,22 +260,22 @@ def add_agreement_message_to_stack(
     POST /agents/{agent_id}/stack/add with synthetic agreement message.
     Returns response body or error dict.
     """
-    header = "[Kindling Agreement]\n\n"
-    text = header + agreement_text
+    lines = [
+        "[Kindling Agreement]",
+        f"Run: {run_id}",
+        f"Role: {self_role} | Self: {self_bonfire_id} | Counterparty: {other_bonfire_id}",
+        "",
+        agreement_text,
+    ]
+    text = "\n".join(lines)
     now = datetime.now(UTC).isoformat()
     payload = {
-        "text": text,
-        "chatId": f"kindling:{run_id}",
-        "userId": f"bonfire:{other_bonfire_id}",
-        "agentId": agent_id,
-        "timestamp": now,
-        "telegramMeta": {
-            "kindling_run_id": run_id,
-            "type": "agreement",
-            "self_role": self_role,
-            "self_bonfire_id": self_bonfire_id,
-            "other_bonfire_id": other_bonfire_id,
-        },
+        "message": {
+            "text": text,
+            "userId": f"bonfire:{other_bonfire_id}",
+            "chatId": f"kindling:{run_id}",
+            "timestamp": now,
+        }
     }
     body = json.dumps(payload).encode()
     try:
