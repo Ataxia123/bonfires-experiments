@@ -7,3 +7,5 @@ project-forge/themes_cache.json
 project-forge/projects_cache.json
 project-forge/forge_state.json
 .env
+.venv/
+kindling-bonfires/.env

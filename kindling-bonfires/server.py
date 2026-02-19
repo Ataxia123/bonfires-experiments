@@ -13,18 +13,20 @@ Uses ThreadingTCPServer so poll requests are served while pipeline runs.
 """
 
 import asyncio
+import http.server
 import json
 import os
+import socketserver
 import threading
 import urllib.parse
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
-import http.server
-import socketserver
-
 import pymongo
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).parent / ".env")
 
 KINDLING_DIR = Path(__file__).parent
 PORT = int(os.environ.get("PORT", "9998"))
@@ -99,7 +101,7 @@ def _run_pipeline(run_id: str, donor_id: str, applicant_id: str, collection: pym
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 class KindlingHandler(http.server.SimpleHTTPRequestHandler):
@@ -163,7 +165,7 @@ class KindlingHandler(http.server.SimpleHTTPRequestHandler):
 
     def _handle_get_run(self, run_id: str) -> None:
         coll = self._collection
-        if not coll:
+        if coll is None:
             self._json_response(500, {"error": "Database not configured"})
             return
         doc = coll.find_one({"run_id": run_id})
@@ -180,7 +182,7 @@ class KindlingHandler(http.server.SimpleHTTPRequestHandler):
         donor_id = (qs.get("donor_id") or [""])[0].strip()
         applicant_id = (qs.get("applicant_id") or [""])[0].strip()
         coll = self._collection
-        if not coll:
+        if coll is None:
             self._json_response(500, {"error": "Database not configured"})
             return
         filter_query = {}
@@ -211,7 +213,7 @@ class KindlingHandler(http.server.SimpleHTTPRequestHandler):
             limit = 5
         limit = max(1, min(limit, 100))
         coll = self._collection
-        if not coll:
+        if coll is None:
             self._json_response(500, {"error": "Database not configured"})
             return
         cursor = coll.find({}).sort("started_at", -1).limit(limit)
@@ -229,7 +231,7 @@ class KindlingHandler(http.server.SimpleHTTPRequestHandler):
 
     def _handle_post_run(self) -> None:
         coll = self._collection
-        if not coll:
+        if coll is None:
             self._json_response(500, {"error": "Database not configured"})
             return
         content_length = int(self.headers.get("Content-Length", 0))

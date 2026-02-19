@@ -5,12 +5,11 @@ donor formalizes → publish agreement to stacks. Each node writes its step to M
 immediately. Orchestration only; all I/O delegated to kindling.py.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, TypedDict
 
-from langgraph.graph import END, StateGraph
-
 import kindling
+from langgraph.graph import END, StateGraph
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -18,7 +17,7 @@ import kindling
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _write_step(collection: Any, run_id: str, step_record: dict) -> None:
@@ -34,13 +33,16 @@ def _write_step(collection: Any, run_id: str, step_record: dict) -> None:
 # ---------------------------------------------------------------------------
 
 
-class KindlingState(TypedDict, total=False):
-    """Shared state for the Kindling pipeline. All 12 fields."""
-
+class _KindlingStateRequired(TypedDict):
     run_id: str
     donor_id: str
     applicant_id: str
     mongo_collection: Any
+
+
+class KindlingState(_KindlingStateRequired, total=False):
+    """Shared state for the Kindling pipeline."""
+
     donor_kg: dict
     applicant_kg: dict
     applicant_statement: str
