@@ -4,6 +4,7 @@
 Endpoints:
   GET  /                              → index.html
   GET  /healthz                       → health check
+  GET  /bonfires                     → list available bonfires from Delve API
   POST /kindle/run                   → start pipeline, return {run_id}
   GET  /kindle/run/{run_id}          → poll run status (UI-safe truncated view)
   GET  /kindle/history?donor_id=&applicant_id=  → runs for pair
@@ -19,6 +20,7 @@ import os
 import socketserver
 import threading
 import urllib.parse
+import urllib.request
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
@@ -28,10 +30,27 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent / ".env")
 
+from kindling import DELVE_API_KEY, DELVE_BASE_URL
+
 KINDLING_DIR = Path(__file__).parent
 PORT = int(os.environ.get("PORT", "9998"))
 MAX_TRUNCATE = 50
 AGREEMENT_PREVIEW_LEN = 120
+
+
+def _fetch_bonfires_from_delve() -> list[dict]:
+    """Fetch public bonfires from the Delve API."""
+    req = urllib.request.Request(
+        f"{DELVE_BASE_URL}/bonfires",
+        headers={"Authorization": f"Bearer {DELVE_API_KEY}"},
+        method="GET",
+    )
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        data = json.loads(resp.read())
+    bonfires = data.get("bonfires") or data.get("data") or []
+    if not isinstance(bonfires, list):
+        return []
+    return [bf for bf in bonfires if bf.get("is_public") is not False]
 
 
 def _get_mongo_collection():
@@ -142,6 +161,9 @@ class KindlingHandler(http.server.SimpleHTTPRequestHandler):
         if path == "/healthz":
             self._json_response(200, {"status": "ok"})
             return
+        if path == "/bonfires":
+            self._handle_list_bonfires()
+            return
         if path.startswith("/kindle/run/"):
             run_id = path.split("/kindle/run/", 1)[-1].split("/")[0].strip()
             if run_id:
@@ -162,6 +184,18 @@ class KindlingHandler(http.server.SimpleHTTPRequestHandler):
             self._handle_post_run()
             return
         self.send_error(404)
+
+    def _handle_list_bonfires(self) -> None:
+        try:
+            bonfires = _fetch_bonfires_from_delve()
+            items = []
+            for bf in bonfires:
+                bf_id = bf.get("id") or bf.get("_id") or bf.get("bonfire_id") or ""
+                name = bf.get("name") or bf.get("title") or str(bf_id)
+                items.append({"id": str(bf_id), "name": name})
+            self._json_response(200, {"bonfires": items})
+        except Exception as e:
+            self._json_response(502, {"error": f"Failed to fetch bonfires: {e}"})
 
     def _handle_get_run(self, run_id: str) -> None:
         coll = self._collection

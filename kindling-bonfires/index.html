@@ -21,8 +21,9 @@ h2{font-size:20px;font-weight:600;margin-bottom:20px}
 /* ---------- Fields ---------- */
 .field{margin-bottom:20px}
 .field label{display:block;font-size:12px;color:#aaa;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
-.field input{width:100%;background:#0d0d0d;border:1px solid #333;border-radius:8px;padding:10px 14px;color:#e8e8e8;font-size:14px;font-family:monospace;outline:none;transition:border-color .2s}
-.field input:focus{border-color:#e8630a}
+.field select{width:100%;background:#0d0d0d;border:1px solid #333;border-radius:8px;padding:10px 14px;color:#e8e8e8;font-size:14px;font-family:monospace;outline:none;transition:border-color .2s;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;cursor:pointer}
+.field select:focus{border-color:#e8630a}
+.field select option{background:#161616;color:#e8e8e8}
 
 /* ---------- Badges ---------- */
 .role-badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle}
@@ -114,12 +115,16 @@ h2{font-size:20px;font-weight:600;margin-bottom:20px}
     <p class="subtitle">Two bonfires. One formal agreement. Fully LLM-driven.</p>
 
     <div class="field">
-      <label>Donor Bonfire ID <span class="role-badge donor-badge">reads applicant</span></label>
-      <input type="text" id="input-donor" placeholder="e.g. bf_a1b2c3d4" autocomplete="off">
+      <label>Donor Bonfire <span class="role-badge donor-badge">reads applicant</span></label>
+      <select id="input-donor">
+        <option value="" disabled selected>Loading bonfires…</option>
+      </select>
     </div>
     <div class="field">
-      <label>Applicant Bonfire ID <span class="role-badge applicant-badge">proposes deal</span></label>
-      <input type="text" id="input-applicant" placeholder="e.g. bf_e5f6g7h8" autocomplete="off">
+      <label>Applicant Bonfire <span class="role-badge applicant-badge">proposes deal</span></label>
+      <select id="input-applicant">
+        <option value="" disabled selected>Loading bonfires…</option>
+      </select>
     </div>
     <button class="btn-primary" id="btn-kindle" disabled>Kindle Agreement →</button>
 
@@ -201,13 +206,45 @@ h2{font-size:20px;font-weight:600;margin-bottom:20px}
     view.classList.add("active");
   }
 
+  // ---- Bonfire dropdown population ----
+
+  function populateBonfireDropdowns(bonfires) {
+    [donorInput, applicantInput].forEach(function (sel) {
+      sel.innerHTML = '<option value="" disabled selected>Select a bonfire</option>';
+      bonfires.forEach(function (bf) {
+        var opt = document.createElement("option");
+        opt.value = bf.id;
+        opt.textContent = bf.name + " (" + bf.id + ")";
+        sel.appendChild(opt);
+      });
+    });
+    updateKindleBtn();
+  }
+
+  function loadBonfires() {
+    api("GET", "/bonfires").then(function (data) {
+      var bonfires = data.bonfires || [];
+      if (bonfires.length === 0) {
+        [donorInput, applicantInput].forEach(function (sel) {
+          sel.innerHTML = '<option value="" disabled selected>No bonfires found</option>';
+        });
+        return;
+      }
+      populateBonfireDropdowns(bonfires);
+    }).catch(function () {
+      [donorInput, applicantInput].forEach(function (sel) {
+        sel.innerHTML = '<option value="" disabled selected>Failed to load bonfires</option>';
+      });
+    });
+  }
+
   // ---- Input validation ----
 
   function updateKindleBtn() {
-    kindleBtn.disabled = !(donorInput.value.trim() && applicantInput.value.trim());
+    kindleBtn.disabled = !(donorInput.value && applicantInput.value);
   }
-  donorInput.addEventListener("input", updateKindleBtn);
-  applicantInput.addEventListener("input", updateKindleBtn);
+  donorInput.addEventListener("change", updateKindleBtn);
+  applicantInput.addEventListener("change", updateKindleBtn);
 
   // ---- Time formatting ----
 
@@ -535,8 +572,8 @@ h2{font-size:20px;font-weight:600;margin-bottom:20px}
   // ---- Event handlers ----
 
   kindleBtn.addEventListener("click", function () {
-    var d = donorInput.value.trim();
-    var a = applicantInput.value.trim();
+    var d = donorInput.value;
+    var a = applicantInput.value;
     if (!d || !a) return;
     startRun(d, a);
   });
@@ -547,18 +584,20 @@ h2{font-size:20px;font-weight:600;margin-bottom:20px}
     loadSetupHistory();
   });
 
-  backBtn.addEventListener("click", function () {
-    donorInput.value = "";
-    applicantInput.value = "";
+  function resetSelects() {
+    donorInput.selectedIndex = 0;
+    applicantInput.selectedIndex = 0;
     updateKindleBtn();
+  }
+
+  backBtn.addEventListener("click", function () {
+    resetSelects();
     showView(viewSetup);
     loadSetupHistory();
   });
 
   newAgreementBtn.addEventListener("click", function () {
-    donorInput.value = "";
-    applicantInput.value = "";
-    updateKindleBtn();
+    resetSelects();
     showView(viewSetup);
     loadSetupHistory();
   });
@@ -569,6 +608,7 @@ h2{font-size:20px;font-weight:600;margin-bottom:20px}
 
   // ---- Init ----
 
+  loadBonfires();
   loadSetupHistory();
 })();
 </script>
