@@ -1,0 +1,2961 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bonfire Quest Game</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      margin: 0; padding: 0;
+      background: #1a1410;
+      color: #e8dcc8;
+      min-height: 100vh;
+    }
+
+    /* ── Status Bar ── */
+    #statusBar {
+      display: none;
+      background: #2a2018;
+      border-bottom: 1px solid #3f2f1f;
+      padding: 8px 24px;
+      font-size: 13px;
+      gap: 16px;
+      align-items: center;
+    }
+    #statusBar.visible { display: flex; }
+    .status-pill {
+      background: #3a2a1a;
+      border: 1px solid #5a4a30;
+      border-radius: 999px;
+      padding: 3px 12px;
+      font-size: 12px;
+      color: #c8a86a;
+    }
+    .status-pill.active { border-color: #8a6a30; color: #e8c878; }
+    #statusBar .back-link {
+      margin-left: auto;
+      color: #8a7a5a;
+      cursor: pointer;
+      font-size: 12px;
+      text-decoration: underline;
+    }
+    #statusBar .back-link:hover { color: #c8a86a; }
+
+    /* ── Phases ── */
+    .phase { display: none; }
+    .phase.active { display: block; }
+
+    /* ── Phase 1: Connect ── */
+    #phaseConnect { display: none; }
+    #phaseConnect.active {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 90vh;
+      text-align: center;
+      padding: 40px;
+    }
+    #phaseConnect h1 {
+      font-size: 42px;
+      color: #e8c878;
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+    #phaseConnect .subtitle {
+      color: #8a7a5a;
+      font-size: 16px;
+      margin-bottom: 48px;
+      max-width: 500px;
+    }
+    .connect-btn {
+      background: linear-gradient(135deg, #8a5a20, #c88a30);
+      color: #fff;
+      border: none;
+      padding: 16px 48px;
+      font-size: 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+    .connect-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(200, 138, 48, 0.3);
+    }
+    .connect-btn:active { transform: translateY(0); }
+
+    /* ── Phase 2: Choose Path ── */
+    #phaseChoose { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+    #phaseChoose h2 { color: #e8c878; text-align: center; margin-bottom: 32px; font-size: 28px; }
+    .path-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .path-card {
+      background: #2a2018;
+      border: 1px solid #3f2f1f;
+      border-radius: 12px;
+      padding: 28px;
+      cursor: default;
+      transition: border-color 0.2s;
+    }
+    .path-card:hover { border-color: #6a5a3a; }
+    .path-card h3 {
+      color: #e8c878;
+      margin: 0 0 8px 0;
+      font-size: 20px;
+    }
+    .path-card .desc {
+      color: #8a7a5a;
+      font-size: 14px;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+    .path-card select,
+    .path-card textarea,
+    .path-card input {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    /* ── Shared form controls ── */
+    select, input, textarea, button {
+      font: inherit;
+      font-size: 14px;
+    }
+    select, input[type="text"], input[type="number"], input:not([type]), textarea {
+      background: #1a1410;
+      border: 1px solid #3f2f1f;
+      color: #e8dcc8;
+      padding: 10px 12px;
+      border-radius: 6px;
+    }
+    select:focus, input:focus, textarea:focus {
+      outline: none;
+      border-color: #8a6a30;
+    }
+    textarea { resize: vertical; min-height: 80px; }
+    button {
+      background: #3a2a1a;
+      border: 1px solid #5a4a30;
+      color: #e8c878;
+      padding: 10px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    button:hover {
+      background: #4a3a2a;
+      border-color: #8a6a30;
+    }
+    button.primary {
+      background: linear-gradient(135deg, #8a5a20, #c88a30);
+      color: #fff;
+      border-color: #c88a30;
+    }
+    button.primary:hover {
+      background: linear-gradient(135deg, #9a6a28, #d89a40);
+    }
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* ── Phase 3: Setup Agent ── */
+    #phaseSetup { max-width: 600px; margin: 0 auto; padding: 40px 24px; }
+    #phaseSetup h2 { color: #e8c878; text-align: center; margin-bottom: 8px; }
+    #phaseSetup .setup-subtitle {
+      text-align: center;
+      color: #8a7a5a;
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+    .wizard-step {
+      background: #2a2018;
+      border: 1px solid #3f2f1f;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .wizard-step.done {
+      border-color: #4a6a30;
+      opacity: 0.7;
+    }
+    .wizard-step h4 {
+      color: #c8a86a;
+      margin: 0 0 12px 0;
+      font-size: 15px;
+    }
+    .wizard-step .step-status {
+      font-size: 12px;
+      color: #6a8a40;
+      margin-top: 8px;
+    }
+    .wizard-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+    .wizard-row select, .wizard-row input { flex: 1; }
+    .wizard-row button { flex-shrink: 0; }
+
+    /* ── Phase 4: Play ── */
+    #phasePlay { display: none; height: calc(100vh - 38px); }
+    #phasePlay.active {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      grid-template-columns: 1fr 400px 300px;
+    }
+
+    /* ── Knowledge Map Column ── */
+    .map-col {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #3f2f1f;
+      min-height: 0;
+      background: #0e0c0a;
+      position: relative;
+    }
+    .map-header {
+      padding: 8px 12px;
+      background: #221a12;
+      border-bottom: 1px solid #3f2f1f;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 12px;
+    }
+    .map-header .map-title {
+      color: #c8a86a;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .map-header .map-stat {
+      color: #8a7a5a;
+      margin-left: auto;
+    }
+    .map-tabs {
+      display: flex;
+      border-bottom: 1px solid #3f2f1f;
+      background: #1a1410;
+    }
+    .map-tab {
+      flex: 1;
+      padding: 6px 0;
+      text-align: center;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #8a7a5a;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      background: none;
+      border-left: none; border-right: none; border-top: none;
+    }
+    .map-tab.active {
+      color: #c8a86a;
+      border-bottom-color: #c8a86a;
+    }
+    .map-tab:hover { color: #e8dcc8; }
+    .map-view { flex: 1; min-height: 0; display: none; position: relative; }
+    .map-view.active { display: flex; flex-direction: column; }
+
+    /* Room Map */
+    .room-map-canvas {
+      flex: 1;
+      overflow: auto;
+      padding: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-content: flex-start;
+    }
+    .room-card {
+      background: #1a1410;
+      border: 1px solid #3f2f1f;
+      border-radius: 8px;
+      padding: 12px;
+      min-width: 140px;
+      max-width: 200px;
+      flex: 1;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .room-card:hover { border-color: #c8a86a; }
+    .room-card.current { border-color: #6aaa5a; box-shadow: 0 0 8px rgba(106,170,90,0.25); }
+    .room-card-name {
+      color: #c8a86a;
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    .room-card-desc {
+      color: #8a7a5a;
+      font-size: 11px;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+    .room-player-token {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #2a2018;
+      border: 1px solid #5a4a30;
+      border-radius: 12px;
+      padding: 2px 8px;
+      font-size: 10px;
+      color: #e8dcc8;
+      margin: 2px;
+    }
+    .room-player-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #6aaa5a;
+    }
+    .map-canvas {
+      flex: 1;
+      min-height: 0;
+    }
+    .map-canvas svg {
+      width: 100%;
+      height: 100%;
+    }
+    .map-tooltip {
+      position: absolute;
+      background: #2a2018;
+      border: 1px solid #5a4a30;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #e8dcc8;
+      pointer-events: none;
+      z-index: 100;
+      max-width: 220px;
+      display: none;
+      line-height: 1.4;
+    }
+    .map-tooltip .tt-name { color: #e8c878; font-weight: 600; }
+    .map-tooltip .tt-label { color: #8a7a5a; font-size: 11px; }
+    .map-tooltip .tt-fact { color: #a09080; margin-top: 4px; }
+
+    /* old world-bar base styles replaced by Turn HUD in new CSS block */
+
+    .chat-col {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #3f2f1f;
+      min-height: 0;
+    }
+    .chat-header {
+      padding: 10px 16px;
+      background: #221a12;
+      border-bottom: 1px solid #3f2f1f;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 13px;
+    }
+    .chat-header select { max-width: 220px; }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      background: #181210;
+    }
+    .chat-messages .msg-self { color: #c0a060; margin-bottom: 6px; }
+    .chat-messages .msg-other { color: #7eb8a0; margin-bottom: 6px; }
+    .chat-messages .msg-system { color: #8a7a5a; font-style: italic; margin-bottom: 6px; }
+    .chat-messages .msg-sender { font-weight: bold; font-size: 11px; opacity: 0.7; }
+    .chat-input-row {
+      display: flex;
+      border-top: 1px solid #3f2f1f;
+      background: #221a12;
+    }
+    .chat-input-row input {
+      flex: 1;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      padding: 12px 16px;
+    }
+    .chat-input-row button {
+      border: none;
+      border-radius: 0;
+      border-left: 1px solid #3f2f1f;
+      padding: 12px 24px;
+    }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background: #221a12;
+    }
+    .sidebar-section {
+      border-bottom: 1px solid #3f2f1f;
+      padding: 12px 16px;
+    }
+    .sidebar-section h4 {
+      margin: 0 0 8px 0;
+      color: #c8a86a;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .quest-list {
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .quest-item {
+      padding: 6px 0;
+      border-bottom: 1px solid #2a2018;
+    }
+    .quest-item:last-child { border: none; }
+    .quest-keyword {
+      color: #e8c878;
+      font-weight: 600;
+    }
+    .quest-reward {
+      color: #8aba50;
+      font-size: 12px;
+    }
+    .activity-log {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 16px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #8a7a5a;
+    }
+
+    .action-bar {
+      grid-column: 1 / -1;
+      background: #2a2018;
+      border-top: 1px solid #3f2f1f;
+      padding: 8px 16px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .action-bar .spacer { flex: 1; }
+    .action-bar select { max-width: 180px; }
+
+    /* ── Trail Popup (kept from original) ── */
+    .trail-popup {
+      position: fixed; right: 20px; bottom: 20px; width: 360px;
+      border: 2px solid #5a4a30;
+      border-radius: 10px;
+      background: #2a2018;
+      color: #e8dcc8;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      display: none; z-index: 9999;
+    }
+    .trail-popup.show { display: block; }
+    .trail-popup-header {
+      padding: 12px 16px;
+      font-weight: bold;
+      border-bottom: 1px solid #3f2f1f;
+      color: #e8c878;
+      font-size: 15px;
+    }
+    .trail-popup-body {
+      padding: 12px 16px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      font-size: 14px;
+    }
+    .trail-popup-actions {
+      padding: 8px 16px;
+      border-top: 1px solid #3f2f1f;
+      text-align: right;
+    }
+
+    /* ── Debug Console ── */
+    .debug-toggle {
+      text-align: center;
+      padding: 6px;
+      font-size: 12px;
+      color: #5a4a30;
+      cursor: pointer;
+    }
+    .debug-toggle:hover { color: #8a7a5a; }
+    .debug-console {
+      display: none;
+      background: #0a0a08;
+      max-height: 300px;
+      overflow: auto;
+    }
+    .debug-console.open { display: block; }
+    .debug-console pre {
+      margin: 0;
+      padding: 12px 16px;
+      color: #6a8a40;
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+      white-space: pre-wrap;
+    }
+
+    /* ── Turn Stepper Overlay ── */
+    .turn-stepper-overlay {
+      position: fixed; inset: 0;
+      background: rgba(10, 8, 6, 0.85);
+      display: none; z-index: 10000;
+      align-items: center; justify-content: center;
+    }
+    .turn-stepper-overlay.active { display: flex; }
+    .turn-stepper {
+      background: #2a2018;
+      border: 2px solid #5a4a30;
+      border-radius: 12px;
+      padding: 32px 48px;
+      min-width: 340px;
+      text-align: center;
+    }
+    .turn-stepper h3 {
+      color: #e8c878;
+      margin: 0 0 24px 0;
+      font-size: 18px;
+      letter-spacing: 1px;
+    }
+    .stepper-steps { list-style: none; padding: 0; margin: 0; text-align: left; }
+    .stepper-steps li {
+      padding: 8px 0;
+      font-size: 14px;
+      color: #5a4a30;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: color 0.3s;
+    }
+    .stepper-steps li.active { color: #e8c878; }
+    .stepper-steps li.done { color: #6a8a40; }
+    .stepper-steps li .step-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #3a2a1a;
+      border: 2px solid #5a4a30;
+      flex-shrink: 0;
+      transition: all 0.3s;
+    }
+    .stepper-steps li.active .step-dot {
+      background: #e8c878;
+      border-color: #e8c878;
+      box-shadow: 0 0 8px rgba(232, 200, 120, 0.4);
+    }
+    .stepper-steps li.done .step-dot {
+      background: #6a8a40;
+      border-color: #6a8a40;
+    }
+
+    /* ── GM Narrative Overlay ── */
+    .gm-overlay {
+      position: fixed; inset: 0;
+      background: rgba(10, 8, 6, 0.9);
+      display: none; z-index: 10001;
+      align-items: center; justify-content: center;
+    }
+    .gm-overlay.active { display: flex; }
+    .gm-card {
+      background: #2a2018;
+      border: 2px solid #8a6a30;
+      border-radius: 14px;
+      max-width: 560px;
+      width: 90%;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(200, 168, 106, 0.08);
+    }
+    .gm-card-header {
+      padding: 20px 28px 12px;
+      text-align: center;
+      border-bottom: 1px solid #3f2f1f;
+    }
+    .gm-card-header h3 {
+      color: #8a7a5a;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin: 0 0 4px 0;
+    }
+    .gm-card-header .gm-title {
+      color: #e8c878;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .gm-card-body {
+      padding: 24px 28px;
+    }
+    .gm-reaction-text {
+      color: #e8dcc8;
+      font-size: 15px;
+      line-height: 1.6;
+      font-style: italic;
+      margin-bottom: 16px;
+    }
+    .gm-world-update {
+      background: #1a1410;
+      border: 1px solid #3f2f1f;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #a09080;
+      line-height: 1.4;
+      margin-bottom: 16px;
+    }
+    .gm-world-update .gm-wu-label {
+      color: #8a7a5a;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .gm-extension {
+      text-align: center;
+      padding: 12px 0;
+      font-size: 16px;
+      color: #e8c878;
+      font-weight: 600;
+    }
+    .gm-extension .ext-value {
+      display: inline-block;
+      background: #3a4a1a;
+      border: 1px solid #5a7a30;
+      border-radius: 6px;
+      padding: 4px 16px;
+      color: #8aba50;
+    }
+    .gm-card-footer {
+      padding: 16px 28px;
+      text-align: center;
+      border-top: 1px solid #3f2f1f;
+    }
+
+    /* ── Turn HUD (replaces world-bar) ── */
+    .world-bar {
+      grid-column: 1 / -1;
+      background: #2a2018;
+      border-bottom: 1px solid #3f2f1f;
+      padding: 10px 20px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      font-size: 13px;
+    }
+    .hud-narrative {
+      flex: 1;
+      min-width: 0;
+      color: #c8b898;
+      line-height: 1.4;
+      font-size: 13px;
+      max-height: 42px;
+      overflow: hidden;
+    }
+    .hud-narrative .hud-label {
+      color: #8a7a5a;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .hud-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .hud-turn {
+      color: #e8c878;
+      font-weight: 600;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    .episode-gauge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #8a7a5a;
+    }
+    .episode-gauge-bar {
+      width: 80px;
+      height: 6px;
+      background: #1a1410;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .episode-gauge-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.4s, background 0.4s;
+      background: #6a8a40;
+    }
+    .episode-gauge-fill.mid { background: #c8a830; }
+    .episode-gauge-fill.low { background: #ba5050; }
+    .hud-agent {
+      text-align: right;
+      flex-shrink: 0;
+      min-width: 100px;
+    }
+    .hud-agent .agent-id { color: #c8a86a; font-weight: 600; font-size: 12px; }
+    .hud-agent .agent-badge {
+      font-size: 11px;
+      color: #8a7a5a;
+    }
+
+    /* ── Entity Detail Panel ── */
+    .entity-panel {
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      width: 220px;
+      background: #221a12;
+      border-left: 1px solid #3f2f1f;
+      z-index: 50;
+      display: none;
+      flex-direction: column;
+      overflow-y: auto;
+      font-size: 13px;
+    }
+    .entity-panel.open { display: flex; }
+    .entity-panel-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid #3f2f1f;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .entity-panel-header .ep-name {
+      color: #e8c878;
+      font-weight: 600;
+      font-size: 14px;
+      flex: 1;
+      word-break: break-word;
+    }
+    .entity-panel-header .ep-close {
+      color: #8a7a5a;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .entity-panel-header .ep-close:hover { color: #e8dcc8; }
+    .ep-badge {
+      display: inline-block;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 3px;
+      border: 1px solid #3f2f1f;
+      color: #8a7a5a;
+      margin-bottom: 4px;
+    }
+    .ep-section {
+      padding: 10px 14px;
+      border-bottom: 1px solid #2a2018;
+    }
+    .ep-section-title {
+      color: #8a7a5a;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .ep-summary {
+      color: #a09080;
+      line-height: 1.4;
+      font-size: 12px;
+    }
+    .ep-connections {
+      list-style: none;
+      padding: 0; margin: 0;
+    }
+    .ep-connections li {
+      padding: 3px 0;
+      color: #c8a86a;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .ep-connections li:hover { color: #e8c878; text-decoration: underline; }
+    .ep-quest-tag {
+      background: #3a1a1a;
+      border: 1px solid #6a3030;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      color: #e85050;
+    }
+    .ep-actions { padding: 10px 14px; }
+
+    /* ── Quest Cards ── */
+    .quest-card {
+      background: #1a1410;
+      border: 1px solid #3f2f1f;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      transition: border-color 0.2s;
+    }
+    .quest-card:hover { border-color: #5a4a30; }
+    .quest-card-head {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .quest-card-icon { font-size: 14px; }
+    .quest-card-head .quest-keyword {
+      color: #e8c878;
+      font-weight: 600;
+      font-size: 13px;
+      flex: 1;
+    }
+    .quest-card-head .quest-reward {
+      color: #8aba50;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .quest-card-type {
+      display: inline-block;
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .quest-card-type.graph { background: #1a2a3a; border: 1px solid #3a5a7a; color: #5a8aba; }
+    .quest-card-type.seed { background: #2a2a1a; border: 1px solid #5a5a30; color: #a0a050; }
+    .quest-card-prompt {
+      color: #8a7a5a;
+      font-size: 12px;
+      line-height: 1.3;
+      margin-bottom: 6px;
+    }
+    .quest-card-hint {
+      font-size: 11px;
+      color: #6a5a3a;
+      font-style: italic;
+      margin-bottom: 6px;
+    }
+    .quest-attempt-btn {
+      font-size: 11px;
+      padding: 3px 10px;
+      background: #3a2a1a;
+      border: 1px solid #5a4a30;
+      color: #c8a86a;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .quest-attempt-btn:hover { background: #4a3a2a; border-color: #8a6a30; }
+    .quest-attempt-form {
+      display: none;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #2a2018;
+    }
+    .quest-attempt-form.open { display: block; }
+    .quest-attempt-form textarea {
+      width: 100%;
+      min-height: 50px;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    /* ── Narrative Journal ── */
+    .journal-entry {
+      padding: 6px 0;
+      border-bottom: 1px solid #1a1410;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 12px;
+      line-height: 1.4;
+      animation: journalFadeIn 0.4s ease;
+    }
+    @keyframes journalFadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .journal-icon { margin-right: 4px; }
+    .journal-text { color: #a09080; }
+    .journal-text em { color: #c8a86a; font-style: normal; }
+    .journal-time {
+      color: #3a2a1a;
+      font-size: 10px;
+      margin-left: 4px;
+    }
+    .journal-entry.highlight .journal-text { color: #e8c878; }
+
+    /* ── Admin Dropdown ── */
+    .admin-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .admin-dropdown-content {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      right: 0;
+      background: #2a2018;
+      border: 1px solid #5a4a30;
+      border-radius: 8px;
+      min-width: 180px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      z-index: 200;
+      padding: 4px 0;
+      margin-bottom: 4px;
+    }
+    .admin-dropdown.open .admin-dropdown-content { display: block; }
+    .admin-dropdown-content button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      border: none;
+      border-radius: 0;
+      padding: 8px 14px;
+      font-size: 12px;
+      color: #a09080;
+      background: transparent;
+    }
+    .admin-dropdown-content button:hover {
+      background: #3a2a1a;
+      color: #e8dcc8;
+    }
+
+    /* ── Utilities ── */
+    .hidden-field { display: none; }
+    .mb-8 { margin-bottom: 8px; }
+    .mb-16 { margin-bottom: 16px; }
+    .text-center { text-align: center; }
+    .text-muted { color: #8a7a5a; font-size: 13px; }
+    .flex-row { display: flex; gap: 8px; align-items: center; }
+    .w-full { width: 100%; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Status Bar ── -->
+  <div id="statusBar">
+    <span class="status-pill" id="pillWallet">Not connected</span>
+    <span class="status-pill" id="pillBonfire" style="display:none"></span>
+    <span class="status-pill active" id="pillAgent" style="display:none"></span>
+    <span class="back-link" id="backLink" onclick="goBack()" style="display:none">Change game</span>
+  </div>
+
+  <!-- ── Phase 1: Connect Wallet ── -->
+  <div id="phaseConnect" class="phase active">
+    <h1>Bonfire Quest</h1>
+    <div class="subtitle">
+      A shared-world adventure powered by knowledge graphs, AI agents, and onchain identity.
+      Connect your wallet to begin.
+    </div>
+    <button class="connect-btn" onclick="doConnect()">Connect Wallet</button>
+  </div>
+
+  <!-- ── Phase 2: Choose Path ── -->
+  <div id="phaseChoose" class="phase">
+    <h2>Choose Your Path</h2>
+    <div class="path-cards">
+
+      <div class="path-card">
+        <h3>Start a Game</h3>
+        <div class="desc">You own a Bonfire NFT and want to create a new game world for agents to explore.</div>
+        <select id="ownedBonfires" onchange="selectOwnedBonfire()">
+          <option value="">Select your bonfire...</option>
+        </select>
+        <textarea id="gamePrompt" placeholder="Describe the game world, theme, rules, and opening scene..."></textarea>
+        <div class="flex-row">
+          <input id="gameQuestCount" placeholder="quests" value="2" style="width:70px" />
+          <input id="gameGmAgentId" placeholder="GM agent ID (recommended)" style="flex:1" />
+        </div>
+        <div style="font-size:11px; color:#8a7a5a; margin-top:4px;">
+          Use a separate agent for the GM to avoid double-episode conflicts with player agents.
+        </div>
+        <div style="margin-top:10px">
+          <button class="primary w-full" onclick="createGame()">Create Game</button>
+        </div>
+      </div>
+
+      <div class="path-card">
+        <h3>Join a Game</h3>
+        <div class="desc">Browse active games, buy a game slot, or restore your existing agent.</div>
+        <select id="activeGames" onchange="selectActiveGame()">
+          <option value="">Select an active game...</option>
+        </select>
+        <div class="flex-row mb-8">
+          <button class="w-full" onclick="listActiveGames()">Refresh Games</button>
+        </div>
+        <div class="text-muted mb-8">Or restore a previous session:</div>
+        <div class="flex-row">
+          <input id="restorePurchaseTxHash" placeholder="purchase tx hash (optional)" style="flex:1" />
+          <button onclick="restorePlayers()">Restore</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Phase 3: Setup Agent ── -->
+  <div id="phaseSetup" class="phase">
+    <h2>Prepare Your Agent</h2>
+    <div class="setup-subtitle">Get your agent ready to enter the game world.</div>
+
+    <div class="wizard-step" id="wizStep1">
+      <h4>1. Select or Buy Agent</h4>
+      <div class="wizard-row">
+        <select id="walletPurchasedAgents" onchange="selectWalletPurchasedAgent()">
+          <option value="">Your agents in this bonfire...</option>
+        </select>
+        <button onclick="loadWalletPurchasedAgents()">Refresh</button>
+      </div>
+      <div class="text-muted mb-8">Don't have an agent yet?</div>
+      <div class="wizard-row">
+        <input id="buyEpisodes" placeholder="episodes" value="2" style="width:70px" />
+        <input id="buyAgentName" placeholder="agent name" value="Quest Agent" style="flex:1" />
+        <button class="primary" onclick="buyAgent()">Buy Agent (x402)</button>
+      </div>
+      <div id="wizStep1Status" class="step-status"></div>
+    </div>
+
+    <div class="wizard-step" id="wizStep2">
+      <h4>2. Register in Game</h4>
+      <div class="wizard-row">
+        <span class="text-muted" id="wizSelectedAgent">No agent selected</span>
+        <button class="primary" onclick="registerSelectedAgent()" id="btnRegister" disabled>Register</button>
+      </div>
+      <div id="wizStep2Status" class="step-status"></div>
+    </div>
+
+    <div class="wizard-step" id="wizStep3">
+      <h4>3. Reveal API Key</h4>
+      <div class="text-muted mb-8">Sign a message with your wallet to unlock your agent's API key.</div>
+      <div class="wizard-row">
+        <button class="primary" onclick="revealAndSaveAgentApiKey()" id="btnReveal">Reveal + Save Key</button>
+        <span class="text-muted" id="wizKeyStatus">No key</span>
+      </div>
+      <div id="wizStep3Status" class="step-status"></div>
+    </div>
+
+    <div style="text-align:center; margin-top:20px">
+      <button class="primary" onclick="enterGame()" id="btnEnterGame" disabled>Enter Game</button>
+      <div class="text-muted" style="margin-top:8px">
+        <span onclick="enterGame()" style="cursor:pointer; text-decoration:underline">Skip setup (use server key)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Phase 4: Play ── -->
+  <div id="phasePlay" class="phase">
+    <!-- Turn HUD -->
+    <div class="world-bar">
+      <div class="hud-narrative">
+        <div class="hud-label">World State</div>
+        <div id="hudNarrative">Loading...</div>
+      </div>
+      <div class="hud-center">
+        <div class="hud-turn" id="hudTurn">Turn 0</div>
+        <div class="episode-gauge">
+          <div class="episode-gauge-bar">
+            <div class="episode-gauge-fill" id="hudGaugeFill" style="width:100%"></div>
+          </div>
+          <span id="hudGaugeLabel">--</span>
+        </div>
+      </div>
+      <div class="hud-agent">
+        <div class="agent-id" id="asAgentId">--</div>
+        <div class="agent-badge" id="asEpisodes">--</div>
+      </div>
+    </div>
+
+    <!-- Chat Column -->
+    <div class="chat-col">
+      <div class="chat-header">
+        <select id="chatAgentSelect" onchange="selectChatAgent()" style="flex:1; max-width:none;">
+          <option value="">Select agent...</option>
+        </select>
+        <span id="chatRoomLabel" style="font-size:11px; color:#c0a060; white-space:nowrap; font-style:italic;"></span>
+        <span id="chatAgentEpisodes" style="font-size:11px; color:#8a7a5a; white-space:nowrap;"></span>
+      </div>
+      <div id="chatWindow" class="chat-messages">Select an agent to start your quest.</div>
+      <div class="chat-input-row">
+        <input id="chatInput" placeholder="Send a message..." onkeydown="if(event.key==='Enter')sendChatMessage()" />
+        <button onclick="sendChatMessage()">Send</button>
+      </div>
+    </div>
+
+    <!-- Map Column -->
+    <div class="map-col">
+      <div class="map-tabs">
+        <button class="map-tab active" data-map-tab="rooms" onclick="switchMapTab('rooms')">Rooms</button>
+        <button class="map-tab" data-map-tab="knowledge" onclick="switchMapTab('knowledge')">Knowledge</button>
+      </div>
+
+      <!-- Room Map View -->
+      <div class="map-view active" id="mapViewRooms">
+        <div class="map-header">
+          <span class="map-title">Room Map</span>
+          <button onclick="loadRoomMap()" style="font-size:11px; padding:3px 10px;">Refresh</button>
+          <span class="map-stat" id="roomMapStats">0 rooms</span>
+        </div>
+        <div class="room-map-canvas" id="roomMapCanvas">
+          <div class="text-muted" style="padding:20px;">No rooms yet. Create a game to begin.</div>
+        </div>
+      </div>
+
+      <!-- Knowledge Map View -->
+      <div class="map-view" id="mapViewKnowledge">
+        <div class="map-header">
+          <span class="map-title">Knowledge Map</span>
+          <button onclick="loadKnowledgeMap()" style="font-size:11px; padding:3px 10px;">Discover</button>
+          <span class="map-stat" id="mapStats">0 nodes</span>
+        </div>
+        <div class="map-canvas" id="mapCanvas"></div>
+        <div class="map-tooltip" id="mapTooltip">
+          <div class="tt-name" id="ttName"></div>
+          <div class="tt-label" id="ttLabel"></div>
+          <div class="tt-fact" id="ttFact"></div>
+        </div>
+        <!-- Entity Detail Panel -->
+        <div class="entity-panel" id="entityPanel">
+          <div class="entity-panel-header">
+            <div>
+              <div class="ep-name" id="epName">--</div>
+              <div class="ep-badge" id="epBadge">Entity</div>
+            </div>
+            <span class="ep-close" onclick="hideEntityPanel()">&times;</span>
+          </div>
+          <div class="ep-section">
+            <div class="ep-section-title">Summary</div>
+            <div class="ep-summary" id="epSummary">--</div>
+          </div>
+          <div class="ep-section">
+            <div class="ep-section-title">Connections</div>
+            <ul class="ep-connections" id="epConnections"></ul>
+          </div>
+          <div class="ep-section" id="epQuestSection" style="display:none">
+            <div class="ep-section-title">Related Quest</div>
+            <div class="ep-quest-tag" id="epQuestTag"></div>
+          </div>
+          <div class="ep-actions">
+            <button class="primary w-full" style="font-size:12px; padding:6px 0;" onclick="exploreEntity()">Explore This</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <h4 style="display:flex; align-items:center; gap:8px;">
+          Quests
+          <button onclick="generateQuests()" style="font-size:10px; padding:2px 8px; margin-left:auto;">Generate</button>
+        </h4>
+        <div id="questList" class="quest-list">
+          <div class="text-muted">No quests loaded.</div>
+        </div>
+      </div>
+      <div class="sidebar-section" style="flex-shrink:0">
+        <h4>Explorers</h4>
+        <div id="playerList" class="quest-list">
+          <div class="text-muted">No players.</div>
+        </div>
+      </div>
+      <div style="flex-shrink:0; padding:4px 16px;">
+        <h4 style="color:#c8a86a; font-size:13px; margin:8px 0 4px 0; text-transform:uppercase; letter-spacing:0.5px;">Journal</h4>
+      </div>
+      <div id="activityLog" class="activity-log">
+        <div class="text-muted">Your adventure begins...</div>
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+      <button class="primary" onclick="endTurn()" id="btnEndTurn" style="padding:10px 28px; font-size:14px;">End Turn</button>
+      <span class="spacer"></span>
+      <div class="admin-dropdown" id="adminDropdown">
+        <button onclick="toggleAdminMenu()" style="font-size:12px; padding:8px 14px; color:#8a7a5a;">Admin</button>
+        <div class="admin-dropdown-content">
+          <button onclick="processChatStack(); toggleAdminMenu();">Process Stack</button>
+          <button onclick="triggerGmReaction(); toggleAdminMenu();">GM Reaction</button>
+          <button onclick="generateWorldEpisode(); toggleAdminMenu();">Generate Episode</button>
+          <button onclick="backfillWorldState(); toggleAdminMenu();">Backfill World</button>
+          <button onclick="processAllStacks(); toggleAdminMenu();">Process All Stacks</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Turn Stepper Overlay ── -->
+  <div class="turn-stepper-overlay" id="turnStepperOverlay">
+    <div class="turn-stepper">
+      <h3>Processing Turn</h3>
+      <ul class="stepper-steps" id="stepperSteps">
+        <li id="step0"><span class="step-dot"></span> Processing your actions...</li>
+        <li id="step1"><span class="step-dot"></span> The GM deliberates...</li>
+        <li id="step2"><span class="step-dot"></span> World state updated</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── GM Narrative Overlay ── -->
+  <div class="gm-overlay" id="gmOverlay">
+    <div class="gm-card">
+      <div class="gm-card-header">
+        <h3>The Game Master Speaks</h3>
+        <div class="gm-title" id="gmOverlayTitle">--</div>
+      </div>
+      <div class="gm-card-body">
+        <div class="gm-reaction-text" id="gmOverlayReaction">--</div>
+        <div class="gm-world-update" id="gmOverlayWorldWrap" style="display:none">
+          <div class="gm-wu-label">World Update</div>
+          <div id="gmOverlayWorld">--</div>
+        </div>
+        <div class="gm-extension" id="gmOverlayExtWrap" style="display:none">
+          <span class="ext-value" id="gmOverlayExt">--</span>
+        </div>
+      </div>
+      <div class="gm-card-footer">
+        <button class="primary" onclick="hideGmOverlay()" style="padding:10px 36px;">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Trail Popup (minor events) ── -->
+  <div id="trailPopup" class="trail-popup">
+    <div class="trail-popup-header" id="trailPopupTitle">Trail Update</div>
+    <div class="trail-popup-body" id="trailPopupBody"></div>
+    <div class="trail-popup-actions">
+      <button onclick="hideTrailPopup()">Continue</button>
+    </div>
+  </div>
+
+  <!-- ── Debug Console ── -->
+  <div class="debug-toggle" onclick="toggleDebug()">Debug Console</div>
+  <div id="debugConsole" class="debug-console">
+    <pre id="out">Ready.</pre>
+  </div>
+
+  <!-- Hidden fields that existing logic depends on -->
+  <input type="hidden" id="bonfireId" />
+  <input type="hidden" id="erc8004Id" />
+  <input type="hidden" id="wallet" />
+  <input type="hidden" id="agentId" />
+  <input type="hidden" id="purchaseId" />
+  <input type="hidden" id="purchaseTxHash" />
+  <input type="hidden" id="episodesPurchased" />
+  <input type="hidden" id="agentApiKey" />
+  <input type="hidden" id="buyPaymentHeader" />
+  <input type="hidden" id="buyAmount" />
+  <input type="hidden" id="chatGraphMode" value="regenerate" />
+  <input type="hidden" id="buyPlatform" value="web" />
+  <input type="hidden" id="buyAgentContext" value="You are a questing assistant." />
+  <input type="hidden" id="buyTelegramToken" />
+  <input type="hidden" id="buyDiscordToken" />
+  <input type="hidden" id="completeChatId" value="chat-1" />
+  <input type="hidden" id="completeUserId" value="player-1" />
+  <input type="hidden" id="completeMessage" />
+  <input type="hidden" id="asGameMaster" value="false" />
+  <input type="hidden" id="gmReward" value="2" />
+  <input type="hidden" id="gmKeyword" />
+  <input type="hidden" id="gmQuestType" value="gm_generated" />
+  <input type="hidden" id="turnAction" value="publish new episode" />
+  <input type="hidden" id="claimQuestId" />
+  <input type="hidden" id="claimSubmission" />
+  <input type="hidden" id="chatUserId" value="player-1" />
+  <input type="hidden" id="walletStatus" />
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+    const AGENT_API_KEY_STORAGE = "bonfireQuestGame.agentApiKey";
+    const CHAT_LOG_STORAGE = "bonfireQuestGame.chatLogByAgent"; // legacy, kept for migration
+    let currentRoomId = "";
+    let roomChatPollTimer = null;
+    const ACTIVE_AGENT_STORAGE = "bonfireQuestGame.activeAgent";
+    let ownedBonfireCache = [];
+    let activeGameCache = [];
+    let walletPurchasedAgentCache = [];
+    let erc8004RegistryAddress = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432";
+    let paymentConfig = {
+      network: "base",
+      source_network: "base",
+      destination_network: "base",
+      token_address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      chain_id: 8453,
+      default_amount: "0.01",
+      intermediary_address: "",
+    };
+    let currentPhase = "connect";
+    let feedPollTimer = null;
+
+    /* ── Core helpers ── */
+    async function api(path, body) {
+      const headers = {"Content-Type": "application/json"};
+      const agentApiKey = val("agentApiKey");
+      if (agentApiKey) headers["X-Agent-Api-Key"] = agentApiKey;
+      const res = await fetch(path, { method: "POST", headers, body: JSON.stringify(body) });
+      const data = await res.json().catch(() => ({}));
+      return {status: res.status, data};
+    }
+    function val(id) { return document.getElementById(id).value.trim(); }
+    function show(x) { document.getElementById("out").textContent = JSON.stringify(x, null, 2); }
+    function setVal(id, v) { document.getElementById(id).value = v || ""; }
+
+    /* ── Phase management ── */
+    function showPhase(phase) {
+      currentPhase = phase;
+      document.querySelectorAll(".phase").forEach(el => el.classList.remove("active"));
+      const target = document.getElementById("phase" + phase.charAt(0).toUpperCase() + phase.slice(1));
+      if (target) target.classList.add("active");
+
+      const bar = document.getElementById("statusBar");
+      const backLink = document.getElementById("backLink");
+      if (phase === "connect") {
+        bar.classList.remove("visible");
+      } else {
+        bar.classList.add("visible");
+      }
+      backLink.style.display = (phase === "play" || phase === "setup") ? "inline" : "none";
+
+      if (phase === "play") {
+        refreshPlayScreen();
+        startFeedPoll();
+        _startRoomChatPoll();
+        setTimeout(() => { _resolveCurrentRoomId(); loadRoomMap(); loadKnowledgeMap(); }, 300);
+      } else {
+        stopFeedPoll();
+        _stopRoomChatPoll();
+      }
+    }
+
+    function goBack() {
+      stopFeedPoll();
+      showPhase("choose");
+    }
+
+    function toggleDebug() {
+      document.getElementById("debugConsole").classList.toggle("open");
+    }
+
+    /* ── Status bar updates ── */
+    function updateStatusBar() {
+      const w = val("wallet");
+      const b = val("bonfireId");
+      const a = val("agentId");
+      const pillW = document.getElementById("pillWallet");
+      const pillB = document.getElementById("pillBonfire");
+      const pillA = document.getElementById("pillAgent");
+      pillW.textContent = w ? w.slice(0, 6) + "..." + w.slice(-4) : "Not connected";
+      if (b) {
+        pillB.textContent = "Bonfire: " + b.slice(0, 8) + "...";
+        pillB.style.display = "inline";
+      } else {
+        pillB.style.display = "none";
+      }
+      if (a) {
+        pillA.textContent = "Agent: " + a.slice(0, 8) + "...";
+        pillA.style.display = "inline";
+      } else {
+        pillA.style.display = "none";
+      }
+    }
+
+    /* ── Phase 1: Connect ── */
+    async function doConnect() {
+      await connectWallet();
+      if (val("wallet")) {
+        await _loadConfig();
+        updateStatusBar();
+        showPhase("choose");
+        loadWalletBonfires();
+        listActiveGames();
+      }
+    }
+
+    /* ── Phase 2: Choose Path ── */
+    async function createGame() {
+      const bonfireId = val("bonfireId");
+      const wallet = val("wallet");
+      const erc8004Id = Number(val("erc8004Id"));
+      const gamePrompt = val("gamePrompt");
+      if (!bonfireId || !wallet || !gamePrompt || Number.isNaN(erc8004Id)) {
+        show({ status: 400, error: "Select a bonfire and write a game prompt first." });
+        return;
+      }
+      const body = {
+        bonfire_id: bonfireId,
+        erc8004_bonfire_id: erc8004Id,
+        wallet_address: wallet,
+        game_prompt: gamePrompt,
+        initial_quest_count: Number(val("gameQuestCount") || "2"),
+      };
+      const gmAgentId = val("gameGmAgentId");
+      if (gmAgentId) body.gm_agent_id = gmAgentId;
+      const result = await api("/game/create", body);
+      show(result);
+      if (result.status === 200) {
+        await listActiveGames();
+        updateStatusBar();
+        showPhase("setup");
+        loadWalletPurchasedAgents();
+      }
+    }
+
+    function selectActiveGame() {
+      const idxRaw = val("activeGames");
+      if (!idxRaw) return;
+      const idx = Number(idxRaw);
+      if (Number.isNaN(idx) || idx < 0 || idx >= activeGameCache.length) return;
+      const selected = activeGameCache[idx];
+      if (!selected) return;
+      if (selected.bonfire_id) setVal("bonfireId", String(selected.bonfire_id));
+      updateStatusBar();
+      showPhase("setup");
+      loadWalletPurchasedAgents();
+      refreshAgentDropdown();
+      show({ status: 200, selected_game: selected });
+    }
+
+    /* ── Phase 3: Setup Agent Wizard ── */
+    function selectWalletPurchasedAgent() {
+      const idxRaw = val("walletPurchasedAgents");
+      if (!idxRaw) return;
+      const idx = Number(idxRaw);
+      if (Number.isNaN(idx) || idx < 0 || idx >= walletPurchasedAgentCache.length) return;
+      const selected = walletPurchasedAgentCache[idx];
+      if (!selected) return;
+      if (selected.agent_id) setVal("agentId", String(selected.agent_id));
+      if (selected.purchase_id && !String(selected.purchase_id).startsWith("synthetic-")) {
+        setVal("purchaseId", String(selected.purchase_id));
+      }
+      if (selected.purchase_tx_hash && !String(selected.purchase_tx_hash).startsWith("synthetic-tx-")) {
+        setVal("purchaseTxHash", String(selected.purchase_tx_hash));
+      }
+      if (selected.erc8004_bonfire_id != null) setVal("erc8004Id", String(selected.erc8004_bonfire_id));
+      _saveActiveAgentMemory({
+        agent_id: selected.agent_id || "",
+        bonfire_id: selected.bonfire_id || val("bonfireId"),
+      });
+      updateWizardState();
+      updateStatusBar();
+      show({ status: 200, selected_purchased_agent: selected });
+    }
+
+    async function registerSelectedAgent() {
+      const idxRaw = val("walletPurchasedAgents");
+      if (!idxRaw) {
+        show({ status: 400, error: "Select a purchased agent first." });
+        return;
+      }
+      const idx = Number(idxRaw);
+      if (Number.isNaN(idx) || idx < 0 || idx >= walletPurchasedAgentCache.length) {
+        show({ status: 400, error: "Invalid purchased agent selection." });
+        return;
+      }
+      const selected = walletPurchasedAgentCache[idx];
+      const wallet = val("wallet");
+      const bonfireId = val("bonfireId");
+      const erc8004IdRaw = val("erc8004Id");
+      const erc8004Id = Number(erc8004IdRaw);
+      if (!wallet || !bonfireId || Number.isNaN(erc8004Id)) {
+        show({ status: 400, error: "Missing required fields." });
+        return;
+      }
+      const result = await api("/game/agents/register-selected", {
+        wallet_address: wallet,
+        bonfire_id: bonfireId,
+        erc8004_bonfire_id: erc8004Id,
+        agent_id: selected.agent_id,
+        episodes_purchased: Number(val("episodesPurchased") || "2"),
+      });
+      if (result.status === 200) {
+        if (selected.agent_id) setVal("agentId", String(selected.agent_id));
+        _saveActiveAgentMemory({ agent_id: selected.agent_id, bonfire_id: bonfireId });
+        document.getElementById("wizStep2Status").textContent = "Registered!";
+        document.getElementById("wizStep2").classList.add("done");
+        await refreshAgentDropdown();
+      }
+      updateWizardState();
+      updateStatusBar();
+      show(result);
+    }
+
+    function updateWizardState() {
+      const agentId = val("agentId");
+      const hasKey = !!val("agentApiKey");
+      const wizAgent = document.getElementById("wizSelectedAgent");
+      const btnReg = document.getElementById("btnRegister");
+      const btnEnter = document.getElementById("btnEnterGame");
+      const keyStatus = document.getElementById("wizKeyStatus");
+
+      wizAgent.textContent = agentId ? "Agent: " + agentId.slice(0, 12) + "..." : "No agent selected";
+      btnReg.disabled = !agentId;
+
+      if (hasKey) {
+        keyStatus.textContent = "Key saved";
+        keyStatus.style.color = "#8aba50";
+        document.getElementById("wizStep3").classList.add("done");
+        document.getElementById("wizStep3Status").textContent = "API key ready.";
+      } else {
+        keyStatus.textContent = "No key";
+        keyStatus.style.color = "#8a7a5a";
+      }
+      btnEnter.disabled = !agentId;
+    }
+
+    function enterGame() {
+      const agentId = val("agentId");
+      if (!agentId && !val("bonfireId")) {
+        show({ status: 400, error: "Select an agent or bonfire first." });
+        return;
+      }
+      updateStatusBar();
+      showPhase("play");
+    }
+
+    /* ── Phase 4: Play Screen ── */
+    async function refreshPlayScreen() {
+      await refreshAgentDropdown();
+      await refreshWorldBar();
+      await refreshSidebar();
+    }
+
+    let turnCount = 0;
+
+    async function refreshWorldBar() {
+      const bonfireId = val("bonfireId");
+      if (!bonfireId) return;
+      try {
+        const res = await fetch(`/game/details?bonfire_id=${encodeURIComponent(bonfireId)}`);
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data) {
+          const game = data.game || {};
+          const narrative = game.world_state_summary || game.last_gm_reaction || "The world awaits your exploration...";
+          document.getElementById("hudNarrative").textContent = narrative;
+        }
+      } catch (_) {}
+      _refreshAgentStatus();
+    }
+
+    function _refreshAgentStatus() {
+      const agentId = val("chatAgentSelect") || val("agentId");
+      document.getElementById("asAgentId").textContent = agentId ? agentId.slice(0, 14) + "..." : "--";
+      document.getElementById("asEpisodes").textContent = "";
+    }
+
+    async function refreshSidebar() {
+      const bonfireId = val("bonfireId");
+      if (!bonfireId) return;
+      try {
+        const res = await fetch(`/game/state?bonfire_id=${encodeURIComponent(bonfireId)}`);
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data) {
+          _renderQuestList(data.quests || []);
+          _renderPlayerList(data.players || []);
+          _updateAgentSelect(data.players || []);
+          _updateAgentStatusFromPlayers(data.players || []);
+        }
+      } catch (_) {}
+      try {
+        const res = await fetch(`/game/feed?bonfire_id=${encodeURIComponent(bonfireId)}&limit=30`);
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data) {
+          _renderActivityLog(data.events || []);
+        }
+      } catch (_) {}
+    }
+
+    function _updateAgentStatusFromPlayers(players) {
+      const agentId = val("chatAgentSelect") || val("agentId");
+      const idEl = document.getElementById("asAgentId");
+      const epLabel = document.getElementById("asEpisodes");
+      const gaugeLabel = document.getElementById("hudGaugeLabel");
+      const gaugeFill = document.getElementById("hudGaugeFill");
+      const chatEpBadge = document.getElementById("chatAgentEpisodes");
+
+      idEl.textContent = agentId ? agentId.slice(0, 14) + "..." : "--";
+
+      let totalTurns = 0;
+      for (const p of players) {
+        if (p) totalTurns += (p.turns_used || 0);
+      }
+      document.getElementById("hudTurn").textContent = `Turn ${totalTurns}`;
+
+      for (const p of players) {
+        if (p && String(p.agent_id) === agentId) {
+          const rem = p.remaining_episodes != null ? p.remaining_episodes : 0;
+          const total = p.total_quota != null ? p.total_quota : rem;
+          const pct = total > 0 ? Math.round((rem / total) * 100) : 0;
+
+          epLabel.textContent = `${rem} ep`;
+          gaugeLabel.textContent = `${rem}/${total}`;
+          gaugeFill.style.width = pct + "%";
+          gaugeFill.className = "episode-gauge-fill" + (pct <= 25 ? " low" : pct <= 50 ? " mid" : "");
+          if (chatEpBadge) chatEpBadge.textContent = `${rem} episodes`;
+          return;
+        }
+      }
+      epLabel.textContent = "--";
+      gaugeLabel.textContent = "--";
+      gaugeFill.style.width = "0%";
+      if (chatEpBadge) chatEpBadge.textContent = "";
+    }
+
+    function _renderQuestList(quests) {
+      const el = document.getElementById("questList");
+      const active = quests.filter(q => q && q.status === "active");
+      if (active.length === 0) {
+        el.innerHTML = '<div class="text-muted">No active quests.</div>';
+        highlightQuestTargets([]);
+        return;
+      }
+      el.innerHTML = active.map(q => {
+        const isGraph = q.quest_type === "graph_discovery";
+        const typeClass = isGraph ? "graph" : "seed";
+        const typeLabel = isGraph ? "DISCOVERY" : "QUEST";
+        const icon = isGraph ? "&#x1F9ED;" : "&#x1F4DC;";
+        const qid = _esc(q.quest_id || "");
+        const hint = q.keyword ? `Mention &ldquo;${_esc(q.keyword)}&rdquo; in your exploration` : "";
+        return `<div class="quest-card" data-quest-id="${qid}">` +
+          `<div class="quest-card-head">` +
+            `<span class="quest-card-icon">${icon}</span>` +
+            `<span class="quest-keyword">${_esc(q.keyword || "?")}</span>` +
+            `<span class="quest-reward">+${q.reward || 0}</span>` +
+          `</div>` +
+          `<span class="quest-card-type ${typeClass}">${typeLabel}</span>` +
+          `<div class="quest-card-prompt">${_esc((q.prompt || "").slice(0, 100))}</div>` +
+          (hint ? `<div class="quest-card-hint">${hint}</div>` : "") +
+          `<button class="quest-attempt-btn" onclick="toggleQuestAttempt('${qid}')">Attempt Quest</button>` +
+          `<div class="quest-attempt-form" id="qa-${qid}">` +
+            `<textarea placeholder="Describe what you discovered..." id="qat-${qid}"></textarea>` +
+            `<button class="primary" style="font-size:11px; padding:4px 12px;" onclick="submitQuestAttempt('${qid}')">Submit</button>` +
+          `</div>` +
+          `</div>`;
+      }).join("");
+      highlightQuestTargets(active);
+    }
+
+    function toggleQuestAttempt(questId) {
+      const form = document.getElementById("qa-" + questId);
+      if (form) form.classList.toggle("open");
+    }
+
+    async function submitQuestAttempt(questId) {
+      const textarea = document.getElementById("qat-" + questId);
+      const submission = textarea ? textarea.value.trim() : "";
+      if (!submission) return;
+      const agentId = val("agentId");
+      const result = await api("/game/quests/claim", { quest_id: questId, agent_id: agentId, submission });
+      if (result.status === 200) {
+        const d = result.data || {};
+        const verdict = d.verdict || "unknown";
+        const reward = d.reward_granted || 0;
+        if (verdict === "accepted" || verdict === "approved") {
+          showTrailPopup("Quest Complete!", [`Reward: +${reward} episodes`, d.reaction || "Well done, explorer."]);
+        } else {
+          showTrailPopup("Quest Attempt", [`Verdict: ${verdict}`, d.reaction || "Keep exploring."]);
+        }
+        await refreshSidebar();
+      }
+      show(result);
+    }
+
+    function _renderPlayerList(players) {
+      const el = document.getElementById("playerList");
+      if (!players || players.length === 0) {
+        el.innerHTML = '<div class="text-muted">No players yet.</div>';
+        return;
+      }
+      el.innerHTML = players.map(p => {
+        const aid = String(p.agent_id || "?");
+        const rem = p.remaining_episodes != null ? p.remaining_episodes : "?";
+        const active = p.is_active ? "" : " (inactive)";
+        return `<div class="quest-item" style="font-size:12px">` +
+          `<span style="color:#c8a86a">${_esc(aid.slice(0,10))}...</span> ` +
+          `<span class="quest-reward">${rem} ep</span>${active}` +
+          `</div>`;
+      }).join("");
+    }
+
+    function _renderActivityLog(events) {
+      const el = document.getElementById("activityLog");
+      if (!events || events.length === 0) {
+        el.innerHTML = '<div class="text-muted">Your adventure begins...</div>';
+        return;
+      }
+      const recent = events.slice(-30).reverse();
+      el.innerHTML = recent.map(ev => {
+        const type = ev.event_type || "event";
+        const payload = ev.payload || {};
+        const timeAgo = _formatTimeAgo(ev.timestamp);
+        let icon = "", text = "", highlight = false;
+
+        if (type === "stack_processed") {
+          icon = "&#x1F4D6;";
+          text = "New knowledge was recorded.";
+        } else if (type === "world_state_updated") {
+          icon = "&#x1F30D;";
+          const summary = (payload.world_state_summary || "").slice(0, 80);
+          text = summary ? `The world shifts: <em>${_esc(summary)}</em>` : "The world state was updated.";
+          highlight = true;
+        } else if (type === "quest_claimed") {
+          const v = payload.verdict || "unknown";
+          icon = v === "accepted" || v === "approved" ? "&#x2705;" : "&#x274C;";
+          text = `Quest <em>${_esc(payload.keyword || "")}</em>: ${_esc(v)}`;
+          highlight = v === "accepted" || v === "approved";
+        } else if (type === "agent_recharged") {
+          icon = "&#x26A1;";
+          text = `The GM grants <em>+${payload.amount || 0} episodes</em>!`;
+          highlight = true;
+        } else if (type === "gm_response_recorded") {
+          icon = "&#x1F9D9;";
+          const reaction = (payload.reaction || "").slice(0, 80);
+          text = reaction ? `GM: <em>${_esc(reaction)}</em>` : "The Game Master has spoken.";
+        } else if (type === "quest_created") {
+          icon = "&#x2728;";
+          text = `New quest: <em>${_esc(payload.keyword || "unknown")}</em>`;
+        } else if (type === "game_created") {
+          icon = "&#x1F525;";
+          text = "A new game world was ignited.";
+          highlight = true;
+        } else {
+          icon = "&#x1F4AC;";
+          text = _esc(type.replace(/_/g, " "));
+        }
+        const cls = highlight ? "journal-entry highlight" : "journal-entry";
+        return `<div class="${cls}"><span class="journal-icon">${icon}</span><span class="journal-text">${text}</span><span class="journal-time">${_esc(timeAgo)}</span></div>`;
+      }).join("");
+    }
+
+    function _formatTimeAgo(timestamp) {
+      if (!timestamp) return "";
+      const diff = Date.now() - new Date(timestamp).getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return "just now";
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs}h ago`;
+      return `${Math.floor(hrs / 24)}d ago`;
+    }
+
+    function _esc(s) {
+      const d = document.createElement("div");
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function startFeedPoll() {
+      stopFeedPoll();
+      feedPollTimer = setInterval(() => {
+        if (currentPhase === "play") {
+          refreshSidebar();
+          refreshWorldBar();
+        }
+      }, 12000);
+    }
+    function stopFeedPoll() {
+      if (feedPollTimer) {
+        clearInterval(feedPollTimer);
+        feedPollTimer = null;
+      }
+    }
+
+    /* ── Unified End Turn ── */
+    let turnInProgress = false;
+
+    function showTurnStepper() {
+      const overlay = document.getElementById("turnStepperOverlay");
+      overlay.classList.add("active");
+      for (let i = 0; i < 3; i++) {
+        const li = document.getElementById("step" + i);
+        li.className = "";
+      }
+      document.getElementById("step0").className = "active";
+    }
+    function updateTurnStep(idx) {
+      for (let i = 0; i < 3; i++) {
+        const li = document.getElementById("step" + i);
+        if (i < idx) li.className = "done";
+        else if (i === idx) li.className = "active";
+        else li.className = "";
+      }
+    }
+    function hideTurnStepper() {
+      document.getElementById("turnStepperOverlay").classList.remove("active");
+    }
+
+    function showGmOverlay(data) {
+      const decision = data.gm_decision || {};
+      const reaction = decision.reaction || "The world turns quietly...";
+      const worldUpdate = decision.world_state_update || "";
+      const ext = typeof decision.extension_awarded === "number" ? decision.extension_awarded : 0;
+
+      document.getElementById("gmOverlayTitle").textContent =
+        ext > 0 ? "Extension Awarded" : "Turn Complete";
+      document.getElementById("gmOverlayReaction").textContent = reaction;
+
+      const worldWrap = document.getElementById("gmOverlayWorldWrap");
+      if (worldUpdate) {
+        document.getElementById("gmOverlayWorld").textContent = worldUpdate;
+        worldWrap.style.display = "block";
+      } else {
+        worldWrap.style.display = "none";
+      }
+
+      const extWrap = document.getElementById("gmOverlayExtWrap");
+      if (ext > 0) {
+        document.getElementById("gmOverlayExt").textContent = `+${ext} episodes`;
+        extWrap.style.display = "block";
+      } else {
+        extWrap.style.display = "none";
+      }
+
+      document.getElementById("gmOverlay").classList.add("active");
+    }
+    function hideGmOverlay() {
+      document.getElementById("gmOverlay").classList.remove("active");
+    }
+
+    async function endTurn() {
+      if (turnInProgress) return;
+      const agentId = val("chatAgentSelect") || val("agentId");
+      if (!agentId) { show({ status: 400, error: "Select an agent first." }); return; }
+      turnInProgress = true;
+      const btn = document.getElementById("btnEndTurn");
+      btn.disabled = true;
+      btn.textContent = "Processing...";
+
+      showTurnStepper();
+
+      try {
+        updateTurnStep(0);
+        const result = await api("/game/agents/end-turn", { agent_id: agentId });
+
+        if (result.status === 200) {
+          const d = result.data || {};
+          const epId = d.episode_id || "";
+          const note = epId ? `Episode recorded: ${epId.slice(0, 12)}...` : "Stack processed.";
+          _appendSystemMessage(note);
+
+          updateTurnStep(1);
+
+          const gmDecision = d.gm_decision || {};
+          if (gmDecision.reaction) {
+            const ext = gmDecision.extension_awarded || 0;
+            _appendSystemMessage(
+              `GM: ${gmDecision.reaction}${ext > 0 ? ` Extension: +${ext}.` : ""}`);
+          }
+
+          const changes = d.room_changes || {};
+          const newRooms = changes.new_rooms_created || [];
+          if (newRooms.length > 0) {
+            newRooms.forEach(r => _appendSystemMessage(`New room discovered: ${r.name}`));
+          }
+          const movements = changes.movements_applied || [];
+          if (movements.length > 0) {
+            const myMove = movements.find(mv => mv.agent_id === agentId);
+            if (myMove) {
+              currentRoomId = myMove.to_room;
+              await _resolveCurrentRoomId();
+            }
+            movements.forEach(mv => _appendSystemMessage(`Player moved to room: ${mv.to_room}`));
+          }
+
+          updateTurnStep(2);
+          await refreshWorldBar();
+          await refreshSidebar();
+          loadKnowledgeMap();
+          loadRoomMap();
+          await _renderChatWindow(agentId);
+
+          turnCount++;
+          hideTurnStepper();
+          showGmOverlay(d);
+        } else {
+          hideTurnStepper();
+          showTrailPopup("Turn Failed", [
+            result.data && result.data.error ? result.data.error : "Could not process turn.",
+          ]);
+        }
+      } catch (err) {
+        hideTurnStepper();
+        showTrailPopup("Error", [err.message || String(err)]);
+      } finally {
+        turnInProgress = false;
+        btn.disabled = false;
+        btn.textContent = "End Turn";
+      }
+    }
+
+    /* ── Admin dropdown ── */
+    function toggleAdminMenu() {
+      document.getElementById("adminDropdown").classList.toggle("open");
+    }
+    document.addEventListener("click", (e) => {
+      const dd = document.getElementById("adminDropdown");
+      if (dd && !dd.contains(e.target)) dd.classList.remove("open");
+    });
+
+    /* ── Entity Panel ── */
+    let selectedEntityUuid = null;
+
+    function showEntityPanel(nodeData) {
+      selectedEntityUuid = nodeData.uuid;
+      const panel = document.getElementById("entityPanel");
+      document.getElementById("epName").textContent = nodeData.name || "Unknown";
+      document.getElementById("epBadge").textContent = (nodeData.labels || []).join(", ") || "Entity";
+      document.getElementById("epSummary").textContent = nodeData.summary || nodeData.fact || "No details available.";
+
+      const connList = document.getElementById("epConnections");
+      const connections = _findConnections(nodeData.uuid);
+      if (connections.length > 0) {
+        connList.innerHTML = connections.map(c =>
+          `<li onclick="focusNode('${_esc(c.uuid)}')">${_esc(c.name || c.uuid.slice(0, 10))}</li>`
+        ).join("");
+      } else {
+        connList.innerHTML = '<li style="color:#5a4a30; cursor:default;">None found yet</li>';
+      }
+
+      const questSection = document.getElementById("epQuestSection");
+      const questTag = document.getElementById("epQuestTag");
+      const relatedQuest = _findRelatedQuest(nodeData.name);
+      if (relatedQuest) {
+        questTag.textContent = `${relatedQuest.keyword}: +${relatedQuest.reward} ep`;
+        questSection.style.display = "block";
+      } else {
+        questSection.style.display = "none";
+      }
+
+      panel.classList.add("open");
+    }
+
+    function hideEntityPanel() {
+      document.getElementById("entityPanel").classList.remove("open");
+      selectedEntityUuid = null;
+    }
+
+    function _findConnections(uuid) {
+      const connected = [];
+      const seen = new Set();
+      for (const e of graphState.edges) {
+        const srcId = typeof e.source === "object" ? e.source.uuid : e.source;
+        const tgtId = typeof e.target === "object" ? e.target.uuid : e.target;
+        let peerId = null;
+        if (srcId === uuid) peerId = tgtId;
+        else if (tgtId === uuid) peerId = srcId;
+        if (peerId && !seen.has(peerId)) {
+          seen.add(peerId);
+          const peer = graphState.nodeMap.get(peerId);
+          if (peer) connected.push(peer);
+        }
+      }
+      return connected.slice(0, 8);
+    }
+
+    function _findRelatedQuest(entityName) {
+      if (!entityName) return null;
+      const nameLower = entityName.toLowerCase();
+      const el = document.getElementById("questList");
+      const cards = el ? el.querySelectorAll(".quest-card") : [];
+      for (const card of cards) {
+        const kw = card.querySelector(".quest-keyword");
+        if (kw && nameLower.includes(kw.textContent.toLowerCase())) return { keyword: kw.textContent, reward: 1 };
+      }
+      return null;
+    }
+
+    function focusNode(uuid) {
+      const node = graphState.nodeMap.get(uuid);
+      if (node) showEntityPanel(node);
+    }
+
+    function exploreEntity() {
+      if (!selectedEntityUuid) return;
+      const node = graphState.nodeMap.get(selectedEntityUuid);
+      if (!node) return;
+      const chatInput = document.getElementById("chatInput");
+      chatInput.value = `Tell me more about ${node.name || "this entity"}. What can we discover about it?`;
+      chatInput.focus();
+      hideEntityPanel();
+    }
+
+    /* ── Backfill (calls new admin endpoint) ── */
+    async function backfillWorldState() {
+      const bonfireId = val("bonfireId");
+      if (!bonfireId) { show({ status: 400, error: "bonfire_id required" }); return; }
+      const result = await api("/game/admin/backfill-world-state", { bonfire_id: bonfireId });
+      if (result.status === 200) {
+        showTrailPopup("World State Recovered", [
+          result.data.episode_id ? `Episode: ${result.data.episode_id}` : "",
+          result.data.episode_summary ? result.data.episode_summary.slice(0, 120) : "",
+          result.data.gm_decision ? `GM: ${result.data.gm_decision.reaction || ""}` : "",
+        ]);
+        await refreshWorldBar();
+      }
+      show(result);
+    }
+
+    /* ── Quest claim (kept for backward compat) ── */
+
+    /* ── Preserved functions from original ── */
+
+    let trailPopupTimer = null;
+
+    function _saveActiveAgentMemory(entry) {
+      const payload = {
+        agent_id: entry && entry.agent_id ? String(entry.agent_id) : "",
+        bonfire_id: entry && entry.bonfire_id ? String(entry.bonfire_id) : "",
+        purchase_id: entry && entry.purchase_id ? String(entry.purchase_id) : "",
+        purchase_tx_hash: entry && entry.purchase_tx_hash ? String(entry.purchase_tx_hash) : "",
+      };
+      if (!payload.agent_id) return;
+      window.localStorage.setItem(ACTIVE_AGENT_STORAGE, JSON.stringify(payload));
+    }
+
+    function _loadActiveAgentMemory() {
+      try {
+        const raw = window.localStorage.getItem(ACTIVE_AGENT_STORAGE) || "";
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") return null;
+        return parsed;
+      } catch (_) { return null; }
+    }
+
+    function _applyActiveAgentToUi(entry) {
+      if (!entry || !entry.agent_id) return;
+      setVal("agentId", String(entry.agent_id));
+      if (entry.bonfire_id) setVal("bonfireId", String(entry.bonfire_id));
+      if (entry.purchase_id && !String(entry.purchase_id).startsWith("synthetic-")) {
+        setVal("purchaseId", String(entry.purchase_id));
+      }
+      if (entry.purchase_tx_hash && !String(entry.purchase_tx_hash).startsWith("synthetic-tx-")) {
+        setVal("purchaseTxHash", String(entry.purchase_tx_hash));
+      }
+      const chatSelect = document.getElementById("chatAgentSelect");
+      if (chatSelect) {
+        const optExists = Array.from(chatSelect.options).some(opt => opt.value === String(entry.agent_id));
+        if (optExists) chatSelect.value = String(entry.agent_id);
+      }
+      _renderChatWindow(String(entry.agent_id));
+    }
+
+    function hideTrailPopup() {
+      document.getElementById("trailPopup").classList.remove("show");
+      if (trailPopupTimer) { clearTimeout(trailPopupTimer); trailPopupTimer = null; }
+    }
+
+    function showTrailPopup(title, lines) {
+      const popup = document.getElementById("trailPopup");
+      document.getElementById("trailPopupTitle").textContent = title || "Trail Update";
+      const printable = Array.isArray(lines) ? lines.filter(Boolean).map(x => String(x)) : [];
+      document.getElementById("trailPopupBody").textContent = printable.join("\n");
+      popup.classList.add("show");
+      if (trailPopupTimer) clearTimeout(trailPopupTimer);
+      trailPopupTimer = setTimeout(hideTrailPopup, 12000);
+    }
+
+    function _pickFlavorLine(kind) {
+      const byKind = {
+        extension: ["Momentum is on your side.", "That moved the story forward.", "Good call - you earned breathing room."],
+        processed: ["The world state has been updated.", "Your progress is now part of the record.", "New context is available for the next turn."],
+        caution: ["Progress logged, but no extension this time.", "You advanced, but resources stay tight.", "No bonus yet - keep pushing the objective."],
+      };
+      const pool = byKind[kind] || byKind.processed;
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    function _showEpisodeUpdatePopup(agentId, data) {
+      const episodeId = data && data.episode_id ? String(data.episode_id) : "";
+      const gmDecision = data && data.gm_decision && typeof data.gm_decision === "object" ? data.gm_decision : null;
+      const extension = gmDecision && typeof gmDecision.extension_awarded === "number" ? gmDecision.extension_awarded : null;
+      const reaction = gmDecision && gmDecision.reaction ? String(gmDecision.reaction) : "";
+      const title = extension != null && extension > 0 ? "Extension Awarded" : episodeId ? "Episode Logged" : "Stack Processed";
+      const flavorKind = extension != null && extension > 0 ? "extension" : episodeId ? "processed" : "caution";
+      showTrailPopup(title, [
+        agentId ? `Agent: ${agentId}` : "",
+        episodeId ? `Episode: ${episodeId}` : "Stack processed.",
+        extension != null ? `Extension: +${extension}` : "",
+        reaction ? `GM: ${reaction}` : "",
+        _pickFlavorLine(flavorKind),
+      ]);
+    }
+
+    async function _resolveCurrentRoomId() {
+      const agentId = val("chatAgentSelect") || val("agentId");
+      if (!agentId) { currentRoomId = ""; return ""; }
+      const bonfireId = val("bonfireId");
+      if (!bonfireId) { currentRoomId = ""; return ""; }
+      try {
+        const res = await fetch(`/game/map?bonfire_id=${bonfireId}`);
+        const data = await res.json();
+        const players = data.players || [];
+        const me = players.find(p => p.agent_id === agentId);
+        if (me && me.current_room) {
+          currentRoomId = me.current_room;
+          const rooms = data.rooms || [];
+          const room = rooms.find(r => r.room_id === currentRoomId);
+          const label = document.getElementById("chatRoomLabel");
+          if (label) label.textContent = room ? room.name : "";
+          return currentRoomId;
+        }
+      } catch (_) {}
+      currentRoomId = "";
+      return "";
+    }
+
+    async function _renderChatWindow(agentId) {
+      const box = document.getElementById("chatWindow");
+      if (!agentId) { box.textContent = "Select an agent to start your quest."; return; }
+      if (!currentRoomId) {
+        await _resolveCurrentRoomId();
+      }
+      if (!currentRoomId) { box.textContent = "Ready. Send a message to begin."; return; }
+      try {
+        const res = await fetch(`/game/room/chat?room_id=${currentRoomId}&limit=50`);
+        const data = await res.json();
+        const messages = data.messages || [];
+        if (messages.length === 0) { box.textContent = "The room is quiet. Send a message to begin."; return; }
+        box.innerHTML = messages.map(m => {
+          const isMe = m.sender_agent_id === agentId;
+          const sender = m.role === "system" ? "system"
+            : isMe ? (m.role === "agent" ? "narrator" : "you")
+            : `${m.role}:${(m.sender_agent_id || "").slice(0, 8)}`;
+          const cls = m.role === "system" ? "msg-system" : isMe ? "msg-self" : "msg-other";
+          return `<div class="${cls}"><span class="msg-sender">[${_esc(sender)}]</span> ${_esc(m.text)}</div>`;
+        }).join("");
+        box.scrollTop = box.scrollHeight;
+      } catch (e) {
+        console.error("_renderChatWindow:", e);
+        box.textContent = "Failed to load room chat.";
+      }
+    }
+
+    function _appendSystemMessage(text) {
+      const agentId = val("chatAgentSelect") || val("agentId");
+      if (!agentId || !currentRoomId) return;
+      const box = document.getElementById("chatWindow");
+      const div = document.createElement("div");
+      div.className = "msg-system";
+      div.innerHTML = `<span class="msg-sender">[system]</span> ${_esc(text)}`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function _startRoomChatPoll() {
+      _stopRoomChatPoll();
+      roomChatPollTimer = setInterval(() => {
+        const agentId = val("chatAgentSelect") || val("agentId");
+        if (agentId && currentRoomId && currentPhase === "play") {
+          _renderChatWindow(agentId);
+        }
+      }, 5000);
+    }
+
+    function _stopRoomChatPoll() {
+      if (roomChatPollTimer) { clearInterval(roomChatPollTimer); roomChatPollTimer = null; }
+    }
+
+    function _updateAgentSelect(players) {
+      const select = document.getElementById("chatAgentSelect");
+      const previous = select.value;
+      const memory = _loadActiveAgentMemory();
+      const opts = [];
+      if (Array.isArray(players)) {
+        players.forEach(p => { if (p && p.agent_id) opts.push(String(p.agent_id)); });
+      }
+      const fallback = val("agentId");
+      if (fallback && !opts.includes(fallback)) opts.push(fallback);
+      select.innerHTML = '<option value="">Select agent...</option>';
+      opts.forEach(agentId => {
+        const option = document.createElement("option");
+        option.value = agentId;
+        option.textContent = agentId.slice(0, 16) + "...";
+        select.appendChild(option);
+      });
+      if (previous && opts.includes(previous)) select.value = previous;
+      else if (memory && memory.agent_id && opts.includes(String(memory.agent_id))) select.value = String(memory.agent_id);
+      else if (fallback && opts.includes(fallback)) select.value = fallback;
+      else if (opts.length > 0) select.value = opts[0];
+      if (select.value) setVal("agentId", select.value);
+      if (select.value) {
+        _saveActiveAgentMemory({ agent_id: select.value, bonfire_id: val("bonfireId") });
+      }
+      _renderChatWindow(select.value);
+    }
+
+    async function selectChatAgent() {
+      const selected = val("chatAgentSelect");
+      if (selected) {
+        setVal("agentId", selected);
+        _saveActiveAgentMemory({ agent_id: selected, bonfire_id: val("bonfireId") });
+      }
+      currentRoomId = "";
+      await _resolveCurrentRoomId();
+      _renderChatWindow(selected);
+      _refreshAgentStatus();
+      if (currentPhase === "play") {
+        refreshSidebar();
+        loadRoomMap();
+        loadKnowledgeMap();
+        _startRoomChatPoll();
+      }
+    }
+
+    async function refreshAgentDropdown() {
+      const bonfireId = val("bonfireId");
+      if (!bonfireId) { _updateAgentSelect([]); return; }
+      const res = await fetch(`/game/state?bonfire_id=${encodeURIComponent(bonfireId)}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { show({ status: res.status, data }); return; }
+      _updateAgentSelect(Array.isArray(data.players) ? data.players : []);
+    }
+
+    async function listActiveGames() {
+      const res = await fetch("/game/list-active");
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) { show({ status: res.status, data: payload }); return; }
+      const games = Array.isArray(payload.games) ? payload.games : [];
+      activeGameCache = games;
+      const select = document.getElementById("activeGames");
+      select.innerHTML = '<option value="">Select an active game...</option>';
+      games.forEach((g, i) => {
+        const label = `${(g.bonfire_id || "").slice(0,10)}... | ${g.active_agent_count || 0} agents`;
+        const option = document.createElement("option");
+        option.value = String(i);
+        option.textContent = label;
+        select.appendChild(option);
+      });
+      show({ status: 200, games });
+    }
+
+    async function restorePlayers() {
+      const wallet = val("wallet");
+      if (!wallet) { show({ status: 400, error: "wallet_address is required" }); return; }
+      const body = { wallet_address: wallet };
+      const tx = val("restorePurchaseTxHash");
+      if (tx) body.purchase_tx_hash = tx;
+      const result = await api("/game/player/restore", body);
+      const players = Array.isArray((result.data || {}).players) ? result.data.players : [];
+      if (players.length > 0) {
+        const first = players[0];
+        if (first.agent_id) setVal("agentId", String(first.agent_id));
+        if (first.bonfire_id) setVal("bonfireId", String(first.bonfire_id));
+        updateStatusBar();
+        showPhase("play");
+      }
+      show(result);
+    }
+
+    async function loadWalletPurchasedAgents() {
+      try {
+        const wallet = val("wallet") || await _getConnectedAddress();
+        if (!val("wallet")) setVal("wallet", wallet);
+        const bonfireId = val("bonfireId");
+        if (!bonfireId) return;
+        const res = await fetch(
+          `/game/wallet/purchased-agents?wallet_address=${encodeURIComponent(wallet)}&bonfire_id=${encodeURIComponent(bonfireId)}`
+        );
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) { show({ status: res.status, data: payload }); return; }
+        const agents = Array.isArray(payload.agents) ? payload.agents : [];
+        walletPurchasedAgentCache = agents;
+        const select = document.getElementById("walletPurchasedAgents");
+        select.innerHTML = '<option value="">Your agents in this bonfire...</option>';
+        agents.forEach((a, i) => {
+          const source = a.source ? ` (${a.source})` : "";
+          const label = `${a.agent_name || "agent"} | ${(a.agent_id || "").slice(0,10)}...${source}`;
+          const option = document.createElement("option");
+          option.value = String(i);
+          option.textContent = label;
+          select.appendChild(option);
+        });
+        if (agents.length > 0) {
+          document.getElementById("wizStep1Status").textContent = `${agents.length} agent(s) found.`;
+        }
+        show({ status: 200, agents });
+      } catch (err) {
+        show({ status: 400, error: err && err.message ? err.message : String(err) });
+      }
+    }
+
+    function selectOwnedBonfire() {
+      const idxRaw = val("ownedBonfires");
+      if (!idxRaw) return;
+      const idx = Number(idxRaw);
+      if (Number.isNaN(idx) || idx < 0 || idx >= ownedBonfireCache.length) return;
+      const selected = ownedBonfireCache[idx];
+      if (!selected) return;
+      if (selected.bonfire_id) setVal("bonfireId", String(selected.bonfire_id));
+      if (selected.erc8004_bonfire_id != null) setVal("erc8004Id", String(selected.erc8004_bonfire_id));
+      if (selected.agent_id) setVal("agentId", String(selected.agent_id));
+      updateStatusBar();
+      show({ status: 200, selected });
+    }
+
+    async function revealAndSaveAgentApiKey() {
+      try {
+        if (!window.ethereum || !window.ethereum.request) {
+          throw new Error("No injected wallet found.");
+        }
+        const bonfireId = val("bonfireId");
+        const agentId = val("agentId");
+        if (!bonfireId || !agentId) throw new Error("Select and register an agent first.");
+        const wallet = val("wallet") || await _getConnectedAddress();
+        if (!val("wallet")) setVal("wallet", wallet);
+        const nonceResult = await api("/game/agents/reveal-nonce-selected", {
+          wallet_address: wallet, bonfire_id: bonfireId, agent_id: agentId,
+        });
+        if (nonceResult.status !== 200) { show(nonceResult); return; }
+        const nonce = String((nonceResult.data || {}).nonce || "");
+        const message = String((nonceResult.data || {}).message || "");
+        const resolvedPurchaseId = String((nonceResult.data || {}).purchase_id || "");
+        const resolvedPurchaseTxHash = String((nonceResult.data || {}).purchase_tx_hash || "");
+        if (!nonce || !message) throw new Error("Reveal nonce response missing nonce/message.");
+        const signature = await window.ethereum.request({ method: "personal_sign", params: [message, wallet] });
+        const revealResult = await api("/game/agents/reveal-api-key-selected", {
+          wallet_address: wallet, bonfire_id: bonfireId, agent_id: agentId,
+          purchase_id: resolvedPurchaseId, purchase_tx_hash: resolvedPurchaseTxHash,
+          nonce, signature: String(signature),
+        });
+        if (revealResult.status !== 200) { show(revealResult); return; }
+        const apiKey = String((revealResult.data || {}).api_key || "");
+        if (!apiKey) throw new Error("Reveal response did not include api_key.");
+        setVal("agentApiKey", apiKey);
+        window.localStorage.setItem(AGENT_API_KEY_STORAGE, apiKey);
+        updateWizardState();
+        show({ status: 200, note: "Agent API key revealed and saved." });
+      } catch (err) {
+        show({ status: 400, error: err && err.message ? err.message : String(err) });
+      }
+    }
+
+    async function sendChatMessage() {
+      const agentId = val("chatAgentSelect") || val("agentId");
+      const message = val("chatInput");
+      if (!agentId) { show({ status: 400, error: "Select an agent first." }); return; }
+      if (!message) return;
+      setVal("agentId", agentId);
+      const chatId = `room-${currentRoomId || agentId}`;
+      const result = await api("/game/agents/complete", {
+        agent_id: agentId, message,
+        chat_id: chatId,
+        user_id: val("chatUserId") || "player-1",
+        graph_mode: val("chatGraphMode") || "regenerate",
+        as_game_master: false, reward: 1, keyword: "", quest_type: "gm_generated",
+      });
+      if (result.status === 200) {
+        setVal("chatInput", "");
+        await _renderChatWindow(agentId);
+      }
+      show(result);
+    }
+
+    async function processChatStack() {
+      const agentId = val("chatAgentSelect") || val("agentId");
+      if (!agentId) { show({ status: 400, error: "Select an agent first." }); return; }
+      const result = await api("/game/agents/process-stack", { agent_id: agentId });
+      if (result.status === 200) {
+        const d = result.data || {};
+        const epId = d.episode_id;
+        const gmR = d.gm_decision ? d.gm_decision.reaction : null;
+        const ext = d.gm_decision ? d.gm_decision.extension_awarded : null;
+        let note = "Stack processed.";
+        if (epId) note += ` Episode: ${epId}.`;
+        if (ext != null) note += ` Extension: +${ext}.`;
+        if (gmR) note += ` GM: ${gmR}`;
+        _appendChatEntry(agentId, "system", note);
+        _showEpisodeUpdatePopup(agentId, d);
+        await refreshWorldBar();
+        await refreshSidebar();
+        loadKnowledgeMap();
+      }
+      show(result);
+    }
+
+    async function triggerGmReaction() {
+      const agentId = val("chatAgentSelect") || val("agentId");
+      if (!agentId) { show({ status: 400, error: "Select an agent first." }); return; }
+      const result = await api("/game/agents/gm-react", { agent_id: agentId });
+      if (result.status === 200) {
+        const decision = result.data && result.data.gm_decision ? result.data.gm_decision : {};
+        const reaction = decision.reaction ? String(decision.reaction) : "";
+        const ext = typeof decision.extension_awarded === "number" ? decision.extension_awarded : null;
+        _appendChatEntry(agentId, "system",
+          `GM reaction.${reaction ? ` ${reaction}` : ""}${ext != null ? ` Extension: +${ext}.` : ""}`);
+        _showEpisodeUpdatePopup(agentId, {
+          episode_id: result.data ? result.data.episode_id : "",
+          gm_decision: decision,
+        });
+        await refreshWorldBar();
+        await refreshSidebar();
+      }
+      show(result);
+    }
+
+    async function generateWorldEpisode() {
+      const bonfireId = val("bonfireId");
+      if (!bonfireId) { show({ status: 400, error: "bonfire_id is required" }); return; }
+      const result = await api("/game/world/generate-episode", { bonfire_id: bonfireId });
+      if (result.status === 200) {
+        const epId = result.data ? result.data.episode_id : null;
+        const owner = result.data ? result.data.owner_agent_id : null;
+        _appendChatEntry(owner || (val("chatAgentSelect") || val("agentId")), "system",
+          `World episode generated${epId ? `: ${epId}` : "."}`);
+        showTrailPopup("World Episode Generated", [
+          owner ? `GM Agent: ${owner}` : "",
+          epId ? `Episode: ${epId}` : "Episode request sent.",
+          "World state published to the bonfire.",
+        ]);
+        await refreshWorldBar();
+        await refreshSidebar();
+      }
+      show(result);
+    }
+
+    async function processAllStacks() { show(await api("/game/stack/process-all", {})); await refreshSidebar(); }
+
+    async function claimQuest() {
+      show(await api("/game/quests/claim", {
+        quest_id: val("claimQuestId"),
+        agent_id: val("agentId"),
+        submission: val("claimSubmission"),
+      }));
+      await refreshSidebar();
+    }
+
+    /* ── Wallet + payment helpers ── */
+    async function _getConnectedAddress() {
+      if (!window.ethereum || !window.ethereum.request) throw new Error("No injected wallet found.");
+      const accounts = await window.ethereum.request({ method: "eth_accounts" });
+      if (!accounts || accounts.length === 0) throw new Error("No wallet account connected.");
+      return accounts[0];
+    }
+
+    async function connectWallet() {
+      try {
+        if (!window.ethereum || !window.ethereum.request) throw new Error("No injected wallet found. Install MetaMask.");
+        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        const account = accounts && accounts.length > 0 ? accounts[0] : "";
+        if (!account) throw new Error("Wallet connection failed.");
+        setVal("wallet", account);
+        show({ status: 200, wallet: account });
+      } catch (err) {
+        show({ status: 400, error: err && err.message ? err.message : String(err) });
+      }
+    }
+
+    async function _loadConfig() {
+      try {
+        const res = await fetch("/game/config");
+        const data = await res.json();
+        if (res.ok && data.erc8004_registry_address) erc8004RegistryAddress = String(data.erc8004_registry_address);
+        if (res.ok && data.payment && typeof data.payment === "object") paymentConfig = { ...paymentConfig, ...data.payment };
+      } catch (_) {}
+    }
+
+    function _normalizeNetwork(network) {
+      const n = String(network || "").trim().toLowerCase();
+      if (n.startsWith("base")) return "base";
+      if (n.startsWith("solana")) return "solana";
+      return n;
+    }
+
+    function _resolveIntermediaryAddress(cfg) {
+      if (cfg.intermediary_address && String(cfg.intermediary_address).trim()) return String(cfg.intermediary_address).trim();
+      const pair = `${_normalizeNetwork(cfg.source_network)}->${_normalizeNetwork(cfg.destination_network)}`;
+      const byPair = { "base->base": "0xfeb1F8F7F9ff37B94D14c88DE9282DA56b3B1Cb1", "base->solana": "0x931Cc2F11C36C34b4312496f470Ff21474F2fA42" };
+      return byPair[pair] || "0x0000000000000000000000000000000000000000";
+    }
+
+    function _parseUsdcAmount(amount) {
+      const n = Number(amount);
+      if (!Number.isFinite(n) || n <= 0) throw new Error("Invalid amount.");
+      return String(Math.floor(n * 1_000_000));
+    }
+
+    function _hexNonce(len) {
+      const bytes = new Uint8Array(len);
+      crypto.getRandomValues(bytes);
+      return "0x" + Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function _base64EncodeUtf8(text) { return btoa(unescape(encodeURIComponent(text))); }
+
+    async function _buildAndSignX402Header(amount) {
+      if (!window.ethereum || !window.ethereum.request) throw new Error("No injected wallet found.");
+      const wallet = val("wallet") || await _getConnectedAddress();
+      if (!val("wallet")) setVal("wallet", wallet);
+      const intermediaryAddress = _resolveIntermediaryAddress(paymentConfig);
+      const now = Math.floor(Date.now() / 1000);
+      const authorization = {
+        from: wallet, to: intermediaryAddress, value: _parseUsdcAmount(amount),
+        validAfter: String(now), validBefore: String(now + 300), nonce: _hexNonce(32),
+      };
+      const typedData = {
+        domain: { name: "USD Coin", version: "2", chainId: Number(paymentConfig.chain_id || 8453), verifyingContract: String(paymentConfig.token_address) },
+        types: {
+          EIP712Domain: [{ name: "name", type: "string" }, { name: "version", type: "string" }, { name: "chainId", type: "uint256" }, { name: "verifyingContract", type: "address" }],
+          TransferWithAuthorization: [{ name: "from", type: "address" }, { name: "to", type: "address" }, { name: "value", type: "uint256" }, { name: "validAfter", type: "uint256" }, { name: "validBefore", type: "uint256" }, { name: "nonce", type: "bytes32" }],
+        },
+        primaryType: "TransferWithAuthorization",
+        message: authorization,
+      };
+      const signature = await window.ethereum.request({ method: "eth_signTypedData_v4", params: [wallet, JSON.stringify(typedData)] });
+      return _base64EncodeUtf8(JSON.stringify({
+        x402Version: 1, scheme: "exact", network: String(paymentConfig.network || "base"),
+        payload: { authorization, signature: String(signature) },
+      }));
+    }
+
+    async function _resolveBuyAmount(bonfireId) {
+      const explicit = val("buyAmount");
+      if (explicit) return explicit;
+      const episodes = Number(val("buyEpisodes") || "0");
+      if (!Number.isFinite(episodes) || episodes <= 0) throw new Error("episodes must be > 0.");
+      const res = await fetch(`/game/bonfire/pricing?bonfire_id=${encodeURIComponent(bonfireId)}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error("Could not load pricing. Enter amount manually.");
+      const perEpisode = Number(data.price_per_episode);
+      if (!Number.isFinite(perEpisode) || perEpisode <= 0) throw new Error("Pricing unavailable.");
+      const total = (perEpisode * episodes).toFixed(6);
+      setVal("buyAmount", total);
+      return total;
+    }
+
+    function _ownerOfCalldata(tokenId) {
+      const hex = BigInt(tokenId).toString(16).padStart(64, "0");
+      return "0x6352211e" + hex;
+    }
+
+    async function _readOwnerOf(tokenId) {
+      if (!window.ethereum || !window.ethereum.request) throw new Error("No wallet provider.");
+      const result = await window.ethereum.request({
+        method: "eth_call",
+        params: [{ to: erc8004RegistryAddress, data: _ownerOfCalldata(tokenId) }, "latest"],
+      });
+      if (!result || typeof result !== "string" || result.length < 66) throw new Error("Invalid ownerOf response");
+      return ("0x" + result.slice(-40)).toLowerCase();
+    }
+
+    async function loadWalletBonfires() {
+      try {
+        await _loadConfig();
+        const wallet = val("wallet") || await _getConnectedAddress();
+        if (!val("wallet")) setVal("wallet", wallet);
+        const res = await fetch(`/game/wallet/provision-records?wallet_address=${encodeURIComponent(wallet)}`);
+        const payload = await res.json();
+        if (!res.ok) { show({ status: res.status, data: payload }); return; }
+        const records = Array.isArray(payload.records) ? payload.records : [];
+        const walletLower = wallet.toLowerCase();
+        const bonfires = [];
+        for (const rec of records) {
+          const tokenId = rec.erc8004_bonfire_id;
+          if (!rec.bonfire_id || tokenId == null) continue;
+          try {
+            const owner = await _readOwnerOf(tokenId);
+            if (owner !== walletLower) continue;
+            bonfires.push({
+              bonfire_id: rec.bonfire_id, erc8004_bonfire_id: tokenId,
+              agent_id: rec.agent_id, agent_name: rec.agent_name, owner_wallet: owner,
+            });
+          } catch (_) {}
+        }
+        ownedBonfireCache = bonfires;
+        const select = document.getElementById("ownedBonfires");
+        select.innerHTML = '<option value="">Select your bonfire...</option>';
+        bonfires.forEach((bf, i) => {
+          const option = document.createElement("option");
+          option.value = String(i);
+          option.textContent = `${bf.agent_name || "bonfire"} | ${(bf.bonfire_id || "").slice(0,10)}... | #${bf.erc8004_bonfire_id}`;
+          select.appendChild(option);
+        });
+        show({ status: 200, bonfires });
+      } catch (err) {
+        show({ status: 400, error: err && err.message ? err.message : String(err) });
+      }
+    }
+
+    async function buyAgent() {
+      const bonfireId = val("bonfireId");
+      if (!bonfireId) { show({ status: 400, error: "Select a bonfire/game first." }); return; }
+      let paymentHeader = val("buyPaymentHeader");
+      if (!paymentHeader) {
+        try {
+          const amount = await _resolveBuyAmount(bonfireId);
+          paymentHeader = await _buildAndSignX402Header(amount);
+          setVal("buyPaymentHeader", paymentHeader);
+        } catch (err) {
+          show({ status: 400, error: "Could not build payment header", detail: err.message || String(err) });
+          return;
+        }
+      }
+      const result = await api(`/game/purchase-agent/${encodeURIComponent(bonfireId)}`, {
+        payment_header: paymentHeader,
+        platform: val("buyPlatform") || "web",
+        episodes_requested: Number(val("buyEpisodes") || "0"),
+        agent_name: val("buyAgentName"),
+        agent_context: val("buyAgentContext"),
+      });
+      const data = result.data || {};
+      if (result.status === 200) {
+        if (data.purchase_id) setVal("purchaseId", String(data.purchase_id));
+        if (data.agent_id) setVal("agentId", String(data.agent_id));
+        if (data.episodes_purchased != null) setVal("episodesPurchased", String(data.episodes_purchased));
+        if (data.tx_hash) setVal("purchaseTxHash", String(data.tx_hash));
+        else if (data.purchase_tx_hash) setVal("purchaseTxHash", String(data.purchase_tx_hash));
+        document.getElementById("wizStep1Status").textContent = "Agent purchased! Refreshing...";
+        await loadWalletPurchasedAgents();
+        updateWizardState();
+      }
+      show(result);
+    }
+
+    /* ── Boot ── */
+    _loadConfig();
+    const savedKey = window.localStorage.getItem(AGENT_API_KEY_STORAGE) || "";
+    if (savedKey) setVal("agentApiKey", savedKey);
+    const remembered = _loadActiveAgentMemory();
+    if (remembered) _applyActiveAgentToUi(remembered);
+
+    async function _tryAutoConnect() {
+      if (!window.ethereum) return false;
+      try {
+        const accounts = await window.ethereum.request({ method: "eth_accounts" });
+        if (!accounts || accounts.length === 0) return false;
+        setVal("wallet", accounts[0]);
+        await _loadConfig();
+        updateStatusBar();
+        if (val("agentId") && val("bonfireId")) {
+          showPhase("play");
+        } else if (val("bonfireId")) {
+          showPhase("setup");
+          loadWalletPurchasedAgents();
+        } else {
+          showPhase("choose");
+          loadWalletBonfires();
+          listActiveGames();
+        }
+        return true;
+      } catch (_) { return false; }
+    }
+
+    /* ══════════ Knowledge Map (D3 Force Graph) ══════════ */
+    const graphState = { nodes: [], edges: [], nodeMap: new Map(), simulation: null, svg: null, g: null };
+
+    const NODE_COLORS = {
+      Entity:   "#c8a86a",
+      Update:   "#5a9a5a",
+      Episodic: "#5a8aba",
+      User:     "#ba6a5a",
+      TaxonomyLabel: "#9a6aba",
+      default:  "#8a7a5a",
+    };
+
+    function _nodeColor(labels) {
+      if (!Array.isArray(labels)) return NODE_COLORS.default;
+      for (const key of Object.keys(NODE_COLORS)) {
+        if (labels.includes(key)) return NODE_COLORS[key];
+      }
+      return NODE_COLORS.default;
+    }
+
+    function _nodeRadius(labels) {
+      if (!Array.isArray(labels)) return 6;
+      if (labels.includes("Episodic")) return 4;
+      if (labels.includes("TaxonomyLabel")) return 5;
+      return 7;
+    }
+
+    function initMap() {
+      const container = document.getElementById("mapCanvas");
+      if (!container || graphState.svg) return;
+      const w = container.clientWidth || 400;
+      const h = container.clientHeight || 400;
+
+      const svg = d3.select(container).append("svg")
+        .attr("width", "100%").attr("height", "100%")
+        .attr("viewBox", [0, 0, w, h]);
+
+      const g = svg.append("g");
+
+      svg.call(d3.zoom().scaleExtent([0.2, 5]).on("zoom", (event) => {
+        g.attr("transform", event.transform);
+      }));
+
+      g.append("g").attr("class", "edges");
+      g.append("g").attr("class", "nodes");
+
+      graphState.svg = svg;
+      graphState.g = g;
+      graphState.simulation = d3.forceSimulation()
+        .force("link", d3.forceLink().id(d => d.uuid).distance(60))
+        .force("charge", d3.forceManyBody().strength(-80))
+        .force("center", d3.forceCenter(w / 2, h / 2))
+        .force("collision", d3.forceCollide().radius(12))
+        .on("tick", renderTick);
+    }
+
+    function renderTick() {
+      const g = graphState.g;
+      if (!g) return;
+      g.select(".edges").selectAll("line")
+        .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+      g.select(".nodes").selectAll("circle")
+        .attr("cx", d => d.x).attr("cy", d => d.y);
+    }
+
+    function mergeGraphData(newNodes, newEdges, animate) {
+      const nm = graphState.nodeMap;
+      const addedNodes = [];
+      for (const n of newNodes) {
+        if (!n.uuid || nm.has(n.uuid)) continue;
+        nm.set(n.uuid, n);
+        graphState.nodes.push(n);
+        addedNodes.push(n.uuid);
+      }
+      const edgeSet = new Set(graphState.edges.map(e =>
+        `${typeof e.source === 'object' ? e.source.uuid : e.source}->${typeof e.target === 'object' ? e.target.uuid : e.target}`
+      ));
+      for (const e of newEdges) {
+        const src = e.source, tgt = e.target;
+        if (!src || !tgt) continue;
+        if (!nm.has(src) || !nm.has(tgt)) continue;
+        const key = `${src}->${tgt}`;
+        if (edgeSet.has(key)) continue;
+        edgeSet.add(key);
+        graphState.edges.push(e);
+      }
+
+      renderGraph(addedNodes, animate);
+      document.getElementById("mapStats").textContent = `${graphState.nodes.length} nodes`;
+    }
+
+    function renderGraph(newNodeUuids, animate) {
+      const g = graphState.g;
+      const sim = graphState.simulation;
+      if (!g || !sim) return;
+
+      const edgeSel = g.select(".edges").selectAll("line").data(graphState.edges, d =>
+        `${typeof d.source === 'object' ? d.source.uuid : d.source}->${typeof d.target === 'object' ? d.target.uuid : d.target}`
+      );
+      edgeSel.exit().remove();
+      edgeSel.enter().append("line")
+        .attr("stroke", "#3f2f1f").attr("stroke-width", 1).attr("stroke-opacity", 0.6)
+        .on("mouseover", function(event, d) {
+          const fact = d.name || d.fact || "";
+          if (!fact) return;
+          const tip = document.getElementById("mapTooltip");
+          document.getElementById("ttName").textContent = fact;
+          document.getElementById("ttLabel").textContent = "relationship";
+          document.getElementById("ttFact").textContent = "";
+          tip.style.display = "block";
+          tip.style.left = event.offsetX + 10 + "px";
+          tip.style.top = event.offsetY + 10 + "px";
+        })
+        .on("mouseout", () => { document.getElementById("mapTooltip").style.display = "none"; });
+
+      const nodeSel = g.select(".nodes").selectAll("circle").data(graphState.nodes, d => d.uuid);
+      nodeSel.exit().remove();
+      const nodeEnter = nodeSel.enter().append("circle")
+        .attr("r", d => _nodeRadius(d.labels))
+        .attr("fill", d => {
+          if (d._questTarget) return "#e85050";
+          return _nodeColor(d.labels);
+        })
+        .attr("stroke", d => d._questTarget ? "#ff8080" : "#1a1410")
+        .attr("stroke-width", d => d._questTarget ? 2 : 1)
+        .attr("cursor", "pointer")
+        .on("mouseover", function(event, d) {
+          const tip = document.getElementById("mapTooltip");
+          document.getElementById("ttName").textContent = d.name || "?";
+          document.getElementById("ttLabel").textContent = (d.labels || []).join(", ");
+          document.getElementById("ttFact").textContent = (d.summary || "").slice(0, 100);
+          tip.style.display = "block";
+          tip.style.left = event.offsetX + 10 + "px";
+          tip.style.top = event.offsetY + 10 + "px";
+        })
+        .on("mouseout", () => { document.getElementById("mapTooltip").style.display = "none"; })
+        .on("click", (event, d) => { showEntityPanel(d); expandNode(d.uuid); })
+        .call(d3.drag()
+          .on("start", (event, d) => { if (!event.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+          .on("drag", (event, d) => { d.fx = event.x; d.fy = event.y; })
+          .on("end", (event, d) => { if (!event.active) sim.alphaTarget(0); d.fx = null; d.fy = null; })
+        );
+
+      if (animate && newNodeUuids && newNodeUuids.length > 0) {
+        const newSet = new Set(newNodeUuids);
+        nodeEnter.filter(d => newSet.has(d.uuid))
+          .attr("r", 0)
+          .transition().duration(600).ease(d3.easeBounce)
+          .attr("r", d => _nodeRadius(d.labels));
+      }
+
+      sim.nodes(graphState.nodes);
+      sim.force("link").links(graphState.edges);
+      sim.alpha(0.4).restart();
+    }
+
+    /* ── Map Tab Switching ── */
+    function switchMapTab(tab) {
+      document.querySelectorAll(".map-tab").forEach(t => t.classList.toggle("active", t.dataset.mapTab === tab));
+      document.getElementById("mapViewRooms").classList.toggle("active", tab === "rooms");
+      document.getElementById("mapViewKnowledge").classList.toggle("active", tab === "knowledge");
+      if (tab === "rooms") loadRoomMap();
+      if (tab === "knowledge") loadKnowledgeMap();
+    }
+
+    /* ── Room Map ── */
+    const PLAYER_COLORS = ["#6aaa5a","#5a8acc","#cc8a5a","#aa5a8a","#8a5acc","#cccc5a","#5accaa"];
+    let roomMapState = { rooms: [], players: [], colorMap: {} };
+
+    async function loadRoomMap() {
+      const bonfireId = val("bonfireId");
+      if (!bonfireId) return;
+      try {
+        const res = await fetch(`/game/map?bonfire_id=${bonfireId}`);
+        const data = await res.json();
+        roomMapState.rooms = data.rooms || [];
+        roomMapState.players = data.players || [];
+        const agents = [...new Set(roomMapState.players.map(p => p.agent_id))];
+        agents.forEach((aid, i) => {
+          if (!roomMapState.colorMap[aid]) roomMapState.colorMap[aid] = PLAYER_COLORS[i % PLAYER_COLORS.length];
+        });
+        renderRoomMap();
+      } catch (e) { console.error("loadRoomMap:", e); }
+    }
+
+    function renderRoomMap() {
+      const canvas = document.getElementById("roomMapCanvas");
+      const rooms = roomMapState.rooms;
+      const players = roomMapState.players;
+      const currentAgentId = val("chatAgentSelect") || val("agentId");
+      const currentPlayer = players.find(p => p.agent_id === currentAgentId);
+      const currentRoomId = currentPlayer ? currentPlayer.current_room : "";
+
+      document.getElementById("roomMapStats").textContent = `${rooms.length} room${rooms.length !== 1 ? "s" : ""}`;
+
+      if (!rooms.length) {
+        canvas.innerHTML = '<div class="text-muted" style="padding:20px;">No rooms yet. Create a game to begin.</div>';
+        return;
+      }
+
+      let html = "";
+      for (const room of rooms) {
+        const rid = room.room_id || "";
+        const isCurrent = rid === currentRoomId;
+        const roomPlayers = players.filter(p => p.current_room === rid);
+        const conns = (room.connections || []).map(cid => {
+          const r = rooms.find(rr => rr.room_id === cid);
+          return r ? r.name : cid.slice(0, 8);
+        });
+        html += `<div class="room-card${isCurrent ? " current" : ""}" onclick="selectRoom('${rid}')">`;
+        html += `<div class="room-card-name">${_esc(room.name || "Unknown")}</div>`;
+        if (room.description) html += `<div class="room-card-desc">${_esc(room.description)}</div>`;
+        if (conns.length) html += `<div style="font-size:10px;color:#5a4a30;margin-bottom:6px;">Exits: ${conns.join(", ")}</div>`;
+        if (roomPlayers.length) {
+          html += '<div>';
+          for (const rp of roomPlayers) {
+            const color = roomMapState.colorMap[rp.agent_id] || "#8a7a5a";
+            const label = rp.agent_id === currentAgentId ? "You" : rp.agent_id.slice(0, 8);
+            html += `<span class="room-player-token"><span class="room-player-dot" style="background:${color}"></span>${_esc(label)}</span>`;
+          }
+          html += "</div>";
+        }
+        html += "</div>";
+      }
+      canvas.innerHTML = html;
+    }
+
+    function selectRoom(roomId) {
+      const room = roomMapState.rooms.find(r => r.room_id === roomId);
+      if (!room) return;
+      const players = roomMapState.players.filter(p => p.current_room === roomId);
+      const lines = [`Room: ${room.name}`];
+      if (room.description) lines.push(room.description);
+      if (players.length) lines.push(`${players.length} explorer${players.length > 1 ? "s" : ""} here`);
+      showTrailPopup(room.name, lines);
+    }
+
+    function _esc(s) {
+      const d = document.createElement("div");
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    async function loadKnowledgeMap() {
+      const bonfireId = val("bonfireId");
+      const agentId = val("agentId");
+      if (!bonfireId) return;
+      initMap();
+      try {
+        const res = await fetch(`/game/graph?bonfire_id=${bonfireId}&agent_id=${agentId || ""}`);
+        const data = await res.json();
+        if (data.nodes) mergeGraphData(data.nodes, data.edges || [], true);
+      } catch (e) { console.error("loadKnowledgeMap:", e); }
+    }
+
+    async function expandNode(entityUuid) {
+      const bonfireId = val("bonfireId");
+      if (!bonfireId || !entityUuid) return;
+      try {
+        const res = await fetch("/game/entity/expand", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ entity_uuid: entityUuid, bonfire_id: bonfireId }),
+        });
+        const data = await res.json();
+        if (data.nodes) mergeGraphData(data.nodes, data.edges || [], true);
+      } catch (e) { console.error("expandNode:", e); }
+    }
+
+    function highlightQuestTargets(quests) {
+      if (!Array.isArray(quests)) return;
+      const targetNames = new Set();
+      for (const q of quests) {
+        if (q.quest_type === "graph_discovery" && q.keyword) {
+          targetNames.add(q.keyword.toLowerCase());
+        }
+      }
+      for (const n of graphState.nodes) {
+        n._questTarget = targetNames.has((n.name || "").toLowerCase().split(" ")[0]);
+      }
+      if (graphState.g) {
+        graphState.g.select(".nodes").selectAll("circle")
+          .attr("fill", d => d._questTarget ? "#e85050" : _nodeColor(d.labels))
+          .attr("stroke", d => d._questTarget ? "#ff8080" : "#1a1410")
+          .attr("stroke-width", d => d._questTarget ? 2 : 1);
+      }
+    }
+
+    async function generateQuests() {
+      const bonfireId = val("bonfireId");
+      if (!bonfireId) return;
+      const result = await api("/game/quests/generate", { bonfire_id: bonfireId });
+      if (result.status === 200 && result.data.quests && result.data.quests.length > 0) {
+        showTrailPopup("New Quests Discovered", result.data.quests.map(
+          q => `${q.keyword}: ${(q.prompt || "").slice(0, 80)} [+${q.reward}]`
+        ));
+        await refreshSidebar();
+      } else {
+        show(result);
+      }
+    }
+
+    (async function boot() {
+      if (await _tryAutoConnect()) return;
+      const delays = [200, 500, 1000];
+      for (const ms of delays) {
+        await new Promise(r => setTimeout(r, ms));
+        if (await _tryAutoConnect()) return;
+      }
+    })();
+  </script>
+</body>
+</html>

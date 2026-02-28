@@ -9,3 +9,4 @@ project-forge/forge_state.json
 .env
 .venv/
 kindling-bonfires/.env
+*/.env
