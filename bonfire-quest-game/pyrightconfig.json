@@ -1,0 +1,10 @@
+{
+  "include": ["."],
+  "extraPaths": ["/home/at0x/Vaults/Research_Projects/language_models/external/delve/demos/bonfires-experiments/bonfire-quest-game"],
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "reportUnusedImport": true,
+  "reportUnusedVariable": true
+}
