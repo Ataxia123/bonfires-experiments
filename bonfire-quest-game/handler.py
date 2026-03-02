@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import threading
 import time
 import urllib.parse
 from dataclasses import asdict
@@ -15,6 +16,7 @@ from fastapi.responses import JSONResponse
 import game_config as config
 import gm_engine
 import http_client
+import room_image
 import stack_processing
 from game_store import GameStore
 from timers import GmBatchTimerRunner, StackTimerRunner
@@ -2503,3 +2505,183 @@ def route_generate_quests(
         )
 
     return JSONResponse({"quests": created_quests, "count": len(created_quests)})
+
+
+# ---------------------------------------------------------------------------
+# Room image / HyperBlog pipeline
+# ---------------------------------------------------------------------------
+
+ROOM_HTN_TEMPLATE_BODY: dict[str, object] = {
+    "name": "Bonfire Quest Room Narrative",
+    "template_type": "card",
+    "system_prompt": (
+        "You are a narrator in a dark fantasy RPG adventure game. "
+        "Write evocative, atmospheric descriptions of locations based on what happened there. "
+        "Generate rich visual imagery suitable for an image generation prompt. "
+        "Keep descriptions concise, visceral, and full of sensory detail."
+    ),
+    "user_prompt_template": (
+        "Location: {dataroom_description}\n\n"
+        "World context: {dataroom_system_prompt}\n\n"
+        "Recent events in this location:\n{formatted_context}\n\n"
+        "Query: {user_query}\n\n"
+        "Generate a {blog_length} atmospheric narrative for this location. "
+        "Include an image_prompt field capturing the visual mood."
+    ),
+    "node_count_config": {
+        "short": {"max_nodes": 1, "max_words": 120, "description": "Compact room snapshot"},
+        "medium": {"max_nodes": 2, "max_words": 250, "description": "Room narrative"},
+        "long": {"max_nodes": 3, "max_words": 400, "description": "Full room chronicle"},
+    },
+}
+
+
+@router.post("/game/setup/htn-template")
+def route_setup_htn_template() -> JSONResponse:
+    """Create the game room HTN template in the Delve backend (idempotent)."""
+    if config.ROOM_HTN_TEMPLATE_ID:
+        return JSONResponse({
+            "htn_template_id": config.ROOM_HTN_TEMPLATE_ID,
+            "cached": True,
+        })
+
+    url = f"{config.DELVE_BASE_URL}/htn-templates"
+    status, payload = http_client._json_request("POST", url, ROOM_HTN_TEMPLATE_BODY)
+    if status in (200, 201) and isinstance(payload, dict):
+        template_id = str(payload.get("id") or payload.get("_id") or "")
+        if template_id:
+            config.ROOM_HTN_TEMPLATE_ID = template_id
+            return JSONResponse({"htn_template_id": template_id, "cached": False})
+
+    return JSONResponse(status_code=status or 500, content={
+        "error": "Failed to create HTN template",
+        "upstream_status": status,
+        "upstream_payload": payload,
+    })
+
+
+@router.post("/game/room/refresh-image")
+def route_refresh_room_image(
+    body: dict[str, object] = Body(default={}),
+    store: GameStore = Depends(get_store),
+) -> JSONResponse:
+    """Re-generate image + summary for a room via internal HyperBlog (no payment)."""
+    bonfire_id = _required_string(body, "bonfire_id")
+    room_id = _required_string(body, "room_id")
+    user_query = str(body.get("user_query", "Describe the current state of this location."))
+
+    room = store.get_room_by_id(bonfire_id, room_id)
+    if not room:
+        return JSONResponse(status_code=404, content={"error": "room not found"})
+
+    def _bg() -> None:
+        hb_id = room_image.generate_room_hyperblog(store, bonfire_id, room_id, user_query)
+        if hb_id:
+            room_image.poll_and_update_room_image(store, bonfire_id, room_id, hb_id)
+
+    threading.Thread(target=_bg, daemon=True).start()
+    return JSONResponse({"status": "generating", "room_id": room_id})
+
+
+@router.post("/game/room/journal")
+def route_room_journal(
+    body: dict[str, object] = Body(default={}),
+    store: GameStore = Depends(get_store),
+    agent_api_key_info: tuple[str, str] = Depends(_get_agent_api_key),
+) -> JSONResponse:
+    """Player writes a journal entry for a room (X402 paid HyperBlog)."""
+    bonfire_id = _required_string(body, "bonfire_id")
+    room_id = _required_string(body, "room_id")
+    agent_id = _required_string(body, "agent_id")
+    user_query = _required_string(body, "user_query")
+    payment_header = str(body.get("payment_header", ""))
+
+    player = store.get_player(agent_id)
+    if not player:
+        return JSONResponse(status_code=404, content={"error": "agent not registered"})
+    if player.current_room != room_id:
+        return JSONResponse(status_code=400, content={"error": "agent is not in this room"})
+
+    room = store.get_room_by_id(bonfire_id, room_id)
+    if not room:
+        return JSONResponse(status_code=404, content={"error": "room not found"})
+
+    dataroom_id = str(room.get("dataroom_id", ""))
+    if not dataroom_id:
+        dataroom_id = room_image.create_room_dataroom(store, bonfire_id, room_id)
+        if not dataroom_id:
+            return JSONResponse(status_code=503, content={"error": "failed to create DataRoom"})
+
+    if payment_header:
+        purchase_url = f"{config.DELVE_BASE_URL}/datarooms/hyperblogs/purchase"
+        purchase_body: dict[str, object] = {
+            "payment_header": payment_header,
+            "dataroom_id": dataroom_id,
+            "user_query": user_query,
+            "blog_length": "short",
+            "generation_mode": "card",
+            "is_public": True,
+        }
+        p_status, p_payload = http_client._json_request("POST", purchase_url, purchase_body)
+        if p_status not in (200, 201) or not isinstance(p_payload, dict):
+            return JSONResponse(status_code=p_status or 502, content={
+                "error": "journal purchase failed", "upstream": p_payload
+            })
+        hb_info = p_payload.get("hyperblog")
+        hb_id = str(hb_info.get("id", "")) if isinstance(hb_info, dict) else ""
+    else:
+        hb_id = room_image.generate_room_hyperblog(store, bonfire_id, room_id, user_query)
+
+    if not hb_id:
+        return JSONResponse(status_code=500, content={"error": "hyperblog creation failed"})
+
+    def _bg() -> None:
+        room_image.poll_and_update_room_image(store, bonfire_id, room_id, hb_id)
+
+    threading.Thread(target=_bg, daemon=True).start()
+    return JSONResponse({
+        "status": "generating",
+        "hyperblog_id": hb_id,
+        "room_id": room_id,
+        "dataroom_id": dataroom_id,
+    })
+
+
+@router.get("/game/room/journal")
+def route_get_room_journal(
+    room_id: str = Query(...),
+    bonfire_id: str = Query(...),
+    limit: int = Query(default=5, ge=1, le=20),
+    store: GameStore = Depends(get_store),
+) -> JSONResponse:
+    """List recent HyperBlog journal entries for a room."""
+    room = store.get_room_by_id(bonfire_id, room_id)
+    if not room:
+        return JSONResponse(status_code=404, content={"error": "room not found"})
+
+    dataroom_id = str(room.get("dataroom_id", ""))
+    if not dataroom_id:
+        return JSONResponse({"room_id": room_id, "entries": [], "count": 0})
+
+    url = f"{config.DELVE_BASE_URL}/datarooms/{dataroom_id}/hyperblogs?limit={limit}&offset=0"
+    status, payload = http_client._json_request("GET", url)
+    if status != 200 or not isinstance(payload, dict):
+        return JSONResponse(status_code=status or 502, content={"error": "failed to fetch journal"})
+
+    raw_blogs = payload.get("hyperblogs")
+    blogs: list[dict[str, object]] = raw_blogs if isinstance(raw_blogs, list) else []
+    entries: list[dict[str, object]] = []
+    for blog in blogs:
+        if not isinstance(blog, dict):
+            continue
+        entries.append({
+            "hyperblog_id": str(blog.get("id", "")),
+            "user_query": str(blog.get("user_query", "")),
+            "summary": str(blog.get("summary") or blog.get("preview") or ""),
+            "banner_url": str(blog.get("banner_url") or ""),
+            "author_wallet": str(blog.get("author_wallet", "")),
+            "created_at": str(blog.get("created_at", "")),
+            "generation_status": str(blog.get("generation_status", "")),
+        })
+
+    return JSONResponse({"room_id": room_id, "entries": entries, "count": len(entries)})

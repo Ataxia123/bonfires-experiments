@@ -280,15 +280,48 @@
       background: #1a1410;
       border: 1px solid #3f2f1f;
       border-radius: 8px;
-      padding: 12px;
-      min-width: 140px;
-      max-width: 200px;
+      padding: 0;
+      min-width: 180px;
+      max-width: 240px;
       flex: 1;
       cursor: pointer;
       transition: border-color 0.2s;
+      overflow: hidden;
     }
     .room-card:hover { border-color: #c8a86a; }
     .room-card.current { border-color: #6aaa5a; box-shadow: 0 0 8px rgba(106,170,90,0.25); }
+    .room-card-img {
+      width: 100%;
+      height: 110px;
+      object-fit: cover;
+      display: block;
+    }
+    .room-card-img-placeholder {
+      width: 100%;
+      height: 110px;
+      background: linear-gradient(135deg, #2a2018 0%, #1a1410 40%, #3f2f1f 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #5a4a30;
+      font-size: 11px;
+    }
+    .room-card-img-generating {
+      width: 100%;
+      height: 110px;
+      background: linear-gradient(135deg, #2a2018 0%, #1a1410 40%, #3f2f1f 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #8a7a5a;
+      font-size: 11px;
+      animation: shimmer 1.5s ease-in-out infinite alternate;
+    }
+    @keyframes shimmer {
+      0% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+    .room-card-body { padding: 10px; }
     .room-card-name {
       color: #c8a86a;
       font-weight: 600;
@@ -299,8 +332,33 @@
       color: #8a7a5a;
       font-size: 11px;
       line-height: 1.4;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
+    .room-card-summary {
+      color: #b8a878;
+      font-size: 10px;
+      font-style: italic;
+      line-height: 1.3;
+      margin-bottom: 6px;
+      max-height: 36px;
+      overflow: hidden;
+    }
+    .room-card-actions {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .room-card-actions button {
+      background: #2a2018;
+      border: 1px solid #5a4a30;
+      border-radius: 4px;
+      color: #c8a86a;
+      font-size: 10px;
+      padding: 2px 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .room-card-actions button:hover { background: #3f2f1f; }
     .room-player-token {
       display: inline-flex;
       align-items: center;
@@ -3055,8 +3113,19 @@
           return r ? r.name : cid.slice(0, 8);
         });
         html += `<div class="room-card${isCurrent ? " current" : ""}" onclick="selectRoom('${rid}')">`;
+
+        if (room.image_url) {
+          html += `<img class="room-card-img" src="${_esc(room.image_url)}" alt="${_esc(room.name || "")}" loading="lazy" onerror="this.outerHTML='<div class=room-card-img-placeholder>No image</div>'">`;
+        } else if (room.latest_hyperblog_id) {
+          html += `<div class="room-card-img-generating">Generating...</div>`;
+        } else {
+          html += `<div class="room-card-img-placeholder">No image</div>`;
+        }
+
+        html += `<div class="room-card-body">`;
         html += `<div class="room-card-name">${_esc(room.name || "Unknown")}</div>`;
-        if (room.description) html += `<div class="room-card-desc">${_esc(room.description)}</div>`;
+        if (room.latest_summary) html += `<div class="room-card-summary">${_esc(room.latest_summary)}</div>`;
+        else if (room.description) html += `<div class="room-card-desc">${_esc(room.description)}</div>`;
         if (conns.length) html += `<div style="font-size:10px;color:#5a4a30;margin-bottom:6px;">Exits: ${conns.join(", ")}</div>`;
         if (roomPlayers.length || roomNpcs.length) {
           html += '<div>';
@@ -3077,7 +3146,15 @@
           }
           html += "</div>";
         }
-        html += "</div>";
+        html += `<div class="room-card-actions">`;
+        html += `<button onclick="event.stopPropagation();refreshRoomImage('${rid}')" title="Refresh image">&#8635;</button>`;
+        if (isCurrent) {
+          html += `<button onclick="event.stopPropagation();openJournalPrompt('${rid}')" title="Write journal entry">Journal</button>`;
+        }
+        html += `<button onclick="event.stopPropagation();viewRoomJournal('${rid}')" title="View journal entries">History</button>`;
+        html += `</div>`;
+        html += `</div>`; /* .room-card-body */
+        html += "</div>"; /* .room-card */
       }
       canvas.innerHTML = html;
     }
@@ -3088,12 +3165,89 @@
       const players = roomMapState.players.filter(p => p.current_room === roomId);
       const npcs = roomMapState.npcsByRoom[roomId] || [];
       const items = roomMapState.objectsByRoom[roomId] || [];
-      const lines = [`Room: ${room.name}`];
-      if (room.description) lines.push(room.description);
+      const lines = [];
+      if (room.latest_summary) lines.push(room.latest_summary);
+      else if (room.description) lines.push(room.description);
       if (players.length) lines.push(`${players.length} explorer${players.length > 1 ? "s" : ""} here`);
       if (npcs.length) lines.push(`NPCs: ${npcs.map(n => n.name).join(", ")}`);
       if (items.length) lines.push(`Items: ${items.map(i => i.name).join(", ")}`);
       showTrailPopup(room.name, lines);
+    }
+
+    async function refreshRoomImage(roomId) {
+      const bonfireId = val("bonfireId");
+      if (!bonfireId) return;
+      try {
+        const res = await fetch("/game/room/refresh-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bonfire_id: bonfireId, room_id: roomId }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          showTrailPopup("Image Generation", ["Generating new room image...", "This may take a minute."]);
+          setTimeout(loadRoomMap, 8000);
+          setTimeout(loadRoomMap, 20000);
+          setTimeout(loadRoomMap, 45000);
+        } else {
+          showTrailPopup("Error", [data.error || "Failed to refresh image"]);
+        }
+      } catch (e) { console.error("refreshRoomImage:", e); }
+    }
+
+    function openJournalPrompt(roomId) {
+      const query = prompt("Write a journal entry for this room:");
+      if (!query || !query.trim()) return;
+      submitJournalEntry(roomId, query.trim());
+    }
+
+    async function submitJournalEntry(roomId, userQuery) {
+      const bonfireId = val("bonfireId");
+      const agentId = val("chatAgentSelect") || val("agentId");
+      if (!bonfireId || !agentId) return;
+      const headers = { "Content-Type": "application/json" };
+      const apiKey = localStorage.getItem("agentApiKey_" + agentId);
+      if (apiKey) headers["X-Agent-Api-Key"] = apiKey;
+      try {
+        const res = await fetch("/game/room/journal", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            bonfire_id: bonfireId,
+            room_id: roomId,
+            agent_id: agentId,
+            user_query: userQuery,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          showTrailPopup("Journal Entry", ["Your journal entry is being generated...", "The room will update soon."]);
+          setTimeout(loadRoomMap, 10000);
+          setTimeout(loadRoomMap, 30000);
+          setTimeout(loadRoomMap, 60000);
+        } else {
+          showTrailPopup("Error", [data.error || "Failed to submit journal"]);
+        }
+      } catch (e) { console.error("submitJournalEntry:", e); }
+    }
+
+    async function viewRoomJournal(roomId) {
+      const bonfireId = val("bonfireId");
+      if (!bonfireId) return;
+      try {
+        const res = await fetch(`/game/room/journal?room_id=${encodeURIComponent(roomId)}&bonfire_id=${encodeURIComponent(bonfireId)}&limit=5`);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.entries || !data.entries.length) {
+          showTrailPopup("Room Journal", ["No journal entries yet."]);
+          return;
+        }
+        const lines = data.entries.map(e => {
+          const date = e.created_at ? new Date(e.created_at).toLocaleDateString() : "";
+          const author = e.author_wallet === "game-server" ? "Room" : (e.author_wallet || "").slice(0, 10);
+          return `[${date} ${author}] ${e.summary || e.user_query || "..."}`;
+        });
+        showTrailPopup("Room Journal", lines);
+      } catch (e) { console.error("viewRoomJournal:", e); }
     }
 
     /* ── NPC Interaction Panel ── */

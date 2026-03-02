@@ -64,6 +64,10 @@ class RoomState:
     description: str = ""
     connections: list[str] = field(default_factory=list)
     graph_entity_uuid: str = ""
+    dataroom_id: str = ""
+    image_url: str = ""
+    latest_hyperblog_id: str = ""
+    latest_summary: str = ""
 
 
 @dataclass

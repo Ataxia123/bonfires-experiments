@@ -44,6 +44,16 @@ class GameStore:
         self.objects_by_game: dict[str, dict[str, ObjectState]] = {}
         self._load_from_disk()
 
+    def _schedule_room_image(self, bonfire_id: str, room_id: str) -> None:
+        """Fire a daemon thread to create a DataRoom + HyperBlog for a room."""
+        import room_image  # deferred to avoid circular imports
+
+        threading.Thread(
+            target=room_image.setup_room,
+            args=(self, bonfire_id, room_id),
+            daemon=True,
+        ).start()
+
     def _snapshot_locked(self) -> dict[str, object]:
         return {
             "players": [asdict(player) for player in self.players_by_agent.values()],
@@ -682,7 +692,9 @@ class GameStore:
             game.rooms.append(asdict(room))
             game.updated_at = datetime.now(UTC).isoformat()
             self._persist_locked()
-            return room
+
+        self._schedule_room_image(bonfire_id, room.room_id)
+        return room
 
     def move_player(self, agent_id: str, room_id: str) -> bool:
         with self._lock:
@@ -737,6 +749,7 @@ class GameStore:
 
     def ensure_starting_room(self, bonfire_id: str) -> str:
         """Ensure at least one room exists for the game and return its room_id."""
+        created_room_id = ""
         with self._lock:
             game = self.games_by_bonfire.get(bonfire_id)
             if not game:
@@ -752,7 +765,11 @@ class GameStore:
             game.rooms.append(asdict(room))
             game.updated_at = datetime.now(UTC).isoformat()
             self._persist_locked()
-            return room.room_id
+            created_room_id = room.room_id
+
+        if created_room_id:
+            self._schedule_room_image(bonfire_id, created_room_id)
+        return created_room_id
 
     def place_player_in_starting_room(self, agent_id: str) -> None:
         """Place a player in the first room of their game if they have no room."""
@@ -818,6 +835,42 @@ class GameStore:
             for room in game.rooms:
                 if isinstance(room, dict) and room.get("room_id") == room_id:
                     room["graph_entity_uuid"] = entity_uuid
+                    self._persist_locked()
+                    return True
+            return False
+
+    def update_room_dataroom(self, bonfire_id: str, room_id: str, dataroom_id: str) -> bool:
+        """Store the Delve DataRoom ID for a room."""
+        with self._lock:
+            game = self.games_by_bonfire.get(bonfire_id)
+            if not game:
+                return False
+            for room in game.rooms:
+                if isinstance(room, dict) and room.get("room_id") == room_id:
+                    room["dataroom_id"] = dataroom_id
+                    self._persist_locked()
+                    return True
+            return False
+
+    def update_room_image(
+        self,
+        bonfire_id: str,
+        room_id: str,
+        image_url: str,
+        summary: str,
+        hyperblog_id: str,
+    ) -> bool:
+        """Update room image URL and summary from a completed HyperBlog."""
+        with self._lock:
+            game = self.games_by_bonfire.get(bonfire_id)
+            if not game:
+                return False
+            for room in game.rooms:
+                if isinstance(room, dict) and room.get("room_id") == room_id:
+                    room["image_url"] = image_url
+                    room["latest_summary"] = summary
+                    room["latest_hyperblog_id"] = hyperblog_id
+                    game.updated_at = datetime.now(UTC).isoformat()
                     self._persist_locked()
                     return True
             return False
