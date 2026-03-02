@@ -1523,6 +1523,161 @@
     let currentPhase = "connect";
     let feedPollTimer = null;
 
+    /* ── WebSocket real-time event stream ── */
+    let gameSocket = null;
+    let wsRetryCount = 0;
+    const WS_MAX_RETRIES = 5;
+    const WS_BASE_DELAY = 2000;
+    let wsFallbackActive = false;
+
+    function connectGameSocket() {
+      const agentId = val("chatAgentSelect") || val("agentId");
+      const apiKey = agentId
+        ? (localStorage.getItem("agentApiKey_" + agentId)
+           || localStorage.getItem(AGENT_API_KEY_STORAGE)
+           || val("agentApiKey"))
+        : "";
+      if (!agentId || !apiKey) {
+        _enableFallbackPolling();
+        return;
+      }
+      if (gameSocket && (gameSocket.readyState === WebSocket.OPEN || gameSocket.readyState === WebSocket.CONNECTING)) {
+        return;
+      }
+      const proto = location.protocol === "https:" ? "wss:" : "ws:";
+      const url = `${proto}//${location.host}/ws/game?agent_id=${encodeURIComponent(agentId)}&api_key=${encodeURIComponent(apiKey)}`;
+      gameSocket = new WebSocket(url);
+
+      gameSocket.onopen = () => {
+        wsRetryCount = 0;
+        _disableFallbackPolling();
+        console.log("[WS] Connected");
+      };
+
+      gameSocket.onmessage = (e) => {
+        try {
+          const event = JSON.parse(e.data);
+          _handleServerEvent(event);
+        } catch (err) {
+          console.error("[WS] Parse error:", err);
+        }
+      };
+
+      gameSocket.onclose = (e) => {
+        console.log("[WS] Closed:", e.code, e.reason);
+        gameSocket = null;
+        if (currentPhase === "play" && wsRetryCount < WS_MAX_RETRIES) {
+          wsRetryCount++;
+          const delay = WS_BASE_DELAY * Math.pow(2, wsRetryCount - 1);
+          setTimeout(connectGameSocket, delay);
+        } else if (currentPhase === "play") {
+          _enableFallbackPolling();
+        }
+      };
+
+      gameSocket.onerror = () => {
+        console.error("[WS] Error");
+      };
+    }
+
+    function disconnectGameSocket() {
+      if (gameSocket) {
+        gameSocket.close();
+        gameSocket = null;
+      }
+      wsRetryCount = 0;
+    }
+
+    function _handleServerEvent(event) {
+      const type = event.type;
+      switch (type) {
+        case "room_chat":
+          _appendLiveChatMessage(event);
+          break;
+        case "room_image_updated":
+          _handleRoomImageUpdated(event);
+          break;
+        case "player_joined":
+        case "player_left":
+          _handlePlayerMovement(event);
+          break;
+        case "room_created":
+          loadRoomMap();
+          break;
+        case "gm_decision":
+          _handleGmDecision(event);
+          break;
+        case "world_state":
+          _handleWorldStateUpdate(event);
+          break;
+        default:
+          console.log("[WS] Unknown event:", type, event);
+      }
+    }
+
+    function _appendLiveChatMessage(event) {
+      const box = document.getElementById("chatWindow");
+      if (!box || event.room_id !== currentRoomId) return;
+      const agentId = val("chatAgentSelect") || val("agentId");
+      const isMe = event.sender_agent_id === agentId;
+      const sender = event.role === "system" ? "system"
+        : isMe ? (event.role === "agent" ? "narrator" : "you")
+        : `${event.role}:${(event.sender_agent_id || "").slice(0, 8)}`;
+      const cls = event.role === "system" ? "msg-system" : isMe ? "msg-self" : "msg-other";
+      const div = document.createElement("div");
+      div.className = cls;
+      div.innerHTML = `<span class="msg-sender">[${_esc(sender)}]</span> ${_esc(event.text || "")}`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function _handleRoomImageUpdated(event) {
+      loadRoomMap();
+      if (event.latest_summary) {
+        showTrailPopup("Room Updated", [event.latest_summary]);
+      }
+    }
+
+    function _handlePlayerMovement(event) {
+      const agentId = val("chatAgentSelect") || val("agentId");
+      if (event.agent_id === agentId && event.type === "player_joined") {
+        currentRoomId = event.new_room;
+        _renderChatWindow(agentId);
+      }
+      loadRoomMap();
+    }
+
+    function _handleGmDecision(event) {
+      if (event.summary) {
+        showTrailPopup("Game Master", [event.summary]);
+      }
+      loadRoomMap();
+      refreshSidebar();
+    }
+
+    function _handleWorldStateUpdate(event) {
+      const narrative = event.world_state_summary || event.last_gm_reaction || "";
+      if (narrative) {
+        const hudEl = document.getElementById("hudNarrative");
+        if (hudEl) hudEl.textContent = narrative;
+      }
+    }
+
+    function _enableFallbackPolling() {
+      if (wsFallbackActive) return;
+      wsFallbackActive = true;
+      console.log("[WS] Falling back to polling");
+      startFeedPoll();
+      _startRoomChatPoll();
+    }
+
+    function _disableFallbackPolling() {
+      if (!wsFallbackActive) return;
+      wsFallbackActive = false;
+      stopFeedPoll();
+      _stopRoomChatPoll();
+    }
+
     /* ── Core helpers ── */
     async function api(path, body) {
       const headers = {"Content-Type": "application/json"};
@@ -1554,17 +1709,24 @@
 
       if (phase === "play") {
         refreshPlayScreen();
-        startFeedPoll();
-        _startRoomChatPoll();
-        setTimeout(() => { _resolveCurrentRoomId(); loadRoomMap(); loadKnowledgeMap(); }, 300);
+        setTimeout(() => {
+          _resolveCurrentRoomId().then(() => {
+            loadRoomMap();
+            loadKnowledgeMap();
+            connectGameSocket();
+          });
+        }, 300);
       } else {
+        disconnectGameSocket();
         stopFeedPoll();
         _stopRoomChatPoll();
       }
     }
 
     function goBack() {
+      disconnectGameSocket();
       stopFeedPoll();
+      _stopRoomChatPoll();
       showPhase("choose");
     }
 
@@ -1986,7 +2148,7 @@
           refreshSidebar();
           refreshWorldBar();
         }
-      }, 12000);
+      }, 30000);
     }
     function stopFeedPoll() {
       if (feedPollTimer) {
@@ -2404,7 +2566,7 @@
         if (agentId && currentRoomId && currentPhase === "play") {
           _renderChatWindow(agentId);
         }
-      }, 5000);
+      }, 30000);
     }
 
     function _stopRoomChatPoll() {
@@ -2453,7 +2615,8 @@
         refreshSidebar();
         loadRoomMap();
         loadKnowledgeMap();
-        _startRoomChatPoll();
+        disconnectGameSocket();
+        connectGameSocket();
       }
     }
 
@@ -2578,6 +2741,7 @@
         if (!apiKey) throw new Error("Reveal response did not include api_key.");
         setVal("agentApiKey", apiKey);
         window.localStorage.setItem(AGENT_API_KEY_STORAGE, apiKey);
+        if (agentId) window.localStorage.setItem("agentApiKey_" + agentId, apiKey);
         updateWizardState();
         show({ status: 200, note: "Agent API key revealed and saved." });
       } catch (err) {
@@ -3186,9 +3350,11 @@
         const data = await res.json().catch(() => ({}));
         if (res.ok) {
           showTrailPopup("Image Generation", ["Generating new room image...", "This may take a minute."]);
-          setTimeout(loadRoomMap, 8000);
-          setTimeout(loadRoomMap, 20000);
-          setTimeout(loadRoomMap, 45000);
+          if (!gameSocket || gameSocket.readyState !== WebSocket.OPEN) {
+            setTimeout(loadRoomMap, 8000);
+            setTimeout(loadRoomMap, 20000);
+            setTimeout(loadRoomMap, 45000);
+          }
         } else {
           showTrailPopup("Error", [data.error || "Failed to refresh image"]);
         }
@@ -3222,9 +3388,11 @@
         const data = await res.json().catch(() => ({}));
         if (res.ok) {
           showTrailPopup("Journal Entry", ["Your journal entry is being generated...", "The room will update soon."]);
-          setTimeout(loadRoomMap, 10000);
-          setTimeout(loadRoomMap, 30000);
-          setTimeout(loadRoomMap, 60000);
+          if (!gameSocket || gameSocket.readyState !== WebSocket.OPEN) {
+            setTimeout(loadRoomMap, 10000);
+            setTimeout(loadRoomMap, 30000);
+            setTimeout(loadRoomMap, 60000);
+          }
         } else {
           showTrailPopup("Error", [data.error || "Failed to submit journal"]);
         }

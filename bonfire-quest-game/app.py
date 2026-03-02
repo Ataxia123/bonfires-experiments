@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 
 import game_config as config
 from game_store import GameStore
+from room_hub import RoomHub
 from timers import GmBatchTimerRunner, StackTimerRunner
 
 
@@ -45,6 +46,7 @@ def create_app(
     resolve_owner_wallet: Callable[[int], str] | None = None,
     stack_timer: StackTimerRunner | None = None,
     gm_timer: GmBatchTimerRunner | None = None,
+    room_hub: RoomHub | None = None,
 ) -> FastAPI:
     """Create and configure the FastAPI application.
 
@@ -56,6 +58,7 @@ def create_app(
     _provided_resolve = resolve_owner_wallet
     _provided_stack_timer = stack_timer
     _provided_gm_timer = gm_timer
+    _provided_room_hub = room_hub
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -64,7 +67,8 @@ def create_app(
             yield
             return
 
-        _store = GameStore(storage_path=config.GAME_STORE_PATH)
+        _hub = RoomHub()
+        _store = GameStore(storage_path=config.GAME_STORE_PATH, on_room_event=_hub.fire_event)
         _stack_timer = StackTimerRunner(
             store=_store, interval_seconds=config.STACK_PROCESS_INTERVAL_SECONDS
         )
@@ -74,6 +78,7 @@ def create_app(
         _stack_timer.start()
         _gm_timer.start()
         app.state.store = _store
+        app.state.room_hub = _hub
         app.state.resolve_owner_wallet = _noop_resolver
         app.state.stack_timer = _stack_timer
         app.state.gm_timer = _gm_timer
@@ -86,10 +91,14 @@ def create_app(
     # When explicit dependencies are provided (e.g. tests), set state immediately
     # so the app works without triggering the lifespan context.
     if _provided_store is not None:
+        _hub_instance = _provided_room_hub or RoomHub()
         app.state.store = _provided_store
+        app.state.room_hub = _hub_instance
         app.state.resolve_owner_wallet = _provided_resolve or _noop_resolver
         app.state.stack_timer = _provided_stack_timer
         app.state.gm_timer = _provided_gm_timer
+        if _provided_store.on_room_event is None:
+            _provided_store.on_room_event = _hub_instance.fire_event
 
     app.add_middleware(
         CORSMiddleware,

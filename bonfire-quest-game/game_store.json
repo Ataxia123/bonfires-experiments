@@ -104,6 +104,21 @@
       "created_at": "2026-02-27T17:43:58.846052+00:00",
       "current_room": "f6c82a9f-27b2-47ae-aa07-499a3bb471e7",
       "inventory": []
+    },
+    {
+      "wallet": "0x69ef61afc3aa356e1ac97347119d75cbdabef534",
+      "agent_id": "69a0c2281f5b02fe9304a7e4",
+      "bonfire_id": "699bd4769003dbb839a1f274",
+      "erc8004_bonfire_id": 0,
+      "purchase_id": "",
+      "purchase_tx_hash": "",
+      "base_quota": 2,
+      "bonus_quota": 0,
+      "turns_used": 0,
+      "is_active": true,
+      "created_at": "2026-03-02T04:45:11.734943+00:00",
+      "current_room": "f6c82a9f-27b2-47ae-aa07-499a3bb471e7",
+      "inventory": []
     }
   ],
   "game_admin_by_bonfire": {
@@ -187,1326 +202,6 @@
   "last_claim_at": {},
   "events_by_bonfire": {
     "699bd4769003dbb839a1f274": [
-      {
-        "event_id": "770f23c2-02c5-478a-9619-b91563f90b3b",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:11:11.494828+00:00",
-        "payload": {
-          "agent_id": "69a0b0481f5b02fe9304a78f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "980ab7df-9736-4850-8b81-3c0a49a81a11",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:11:12.953825+00:00",
-        "payload": {
-          "agent_id": "69a0b2321f5b02fe9304a793",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "5abca2c6-6a9e-4484-ae69-7cd4db2208cf",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:11:14.444905+00:00",
-        "payload": {
-          "agent_id": "69a0bb0e1f5b02fe9304a79f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "159338c1-36b5-4fe0-a726-8ba0317ce3e0",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:26:16.174171+00:00",
-        "payload": {
-          "agent_id": "69a0bfd81f5b02fe9304a7ca",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "27064421-e592-4835-8b76-77dc0af19c39",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:26:17.656044+00:00",
-        "payload": {
-          "agent_id": "69a0bd611f5b02fe9304a7b6",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "e45853ba-42a1-4522-ac8d-591956b27537",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:26:19.142634+00:00",
-        "payload": {
-          "agent_id": "69a0b3021f5b02fe9304a796",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "ad91fdcc-f7b5-4b45-8e0a-876be160fb13",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:26:20.594425+00:00",
-        "payload": {
-          "agent_id": "699bd4769003dbb839a1f276",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "cae0599f-17a9-440a-b2b0-18175d103cf5",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:26:22.054672+00:00",
-        "payload": {
-          "agent_id": "69a0b0481f5b02fe9304a78f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "e79077f7-9ce5-4331-8629-8cfb3e76d80e",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:26:23.522848+00:00",
-        "payload": {
-          "agent_id": "69a0b2321f5b02fe9304a793",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "7250db10-90ba-4740-96f8-f509401d68ea",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:26:24.989219+00:00",
-        "payload": {
-          "agent_id": "69a0bb0e1f5b02fe9304a79f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "cbf47b75-be12-49cb-81df-d5e99a909507",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:41:26.752583+00:00",
-        "payload": {
-          "agent_id": "69a0bfd81f5b02fe9304a7ca",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "8ea5f716-bcfd-4f5e-a357-6ccaff0915ce",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:41:28.209010+00:00",
-        "payload": {
-          "agent_id": "69a0bd611f5b02fe9304a7b6",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "803b3f2e-f6fb-482e-84cd-819076dea036",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:41:29.640365+00:00",
-        "payload": {
-          "agent_id": "69a0b3021f5b02fe9304a796",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "b2b268bd-bffa-45bc-9401-2cd49f2f534c",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:41:31.096067+00:00",
-        "payload": {
-          "agent_id": "699bd4769003dbb839a1f276",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "87a19b67-bda3-4d53-8328-e1e1a7329c63",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:41:32.587288+00:00",
-        "payload": {
-          "agent_id": "69a0b0481f5b02fe9304a78f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "c3bcbc71-7239-40d9-a9cd-c3c19ce785c3",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:41:34.044194+00:00",
-        "payload": {
-          "agent_id": "69a0b2321f5b02fe9304a793",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "d171dc97-cd87-4af3-842b-48e9d3bcb045",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:41:35.473659+00:00",
-        "payload": {
-          "agent_id": "69a0bb0e1f5b02fe9304a79f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "9b53af9d-3d8b-4ee9-9dd5-20d7602f246c",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:56:37.065597+00:00",
-        "payload": {
-          "agent_id": "69a0bfd81f5b02fe9304a7ca",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "35c67896-8cec-4f2e-affd-c3a6dd42ade7",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:56:38.523377+00:00",
-        "payload": {
-          "agent_id": "69a0bd611f5b02fe9304a7b6",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "ee50d0fb-c261-4811-96f3-3d65644f0f76",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:56:39.963610+00:00",
-        "payload": {
-          "agent_id": "69a0b3021f5b02fe9304a796",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "38c674d5-1c3f-42aa-9cc7-9908586e3a63",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:56:41.402081+00:00",
-        "payload": {
-          "agent_id": "699bd4769003dbb839a1f276",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "9da3562c-78b2-4f82-89a9-0063a32801c8",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:56:42.862626+00:00",
-        "payload": {
-          "agent_id": "69a0b0481f5b02fe9304a78f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "a9776bfc-c86b-4544-8587-6a9c9f61c4f4",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:56:44.347602+00:00",
-        "payload": {
-          "agent_id": "69a0b2321f5b02fe9304a793",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "8f06bd03-2b50-4fda-a1ba-916df6ad21e6",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T06:56:45.814255+00:00",
-        "payload": {
-          "agent_id": "69a0bb0e1f5b02fe9304a79f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "528d91c8-a2d3-4663-929d-ee422b889e85",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:11:47.590250+00:00",
-        "payload": {
-          "agent_id": "69a0bfd81f5b02fe9304a7ca",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "9885d2e7-ae84-4553-8500-f6bcbf6ae16a",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:11:49.030368+00:00",
-        "payload": {
-          "agent_id": "69a0bd611f5b02fe9304a7b6",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "6ae163b9-aa01-477d-9fcd-41ef9f1c3dde",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:11:50.464894+00:00",
-        "payload": {
-          "agent_id": "69a0b3021f5b02fe9304a796",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "658fef00-f93d-43c9-af8a-07d3e170dc6b",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:11:51.896821+00:00",
-        "payload": {
-          "agent_id": "699bd4769003dbb839a1f276",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "76d326b5-6a33-49ec-a86f-13365f746f78",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:11:53.354503+00:00",
-        "payload": {
-          "agent_id": "69a0b0481f5b02fe9304a78f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "8720e4fd-a45b-4428-b9e5-a9d5adf1233e",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:11:54.782824+00:00",
-        "payload": {
-          "agent_id": "69a0b2321f5b02fe9304a793",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "944ec3df-40c2-429e-81ba-19f5a939c466",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:11:56.255474+00:00",
-        "payload": {
-          "agent_id": "69a0bb0e1f5b02fe9304a79f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "bc101e87-d5e7-4948-8454-73a305b17d71",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:26:57.694704+00:00",
-        "payload": {
-          "agent_id": "69a0bfd81f5b02fe9304a7ca",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "9399f390-43a3-4964-942a-d10bceea88e5",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:26:59.156986+00:00",
-        "payload": {
-          "agent_id": "69a0bd611f5b02fe9304a7b6",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "835eccd5-2a05-4fe4-82ce-4c22e9b9da93",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:27:00.611851+00:00",
-        "payload": {
-          "agent_id": "69a0b3021f5b02fe9304a796",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "615e5a18-9efe-423d-8675-00ecb09c748a",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:27:02.077628+00:00",
-        "payload": {
-          "agent_id": "699bd4769003dbb839a1f276",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "560fffc8-71ff-46bb-8fc1-579844acc3e0",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:27:03.536487+00:00",
-        "payload": {
-          "agent_id": "69a0b0481f5b02fe9304a78f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "74931fd1-5397-46d2-b733-c25a9ce23b23",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:27:05.023673+00:00",
-        "payload": {
-          "agent_id": "69a0b2321f5b02fe9304a793",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "fe933396-a036-450b-8bf0-92f2ef0245a6",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:27:06.498680+00:00",
-        "payload": {
-          "agent_id": "69a0bb0e1f5b02fe9304a79f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "844cb86d-9c97-4bcd-a696-a866dd034a0f",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:42:07.929358+00:00",
-        "payload": {
-          "agent_id": "69a0bfd81f5b02fe9304a7ca",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "2519a4b3-8e1d-44c1-b13b-f13ad134a619",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:42:09.390937+00:00",
-        "payload": {
-          "agent_id": "69a0bd611f5b02fe9304a7b6",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "acf9d176-b94e-4a4b-af8b-e08ef021b7da",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:42:10.880696+00:00",
-        "payload": {
-          "agent_id": "69a0b3021f5b02fe9304a796",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "97ec4e38-c623-49e8-b49d-9be1537dd742",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:42:12.316124+00:00",
-        "payload": {
-          "agent_id": "699bd4769003dbb839a1f276",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "63171731-edcb-4baa-881d-eb269e2e7fa3",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:42:13.772306+00:00",
-        "payload": {
-          "agent_id": "69a0b0481f5b02fe9304a78f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "574897c7-13ad-4eab-8745-8be8b2507859",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:42:15.236530+00:00",
-        "payload": {
-          "agent_id": "69a0b2321f5b02fe9304a793",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "33bed67a-a512-4986-8e16-3448e6e63d7d",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:42:16.698704+00:00",
-        "payload": {
-          "agent_id": "69a0bb0e1f5b02fe9304a79f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "8ba8fe8f-8757-43fe-a09f-e85fb5ebf331",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:57:18.139319+00:00",
-        "payload": {
-          "agent_id": "69a0bfd81f5b02fe9304a7ca",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "6ccf92bb-2dcb-4aa9-970d-dbe594405418",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:57:19.626836+00:00",
-        "payload": {
-          "agent_id": "69a0bd611f5b02fe9304a7b6",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "32b97d31-e544-4e76-88d8-3c6acf5afeda",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:57:21.109120+00:00",
-        "payload": {
-          "agent_id": "69a0b3021f5b02fe9304a796",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "455bce41-3c09-4eff-bf33-fb3b79f18e0f",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:57:22.570673+00:00",
-        "payload": {
-          "agent_id": "699bd4769003dbb839a1f276",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "b9d621c6-b34c-4a51-8c7f-a601f5e2937e",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:57:24.036031+00:00",
-        "payload": {
-          "agent_id": "69a0b0481f5b02fe9304a78f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "8d2baa93-513b-4787-8e3a-f09ec39256a6",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:57:25.494417+00:00",
-        "payload": {
-          "agent_id": "69a0b2321f5b02fe9304a793",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "b02cd58f-9d28-4725-8aef-8130e1b06ec9",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T07:57:26.984206+00:00",
-        "payload": {
-          "agent_id": "69a0bb0e1f5b02fe9304a79f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "01848ccf-2523-4258-a4c0-303bce77e91d",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:12:28.740974+00:00",
-        "payload": {
-          "agent_id": "69a0bfd81f5b02fe9304a7ca",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "1bca250e-6519-443a-aa21-c9e85ee7052e",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:12:30.199338+00:00",
-        "payload": {
-          "agent_id": "69a0bd611f5b02fe9304a7b6",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "40939ec0-5274-43f0-945f-cbc18e6d2958",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:12:31.662312+00:00",
-        "payload": {
-          "agent_id": "69a0b3021f5b02fe9304a796",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "217732bc-42a2-4f29-bc33-492e3c16f0d4",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:12:33.123914+00:00",
-        "payload": {
-          "agent_id": "699bd4769003dbb839a1f276",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "8737cdc8-be6f-42e4-a5a1-61cdd4f36649",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:12:34.581894+00:00",
-        "payload": {
-          "agent_id": "69a0b0481f5b02fe9304a78f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "70cc6555-4eb0-4990-9ab5-3f96544a4513",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:12:36.010401+00:00",
-        "payload": {
-          "agent_id": "69a0b2321f5b02fe9304a793",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "401d9aaa-3a51-47f4-a0a4-707195c34d05",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:12:37.477942+00:00",
-        "payload": {
-          "agent_id": "69a0bb0e1f5b02fe9304a79f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "ceb4b076-cefe-4f3f-9aa3-82b6d6b3cc04",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:27:39.230855+00:00",
-        "payload": {
-          "agent_id": "69a0bfd81f5b02fe9304a7ca",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "79864394-308b-40df-bc27-c588deb847fc",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:27:40.742999+00:00",
-        "payload": {
-          "agent_id": "69a0bd611f5b02fe9304a7b6",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "7753d5c8-4bb9-4eba-bcf6-33fa3d7ae16a",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:27:42.175554+00:00",
-        "payload": {
-          "agent_id": "69a0b3021f5b02fe9304a796",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "05454125-f46c-455d-84ab-cec6bbda7320",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:27:43.643267+00:00",
-        "payload": {
-          "agent_id": "699bd4769003dbb839a1f276",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "b11d2158-7216-4499-bf51-8f2042488729",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:27:45.077417+00:00",
-        "payload": {
-          "agent_id": "69a0b0481f5b02fe9304a78f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "e18cfa4a-a6bd-4a82-9a2e-afcd6618bd87",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:27:46.535174+00:00",
-        "payload": {
-          "agent_id": "69a0b2321f5b02fe9304a793",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "74489994-031b-4499-bf45-4c7ea4869bc7",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:27:47.991414+00:00",
-        "payload": {
-          "agent_id": "69a0bb0e1f5b02fe9304a79f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "8cd960f9-4a24-4a47-ab91-53ab1ac8f858",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:42:49.576457+00:00",
-        "payload": {
-          "agent_id": "69a0bfd81f5b02fe9304a7ca",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "420150ca-8ccb-41d6-aa8b-6ea7106fcf41",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:42:51.031338+00:00",
-        "payload": {
-          "agent_id": "69a0bd611f5b02fe9304a7b6",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "f160af03-fafb-496a-91b2-ca5336edae07",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:42:52.486872+00:00",
-        "payload": {
-          "agent_id": "69a0b3021f5b02fe9304a796",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "304475ef-cec0-4de6-9bd4-2a546e4b1b31",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:42:53.936100+00:00",
-        "payload": {
-          "agent_id": "699bd4769003dbb839a1f276",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "996479f8-f502-4b22-b373-bd7c48011635",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:42:55.388396+00:00",
-        "payload": {
-          "agent_id": "69a0b0481f5b02fe9304a78f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "56ee7d60-7eb2-4c3e-8ddc-d549fc94e120",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:42:56.876406+00:00",
-        "payload": {
-          "agent_id": "69a0b2321f5b02fe9304a793",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "6eb7ec62-f6ec-4aff-a495-92515639b4f2",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:42:58.329715+00:00",
-        "payload": {
-          "agent_id": "69a0bb0e1f5b02fe9304a79f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "583dcf7a-2c70-417d-89c2-e45cfeeb02ca",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:57:59.807742+00:00",
-        "payload": {
-          "agent_id": "69a0bfd81f5b02fe9304a7ca",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "5de10cac-3457-4a71-82dd-b691157eec31",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:58:01.306504+00:00",
-        "payload": {
-          "agent_id": "69a0bd611f5b02fe9304a7b6",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "1461fb35-8e31-4fbf-9570-54a8c9c9466c",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:58:02.786290+00:00",
-        "payload": {
-          "agent_id": "69a0b3021f5b02fe9304a796",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "f7a71cdd-dd70-48c1-9df7-24484729beb4",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:58:04.245172+00:00",
-        "payload": {
-          "agent_id": "699bd4769003dbb839a1f276",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "efc58478-c4c7-41d7-9add-582fc0773cfa",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:58:05.690150+00:00",
-        "payload": {
-          "agent_id": "69a0b0481f5b02fe9304a78f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "95166da4-9de3-42d6-946a-e9dcd401b52c",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:58:07.183544+00:00",
-        "payload": {
-          "agent_id": "69a0b2321f5b02fe9304a793",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "c4358b62-21f7-4440-b5de-a41eb13ddc88",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T08:58:08.665468+00:00",
-        "payload": {
-          "agent_id": "69a0bb0e1f5b02fe9304a79f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "4d965626-c7d9-400c-8f4f-5ab1633a0b90",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:13:10.128306+00:00",
-        "payload": {
-          "agent_id": "69a0bfd81f5b02fe9304a7ca",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "dce80c83-e65c-4308-9f78-996880ebeb7c",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:13:11.590286+00:00",
-        "payload": {
-          "agent_id": "69a0bd611f5b02fe9304a7b6",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "bf90c17e-fa8b-4a63-86b7-15c3f795f4ad",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:13:13.105705+00:00",
-        "payload": {
-          "agent_id": "69a0b3021f5b02fe9304a796",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "da6ec12d-5dcb-4223-9f01-258c83a31a92",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:13:14.563831+00:00",
-        "payload": {
-          "agent_id": "699bd4769003dbb839a1f276",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "a6f2f0ef-7ea9-409f-baf1-81025affd21f",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:13:16.021565+00:00",
-        "payload": {
-          "agent_id": "69a0b0481f5b02fe9304a78f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "78643cdf-fedb-463d-9edc-9d3cfaad51f3",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:13:17.480567+00:00",
-        "payload": {
-          "agent_id": "69a0b2321f5b02fe9304a793",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "6d3bfc16-9358-46c3-9f11-838fae6a5984",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:13:18.961452+00:00",
-        "payload": {
-          "agent_id": "69a0bb0e1f5b02fe9304a79f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "bc0a476d-ef6c-4373-9c82-bf11e90ddc4e",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:28:20.447587+00:00",
-        "payload": {
-          "agent_id": "69a0bfd81f5b02fe9304a7ca",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "c44d0c4e-236d-40d2-a02e-61dc5474d592",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:28:21.887696+00:00",
-        "payload": {
-          "agent_id": "69a0bd611f5b02fe9304a7b6",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "09ed784e-be02-403f-8a76-a1244e02fc0d",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:28:23.353483+00:00",
-        "payload": {
-          "agent_id": "69a0b3021f5b02fe9304a796",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "67929598-ea90-499f-9ccb-263b8cadad3d",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:28:24.809772+00:00",
-        "payload": {
-          "agent_id": "699bd4769003dbb839a1f276",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "1ddaaa2a-de47-49c9-80c8-fd5c05671c0a",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:28:26.243368+00:00",
-        "payload": {
-          "agent_id": "69a0b0481f5b02fe9304a78f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "16b01d63-59c2-43c7-9627-9b170fde5659",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:28:27.698756+00:00",
-        "payload": {
-          "agent_id": "69a0b2321f5b02fe9304a793",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "5526bf56-c0d3-4459-a9c6-6af883d2b847",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:28:29.166078+00:00",
-        "payload": {
-          "agent_id": "69a0bb0e1f5b02fe9304a79f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "bf7e07fa-d179-41fd-8ba8-b2596937d4a4",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:43:30.648409+00:00",
-        "payload": {
-          "agent_id": "69a0bfd81f5b02fe9304a7ca",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "aa0fdf85-be21-4514-8c65-02857d132361",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:43:32.075910+00:00",
-        "payload": {
-          "agent_id": "69a0bd611f5b02fe9304a7b6",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "c1801e6e-16f9-4579-9fec-b9141e8be326",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:43:33.508567+00:00",
-        "payload": {
-          "agent_id": "69a0b3021f5b02fe9304a796",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "4e756d39-d6dc-4cbf-a46b-866a0df28d2e",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:43:34.951500+00:00",
-        "payload": {
-          "agent_id": "699bd4769003dbb839a1f276",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "821d01a1-2faa-4245-8fa7-09752a9ec22b",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:43:36.381654+00:00",
-        "payload": {
-          "agent_id": "69a0b0481f5b02fe9304a78f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "a68c92f3-adf8-42db-af47-2beef1fb2312",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:43:37.847215+00:00",
-        "payload": {
-          "agent_id": "69a0b2321f5b02fe9304a793",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "7f954b03-a61b-4eb8-99ef-6a4ca46419af",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:43:39.330872+00:00",
-        "payload": {
-          "agent_id": "69a0bb0e1f5b02fe9304a79f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "9c646ef1-b0aa-44bf-9018-45a9ca6dabba",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:58:40.802171+00:00",
-        "payload": {
-          "agent_id": "69a0bfd81f5b02fe9304a7ca",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "fa78ef43-a07d-4f50-8cdc-7f96ff2e75dc",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:58:42.260390+00:00",
-        "payload": {
-          "agent_id": "69a0bd611f5b02fe9304a7b6",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "ba63daa3-a977-4fbb-88c9-48f32ca5c635",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:58:43.720563+00:00",
-        "payload": {
-          "agent_id": "69a0b3021f5b02fe9304a796",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "e8a87f21-da73-4831-a078-249200982578",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:58:45.190422+00:00",
-        "payload": {
-          "agent_id": "699bd4769003dbb839a1f276",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "5dfff24c-ab06-40bd-9fe4-c105a5e95e96",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:58:46.649732+00:00",
-        "payload": {
-          "agent_id": "69a0b0481f5b02fe9304a78f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "758a1977-f606-481f-ad54-7d971ec8fbe8",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:58:48.126777+00:00",
-        "payload": {
-          "agent_id": "69a0b2321f5b02fe9304a793",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "b20ff108-8d58-48b1-8f7a-c3e0e568ba9b",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T09:58:49.584686+00:00",
-        "payload": {
-          "agent_id": "69a0bb0e1f5b02fe9304a79f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "ecc586f1-ab2e-4e65-bd88-9811804a9df2",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T10:13:51.072861+00:00",
-        "payload": {
-          "agent_id": "69a0bfd81f5b02fe9304a7ca",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "b9f4e8e0-8e38-4042-a901-294f31e131d8",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T10:13:52.529045+00:00",
-        "payload": {
-          "agent_id": "69a0bd611f5b02fe9304a7b6",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "6364c20b-11fe-4d85-beb3-1bcef4dadb4a",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T10:13:53.963626+00:00",
-        "payload": {
-          "agent_id": "69a0b3021f5b02fe9304a796",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "fcec75b7-4a8e-4572-b0f2-38831354e570",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T10:13:55.703306+00:00",
-        "payload": {
-          "agent_id": "699bd4769003dbb839a1f276",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "654263e2-7bb1-4b86-a006-0f9f548fd086",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T10:13:57.131510+00:00",
-        "payload": {
-          "agent_id": "69a0b0481f5b02fe9304a78f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "7b68ce0d-76bd-47ba-98ed-5bcd2bbb5f37",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T10:13:58.613598+00:00",
-        "payload": {
-          "agent_id": "69a0b2321f5b02fe9304a793",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "f007bfb8-77e9-41a0-8ff8-3da15dc53b72",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T10:14:00.095650+00:00",
-        "payload": {
-          "agent_id": "69a0bb0e1f5b02fe9304a79f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "51e2bc55-b714-4782-a3d9-ce4187ba95d0",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T10:29:01.825427+00:00",
-        "payload": {
-          "agent_id": "69a0bfd81f5b02fe9304a7ca",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "057ccb40-e74d-4182-9c18-88f829caa9c0",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T10:29:03.261732+00:00",
-        "payload": {
-          "agent_id": "69a0bd611f5b02fe9304a7b6",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "0e068a98-5abd-4f8d-81dd-b7fc81920884",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T10:29:04.689719+00:00",
-        "payload": {
-          "agent_id": "69a0b3021f5b02fe9304a796",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "08a19ee2-a7f5-4488-9bf7-9eb2dc70aaf1",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T10:29:06.144837+00:00",
-        "payload": {
-          "agent_id": "699bd4769003dbb839a1f276",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
-      {
-        "event_id": "cf38e89c-3583-491f-91ad-a5c445b42bf6",
-        "event_type": "stack_processed",
-        "at": "2026-03-01T10:29:07.642184+00:00",
-        "payload": {
-          "agent_id": "69a0b0481f5b02fe9304a78f",
-          "status": 400,
-          "success": false,
-          "episode_id": ""
-        }
-      },
       {
         "event_id": "7fb176fa-1271-4158-872f-60a566eea9cd",
         "event_type": "stack_processed",
@@ -5686,6 +4381,1325 @@
           "success": false,
           "episode_id": ""
         }
+      },
+      {
+        "event_id": "5250d7af-60d5-423b-8156-56f95fc3ba70",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T00:57:46.315552+00:00",
+        "payload": {
+          "agent_id": "69a0bfd81f5b02fe9304a7ca",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "308397d5-2d37-4f7b-8222-be071685080e",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T00:57:47.766250+00:00",
+        "payload": {
+          "agent_id": "69a0bd611f5b02fe9304a7b6",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "cc7e761b-7157-435a-b91c-ec3447ef00c1",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T00:57:49.191485+00:00",
+        "payload": {
+          "agent_id": "69a0b3021f5b02fe9304a796",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "56eb4f3a-9563-4364-a0ba-78ef25334d7e",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T00:57:50.642325+00:00",
+        "payload": {
+          "agent_id": "699bd4769003dbb839a1f276",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "b4e30f44-53da-476c-bfc0-7a0264eb60fd",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T00:57:52.065672+00:00",
+        "payload": {
+          "agent_id": "69a0b0481f5b02fe9304a78f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "bb967e58-a855-4dc3-bea1-84f84fd0a4a9",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T00:57:53.525881+00:00",
+        "payload": {
+          "agent_id": "69a0b2321f5b02fe9304a793",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "ab112e4a-3a41-4e7f-b1b7-794f987d87c7",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T00:57:54.979431+00:00",
+        "payload": {
+          "agent_id": "69a0bb0e1f5b02fe9304a79f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "e69dab42-222b-4b18-bf99-018d1a2028a9",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:12:56.446826+00:00",
+        "payload": {
+          "agent_id": "69a0bfd81f5b02fe9304a7ca",
+          "status": 502,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "4bbdeddd-b725-41c8-a020-d30ce13c409d",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:12:57.877740+00:00",
+        "payload": {
+          "agent_id": "69a0bd611f5b02fe9304a7b6",
+          "status": 502,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "f2fd45c3-abd5-4424-879b-5c7c321599a4",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:12:59.313685+00:00",
+        "payload": {
+          "agent_id": "69a0b3021f5b02fe9304a796",
+          "status": 502,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "e4084411-3bd4-4fa3-b7ad-af58d66073a2",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:13:00.746991+00:00",
+        "payload": {
+          "agent_id": "699bd4769003dbb839a1f276",
+          "status": 502,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "db6656d6-e52e-40db-a7dd-42fb3ab4bb43",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:13:02.193769+00:00",
+        "payload": {
+          "agent_id": "69a0b0481f5b02fe9304a78f",
+          "status": 502,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "519f83d6-be21-4300-89f7-a02c9f83aca2",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:13:03.679095+00:00",
+        "payload": {
+          "agent_id": "69a0b2321f5b02fe9304a793",
+          "status": 502,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "62672fd5-99c4-4edf-b249-f41b2d96e382",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:13:05.092677+00:00",
+        "payload": {
+          "agent_id": "69a0bb0e1f5b02fe9304a79f",
+          "status": 502,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "70cf6151-df78-4baa-952c-566e0663f022",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:28:06.578459+00:00",
+        "payload": {
+          "agent_id": "69a0bfd81f5b02fe9304a7ca",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "c6e55f8d-5170-4d56-9ac1-1d3c8b3b99c1",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:28:08.000739+00:00",
+        "payload": {
+          "agent_id": "69a0bd611f5b02fe9304a7b6",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "0e67cb61-86db-48c4-8af1-e5ea702c6c76",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:28:09.444502+00:00",
+        "payload": {
+          "agent_id": "69a0b3021f5b02fe9304a796",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "7da1819e-d7ef-429e-afc9-fd977d256891",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:28:10.871944+00:00",
+        "payload": {
+          "agent_id": "699bd4769003dbb839a1f276",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "b5f91908-0afb-4085-bb75-f24ac47746a8",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:28:12.330415+00:00",
+        "payload": {
+          "agent_id": "69a0b0481f5b02fe9304a78f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "9a3f92df-11c9-40ec-bc2a-c247d2cb4be5",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:28:13.787419+00:00",
+        "payload": {
+          "agent_id": "69a0b2321f5b02fe9304a793",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "fd4a97ab-9d96-48ad-9ecb-5c1437e12d92",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:28:15.242561+00:00",
+        "payload": {
+          "agent_id": "69a0bb0e1f5b02fe9304a79f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "b9296f69-0879-43ed-b995-aada55087032",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:43:16.665095+00:00",
+        "payload": {
+          "agent_id": "69a0bfd81f5b02fe9304a7ca",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "1b744cf5-efcb-4bf7-bf6e-4f4a2d50b806",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:43:18.148217+00:00",
+        "payload": {
+          "agent_id": "69a0bd611f5b02fe9304a7b6",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "1b1c57df-065d-4ec4-9acc-afa85e132697",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:43:19.569829+00:00",
+        "payload": {
+          "agent_id": "69a0b3021f5b02fe9304a796",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "ef168c12-48b9-4717-8b51-2d8810be7f7a",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:43:21.019543+00:00",
+        "payload": {
+          "agent_id": "699bd4769003dbb839a1f276",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "9e3c64ce-93b1-4147-af69-418054a78f4b",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:43:22.444381+00:00",
+        "payload": {
+          "agent_id": "69a0b0481f5b02fe9304a78f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "f3ff4a80-0857-43c5-9e4b-1870df4e7573",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:43:23.869866+00:00",
+        "payload": {
+          "agent_id": "69a0b2321f5b02fe9304a793",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "a46b4164-0a83-4a0a-ab3e-abb78404b829",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:43:25.325345+00:00",
+        "payload": {
+          "agent_id": "69a0bb0e1f5b02fe9304a79f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "4a5c8855-d731-4f33-89b9-3f033cc30e3b",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:58:26.804960+00:00",
+        "payload": {
+          "agent_id": "69a0bfd81f5b02fe9304a7ca",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "0ad8ae52-d21f-49b6-ab95-89ddc470b3a3",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:58:28.244941+00:00",
+        "payload": {
+          "agent_id": "69a0bd611f5b02fe9304a7b6",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "ad006c88-df2a-45d7-8452-b6ba5d941fc2",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:58:29.690985+00:00",
+        "payload": {
+          "agent_id": "69a0b3021f5b02fe9304a796",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "59da235d-6d6e-4267-9664-0253c33aa8b4",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:58:31.147027+00:00",
+        "payload": {
+          "agent_id": "699bd4769003dbb839a1f276",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "adcac058-c839-4cd4-a267-a8ccc77f43d0",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:58:32.613696+00:00",
+        "payload": {
+          "agent_id": "69a0b0481f5b02fe9304a78f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "8b37b20e-e720-45e2-b427-9c711f10b45d",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:58:34.057339+00:00",
+        "payload": {
+          "agent_id": "69a0b2321f5b02fe9304a793",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "638afcc3-903f-4136-a601-7ad3a9dc7193",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T01:58:35.536285+00:00",
+        "payload": {
+          "agent_id": "69a0bb0e1f5b02fe9304a79f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "3ba7ef12-bbed-4c7c-8aa2-ffa329b3c412",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:13:37.021432+00:00",
+        "payload": {
+          "agent_id": "69a0bfd81f5b02fe9304a7ca",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "f5d79d9c-9779-4b70-b4e5-645c090b3bb1",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:13:38.446384+00:00",
+        "payload": {
+          "agent_id": "69a0bd611f5b02fe9304a7b6",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "153eda76-5938-4c3c-b6a6-d62a001054c0",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:13:39.902650+00:00",
+        "payload": {
+          "agent_id": "69a0b3021f5b02fe9304a796",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "c2e35011-7f91-4070-93fd-56d2cd9509ae",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:13:41.395582+00:00",
+        "payload": {
+          "agent_id": "699bd4769003dbb839a1f276",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "eb88d3c2-6532-43fa-acc5-ba1a56ce8d9f",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:13:42.882377+00:00",
+        "payload": {
+          "agent_id": "69a0b0481f5b02fe9304a78f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "2cb2237f-7dc9-4c2a-821d-0a5fd85b63c8",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:13:44.339893+00:00",
+        "payload": {
+          "agent_id": "69a0b2321f5b02fe9304a793",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "fa52255c-33d2-4828-9722-17099841a5f8",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:13:45.794211+00:00",
+        "payload": {
+          "agent_id": "69a0bb0e1f5b02fe9304a79f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "49d2c99b-9db2-42aa-85a6-9a57dc03d80a",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:28:47.400284+00:00",
+        "payload": {
+          "agent_id": "69a0bfd81f5b02fe9304a7ca",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "782b20b3-618b-49ee-9cf8-fd5ce0871c70",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:28:48.823212+00:00",
+        "payload": {
+          "agent_id": "69a0bd611f5b02fe9304a7b6",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "52d26d87-0c24-4596-aa06-f5bcade97ee6",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:28:50.246089+00:00",
+        "payload": {
+          "agent_id": "69a0b3021f5b02fe9304a796",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "51ef6f88-9d47-4db6-ae66-8326822a97bf",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:28:51.690315+00:00",
+        "payload": {
+          "agent_id": "699bd4769003dbb839a1f276",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "ba235a83-cf74-4cfe-979b-6b7170b10979",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:28:53.170860+00:00",
+        "payload": {
+          "agent_id": "69a0b0481f5b02fe9304a78f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "1cccfa5f-21df-4291-8b30-648b4d02594f",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:28:54.622713+00:00",
+        "payload": {
+          "agent_id": "69a0b2321f5b02fe9304a793",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "4c745392-996e-4b99-870e-3e5d0531f651",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:28:56.099116+00:00",
+        "payload": {
+          "agent_id": "69a0bb0e1f5b02fe9304a79f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "bf4b6211-aab6-40e6-9331-88c6a11a35f9",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:43:57.834579+00:00",
+        "payload": {
+          "agent_id": "69a0bfd81f5b02fe9304a7ca",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "38e26c62-0f40-4dbb-ba47-e2c966fcc0db",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:43:59.293785+00:00",
+        "payload": {
+          "agent_id": "69a0bd611f5b02fe9304a7b6",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "8a0a3aa6-a719-4ebd-96d3-c18972ad2082",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:44:00.752033+00:00",
+        "payload": {
+          "agent_id": "69a0b3021f5b02fe9304a796",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "64026ebb-9583-440b-a5bc-f4d4d3fcb6ea",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:44:02.192826+00:00",
+        "payload": {
+          "agent_id": "699bd4769003dbb839a1f276",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "38898494-3c19-44fc-b316-10dd4ac43a44",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:44:03.616090+00:00",
+        "payload": {
+          "agent_id": "69a0b0481f5b02fe9304a78f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "76ffd42d-489e-403c-b5db-85aa1986f348",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:44:05.071213+00:00",
+        "payload": {
+          "agent_id": "69a0b2321f5b02fe9304a793",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "7fa2cf4c-502c-4863-83cf-bf7e71e65326",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:44:06.493952+00:00",
+        "payload": {
+          "agent_id": "69a0bb0e1f5b02fe9304a79f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "5482a2ea-592e-455f-9c3e-a1f50ddf7a15",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:59:08.243872+00:00",
+        "payload": {
+          "agent_id": "69a0bfd81f5b02fe9304a7ca",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "71e63e0d-09a5-43a1-b6b3-b150ef05fd52",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:59:09.725478+00:00",
+        "payload": {
+          "agent_id": "69a0bd611f5b02fe9304a7b6",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "5d1a5465-889f-45df-926f-3197970eb234",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:59:11.168439+00:00",
+        "payload": {
+          "agent_id": "69a0b3021f5b02fe9304a796",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "12c3e00c-42b7-454d-9209-38de8c4ac92f",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:59:12.595712+00:00",
+        "payload": {
+          "agent_id": "699bd4769003dbb839a1f276",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "a0e15266-81f9-4557-9941-34153ecf32be",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:59:14.023025+00:00",
+        "payload": {
+          "agent_id": "69a0b0481f5b02fe9304a78f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "ccc2d98f-9ad0-4fe0-9570-dcf9f4c7a0b6",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:59:15.481465+00:00",
+        "payload": {
+          "agent_id": "69a0b2321f5b02fe9304a793",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "efe63c17-a102-4e75-9c0c-91082c9c21fe",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T02:59:16.902932+00:00",
+        "payload": {
+          "agent_id": "69a0bb0e1f5b02fe9304a79f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "039c87b7-c7f3-47e8-b11c-013325431479",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:14:18.363073+00:00",
+        "payload": {
+          "agent_id": "69a0bfd81f5b02fe9304a7ca",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "8d2d7515-ad9c-4247-8cd5-bb8b8da7f679",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:14:19.784086+00:00",
+        "payload": {
+          "agent_id": "69a0bd611f5b02fe9304a7b6",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "e7bd2275-fbe3-413e-b8f7-aeb842fe92ff",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:14:21.230498+00:00",
+        "payload": {
+          "agent_id": "69a0b3021f5b02fe9304a796",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "6de235d7-fe4a-4289-bb21-3631b1211e50",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:14:22.705198+00:00",
+        "payload": {
+          "agent_id": "699bd4769003dbb839a1f276",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "9aa2c896-63bb-434f-b106-9a364e9c2704",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:14:24.157843+00:00",
+        "payload": {
+          "agent_id": "69a0b0481f5b02fe9304a78f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "954d3a44-4cae-40c4-9d22-d90e9c787ce4",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:14:25.611764+00:00",
+        "payload": {
+          "agent_id": "69a0b2321f5b02fe9304a793",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "4df35101-0e20-4d42-b503-7654c6398970",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:14:27.028349+00:00",
+        "payload": {
+          "agent_id": "69a0bb0e1f5b02fe9304a79f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "1002f6b3-4804-4b99-8603-aee4ee81ab7a",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:29:28.496723+00:00",
+        "payload": {
+          "agent_id": "69a0bfd81f5b02fe9304a7ca",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "6f3e3c32-f3cc-47a6-af63-81b9265c22dd",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:29:29.919097+00:00",
+        "payload": {
+          "agent_id": "69a0bd611f5b02fe9304a7b6",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "ceaf8fbc-fedb-4b64-a51e-706a8a508101",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:29:31.342549+00:00",
+        "payload": {
+          "agent_id": "69a0b3021f5b02fe9304a796",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "4f341aa9-c95c-421c-9d39-4ea2d5700d37",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:29:32.799448+00:00",
+        "payload": {
+          "agent_id": "699bd4769003dbb839a1f276",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "ed9f34db-8624-4b75-bf1b-493d5f64c368",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:29:34.242517+00:00",
+        "payload": {
+          "agent_id": "69a0b0481f5b02fe9304a78f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "230d32fa-5a1d-4362-8613-694baaf500d4",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:29:35.687916+00:00",
+        "payload": {
+          "agent_id": "69a0b2321f5b02fe9304a793",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "b77ea2db-63c9-42aa-8e25-ce592b6e62aa",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:29:37.134632+00:00",
+        "payload": {
+          "agent_id": "69a0bb0e1f5b02fe9304a79f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "0df7eb2d-6a7f-4e3b-9b14-982a6e853ee5",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:44:38.599637+00:00",
+        "payload": {
+          "agent_id": "69a0bfd81f5b02fe9304a7ca",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "127c0237-95e6-47e2-a7de-a659a897d062",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:44:40.062742+00:00",
+        "payload": {
+          "agent_id": "69a0bd611f5b02fe9304a7b6",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "f90f729e-e11d-425e-8649-6dae3cc0a455",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:44:41.529094+00:00",
+        "payload": {
+          "agent_id": "69a0b3021f5b02fe9304a796",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "e3eaabab-8111-48f0-8518-11c36abb2520",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:44:42.952245+00:00",
+        "payload": {
+          "agent_id": "699bd4769003dbb839a1f276",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "6f31759d-ca95-43f1-89ce-f74b0266de4f",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:44:44.391851+00:00",
+        "payload": {
+          "agent_id": "69a0b0481f5b02fe9304a78f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "f829ff44-356a-47a9-9e92-b211ed953b50",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:44:45.874096+00:00",
+        "payload": {
+          "agent_id": "69a0b2321f5b02fe9304a793",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "ef9bab40-970a-40a0-853a-0c07caa18806",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:44:47.328947+00:00",
+        "payload": {
+          "agent_id": "69a0bb0e1f5b02fe9304a79f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "cfa32891-ebcc-4da9-88f8-22aec108872c",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:59:48.760774+00:00",
+        "payload": {
+          "agent_id": "69a0bfd81f5b02fe9304a7ca",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "9b1c9cfd-60df-4987-9604-3191b18a5b4b",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:59:50.237103+00:00",
+        "payload": {
+          "agent_id": "69a0bd611f5b02fe9304a7b6",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "176ecf9c-5e52-42bb-a6f6-cd6d509ffdd4",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:59:51.717216+00:00",
+        "payload": {
+          "agent_id": "69a0b3021f5b02fe9304a796",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "fa2b20b6-4451-4a52-88e4-3bb0f2bb8aa0",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:59:53.174532+00:00",
+        "payload": {
+          "agent_id": "699bd4769003dbb839a1f276",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "c1eab499-3bbc-4cca-adba-e92f691fdd48",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:59:54.625470+00:00",
+        "payload": {
+          "agent_id": "69a0b0481f5b02fe9304a78f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "96057917-f18c-4e47-8fa9-32dee930666a",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:59:56.102555+00:00",
+        "payload": {
+          "agent_id": "69a0b2321f5b02fe9304a793",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "06faa6e1-41d0-4482-8974-040913265f52",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T03:59:57.557140+00:00",
+        "payload": {
+          "agent_id": "69a0bb0e1f5b02fe9304a79f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "d777508c-b648-4289-a97a-9a753dc2b7b6",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:14:59.011100+00:00",
+        "payload": {
+          "agent_id": "69a0bfd81f5b02fe9304a7ca",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "a650f370-c94f-42f7-b10b-73733f2a618f",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:15:00.470823+00:00",
+        "payload": {
+          "agent_id": "69a0bd611f5b02fe9304a7b6",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "bdf4a974-2d43-4648-b3ec-618ffa1b1b25",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:15:01.980009+00:00",
+        "payload": {
+          "agent_id": "69a0b3021f5b02fe9304a796",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "ac2023f9-8191-4f9c-861f-e3044ab13edf",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:15:03.429664+00:00",
+        "payload": {
+          "agent_id": "699bd4769003dbb839a1f276",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "517e5d9b-08e0-40a1-a3b2-2763a43af04b",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:15:04.869781+00:00",
+        "payload": {
+          "agent_id": "69a0b0481f5b02fe9304a78f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "807eb4c4-0eba-47c7-a446-bbaed2076062",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:15:06.319779+00:00",
+        "payload": {
+          "agent_id": "69a0b2321f5b02fe9304a793",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "89c99210-7c1f-4122-a6e4-356d5113fdcc",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:15:07.745610+00:00",
+        "payload": {
+          "agent_id": "69a0bb0e1f5b02fe9304a79f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "4d215c4e-423c-4c8d-bb1e-f3f592190987",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:30:09.237539+00:00",
+        "payload": {
+          "agent_id": "69a0bfd81f5b02fe9304a7ca",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "f52c684d-ed2b-4957-a0a1-2b50e92323d4",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:30:10.695920+00:00",
+        "payload": {
+          "agent_id": "69a0bd611f5b02fe9304a7b6",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "ca4c73e5-9470-4e36-8efa-4c0d057eedb6",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:30:12.125534+00:00",
+        "payload": {
+          "agent_id": "69a0b3021f5b02fe9304a796",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "3cce1c17-e36b-4ac3-829e-44e224deb301",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:30:13.606500+00:00",
+        "payload": {
+          "agent_id": "699bd4769003dbb839a1f276",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "7fc745c0-32a2-457f-874f-06af69549748",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:30:15.283088+00:00",
+        "payload": {
+          "agent_id": "69a0b0481f5b02fe9304a78f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "dd2b346d-a1b8-4bc7-9568-cf34ade20176",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:30:16.760914+00:00",
+        "payload": {
+          "agent_id": "69a0b2321f5b02fe9304a793",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "cca32d8d-cab2-4da9-90a8-125b3935ff2b",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:30:18.224886+00:00",
+        "payload": {
+          "agent_id": "69a0bb0e1f5b02fe9304a79f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "2a950843-358c-4cdb-a2a7-de36a64a4ddb",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:40:37.186220+00:00",
+        "payload": {
+          "agent_id": "69a0bfd81f5b02fe9304a7ca",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "7c77c8d5-6d8b-4f98-ae2b-1de813ecf14a",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:40:38.642596+00:00",
+        "payload": {
+          "agent_id": "69a0bd611f5b02fe9304a7b6",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "b347a321-5d25-4f36-aa98-13b751e68251",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:40:40.122114+00:00",
+        "payload": {
+          "agent_id": "69a0b3021f5b02fe9304a796",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "c085ee53-917d-4794-8c49-f90bd7556033",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:40:41.615016+00:00",
+        "payload": {
+          "agent_id": "699bd4769003dbb839a1f276",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "9db56d7a-933b-41f5-9b5d-7f1073d8c2a5",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:40:43.080478+00:00",
+        "payload": {
+          "agent_id": "69a0b0481f5b02fe9304a78f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "21830cb3-978b-4fab-bb74-0ccf23174aec",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:40:44.514128+00:00",
+        "payload": {
+          "agent_id": "69a0b2321f5b02fe9304a793",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "12e82204-4a49-4e2d-bbb7-b7b300527bda",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:40:45.986304+00:00",
+        "payload": {
+          "agent_id": "69a0bb0e1f5b02fe9304a79f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "190ddd9b-ecb9-4610-b6b9-1aaf1714fea4",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:43:37.208520+00:00",
+        "payload": {
+          "agent_id": "69a0bfd81f5b02fe9304a7ca",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "97b54af9-0910-425c-a04a-a46962aeabb7",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:43:38.667576+00:00",
+        "payload": {
+          "agent_id": "69a0bd611f5b02fe9304a7b6",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "7daf49f5-8131-4203-96cd-a97f6837d1f2",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:43:40.140030+00:00",
+        "payload": {
+          "agent_id": "69a0b3021f5b02fe9304a796",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "9f9f6274-9135-496f-bdb2-3ad5754621a2",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:43:41.619251+00:00",
+        "payload": {
+          "agent_id": "699bd4769003dbb839a1f276",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "d0569b96-35c3-47b7-9f25-6d4f8a0b5590",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:43:43.081301+00:00",
+        "payload": {
+          "agent_id": "69a0b0481f5b02fe9304a78f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "e855c782-5bc7-4106-ab04-58c5463809b9",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:43:44.537746+00:00",
+        "payload": {
+          "agent_id": "69a0b2321f5b02fe9304a793",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "dc1a5592-89bf-4d1e-b2a2-6ca5b723951d",
+        "event_type": "stack_processed",
+        "at": "2026-03-02T04:43:46.000573+00:00",
+        "payload": {
+          "agent_id": "69a0bb0e1f5b02fe9304a79f",
+          "status": 400,
+          "success": false,
+          "episode_id": ""
+        }
+      },
+      {
+        "event_id": "c2ff4c16-cc8d-4981-9166-2b5170f843c2",
+        "event_type": "player_registered",
+        "at": "2026-03-02T04:45:11.734976+00:00",
+        "payload": {
+          "wallet": "0x69ef61afc3aa356e1ac97347119d75cbdabef534",
+          "agent_id": "69a0c2281f5b02fe9304a7e4",
+          "base_quota": 2
+        }
       }
     ]
   },
@@ -5965,7 +5979,8 @@
         "amount": 1,
         "created_at": "2026-02-28T00:01:13.512873+00:00"
       }
-    ]
+    ],
+    "69a0c2281f5b02fe9304a7e4": []
   },
   "agent_context_by_agent": {
     "69a0b2321f5b02fe9304a793": {
@@ -6141,6 +6156,22 @@
         "role": "agent",
         "text": "You feel a strange vibration deep in your marrow, a phantom resonance echoing from the direction of the Azure Grotto. I have expanded our inner map of this world, drawing more threads of information from the ether to help you understand this task.\n\nThe core fragment is no mere stone; it is the beating heart of a guardian construct, an ancient sentinel that has hummed in the darkness since before the Eternal Mist first rose. To retrieve it, you must descend into the bioluminescent depths of the Grotto, where the rhythmic pulse of the mechanism guides you toward a power source capable of shielding our new home from the terrors of the wild.",
         "timestamp": "2026-03-01T12:57:15.108722+00:00"
+      },
+      {
+        "room_id": "f6c82a9f-27b2-47ae-aa07-499a3bb471e7",
+        "sender_agent_id": "69a0bd611f5b02fe9304a7b6",
+        "sender_wallet": "0x69ef61afc3aa356e1ac97347119d75cbdabef534",
+        "role": "user",
+        "text": "whats going on",
+        "timestamp": "2026-03-02T04:45:40.358256+00:00"
+      },
+      {
+        "room_id": "f6c82a9f-27b2-47ae-aa07-499a3bb471e7",
+        "sender_agent_id": "69a0bd611f5b02fe9304a7b6",
+        "sender_wallet": "0x69ef61afc3aa356e1ac97347119d75cbdabef534",
+        "role": "agent",
+        "text": "You blink as the hazy fog of the transition clears, finding yourself within the sturdy, timber-framed walls of The Hearth. The crackle of the fire provides a rhythmic heartbeat to this sanctuary, yet the air is thick with the weight of the tasks ahead\u2014a missing surveyor and a humming core awaiting you in the wilds. I have expanded our inner map of this world, drawing more threads of information from the surrounding mists to guide your first steps.",
+        "timestamp": "2026-03-02T04:45:40.361584+00:00"
       }
     ]
   },

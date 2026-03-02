@@ -10,6 +10,8 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import game_config as config
+from typing import Any, Callable
+
 from models import (
     AttemptState,
     GameState,
@@ -20,13 +22,20 @@ from models import (
     RoomState,
 )
 
+RoomEventCallback = Callable[[str, dict[str, Any]], None]
+
 
 class GameStore:
     """In-memory game store and business rules."""
 
-    def __init__(self, storage_path: Path | None = None) -> None:
+    def __init__(
+        self,
+        storage_path: Path | None = None,
+        on_room_event: RoomEventCallback | None = None,
+    ) -> None:
         self._lock = threading.Lock()
         self._storage_path = Path(storage_path or config.GAME_STORE_PATH)
+        self.on_room_event: RoomEventCallback | None = on_room_event
         self.players_by_agent: dict[str, PlayerState] = {}
         self.players_by_purchase: dict[str, PlayerState] = {}
         self.players_by_wallet: dict[str, list[str]] = {}
@@ -43,6 +52,15 @@ class GameStore:
         self.npcs_by_game: dict[str, dict[str, NpcState]] = {}
         self.objects_by_game: dict[str, dict[str, ObjectState]] = {}
         self._load_from_disk()
+
+    def emit_room_event(self, room_id: str, event: dict[str, Any]) -> None:
+        """Fire the on_room_event callback if registered. Never raises."""
+        cb = self.on_room_event
+        if cb is not None:
+            try:
+                cb(room_id, event)
+            except Exception:
+                pass
 
     def _schedule_room_image(self, bonfire_id: str, room_id: str) -> None:
         """Fire a daemon thread to create a DataRoom + HyperBlog for a room."""
@@ -655,11 +673,25 @@ class GameStore:
                     "world_state_summary": game.world_state_summary,
                 },
             )
-            return {
+            result = {
                 "world_state_summary": game.world_state_summary,
                 "last_gm_reaction": game.last_gm_reaction,
                 "last_episode_id": game.last_episode_id,
             }
+            room_ids = [
+                str(r.get("room_id", ""))
+                for r in game.rooms
+                if isinstance(r, dict) and r.get("room_id")
+            ]
+        for rid in room_ids:
+            self.emit_room_event(rid, {
+                "type": "world_state",
+                "bonfire_id": bonfire_id,
+                "episode_id": episode_id,
+                "world_state_summary": result["world_state_summary"],
+                "last_gm_reaction": result["last_gm_reaction"],
+            })
+        return result
 
     def get_owner_agent_id(self, bonfire_id: str) -> str | None:
         with self._lock:
@@ -689,10 +721,14 @@ class GameStore:
                 description=description,
                 connections=connections or [],
             )
-            game.rooms.append(asdict(room))
+            room_dict = asdict(room)
+            game.rooms.append(room_dict)
             game.updated_at = datetime.now(UTC).isoformat()
             self._persist_locked()
 
+        self.emit_room_event(room.room_id, {
+            "type": "room_created", "room": room_dict, "bonfire_id": bonfire_id,
+        })
         self._schedule_room_image(bonfire_id, room.room_id)
         return room
 
@@ -707,9 +743,17 @@ class GameStore:
             valid_ids = {r["room_id"] for r in game.rooms if isinstance(r, dict) and "room_id" in r}
             if room_id not in valid_ids:
                 return False
+            old_room = player.current_room
             player.current_room = room_id
             self._persist_locked()
-            return True
+        if old_room:
+            self.emit_room_event(old_room, {
+                "type": "player_left", "agent_id": agent_id, "old_room": old_room, "new_room": room_id,
+            })
+        self.emit_room_event(room_id, {
+            "type": "player_joined", "agent_id": agent_id, "old_room": old_room, "new_room": room_id,
+        })
+        return True
 
     def get_room_map(self, bonfire_id: str) -> dict[str, object]:
         with self._lock:
@@ -802,7 +846,8 @@ class GameStore:
             if len(messages) > 200:
                 del messages[: len(messages) - 200]
             self._persist_locked()
-            return entry
+        self.emit_room_event(room_id, {"type": "room_chat", **entry})
+        return entry
 
     def get_room_messages(self, room_id: str, limit: int = 50) -> list[dict[str, object]]:
         with self._lock:
@@ -872,6 +917,13 @@ class GameStore:
                     room["latest_hyperblog_id"] = hyperblog_id
                     game.updated_at = datetime.now(UTC).isoformat()
                     self._persist_locked()
+                    self.emit_room_event(room_id, {
+                        "type": "room_image_updated",
+                        "room_id": room_id,
+                        "image_url": image_url,
+                        "latest_summary": summary,
+                        "hyperblog_id": hyperblog_id,
+                    })
                     return True
             return False
 

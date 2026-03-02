@@ -10,7 +10,7 @@ from dataclasses import asdict
 from datetime import UTC, datetime
 from typing import Callable
 
-from fastapi import APIRouter, Body, Depends, Header, Query, Request
+from fastapi import APIRouter, Body, Depends, Header, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 
 import game_config as config
@@ -19,6 +19,7 @@ import http_client
 import room_image
 import stack_processing
 from game_store import GameStore
+from room_hub import RoomHub
 from timers import GmBatchTimerRunner, StackTimerRunner
 
 router = APIRouter()
@@ -38,6 +39,10 @@ def get_resolve_owner_wallet(request: Request) -> Callable[[int], str]:
 
 def get_stack_timer(request: Request) -> StackTimerRunner | None:
     return getattr(request.app.state, "stack_timer", None)
+
+
+def get_room_hub(request: Request) -> RoomHub:
+    return request.app.state.room_hub  # type: ignore[no-any-return]
 
 
 def get_gm_timer(request: Request) -> GmBatchTimerRunner | None:
@@ -1829,7 +1834,8 @@ def route_end_turn(
     response["gm_decision"] = gm_decision
     response["room_changes"] = room_changes
     response["npc_object_changes"] = npc_obj_changes
-    response["room_map"] = store.get_room_map(bonfire_id)
+    room_map = store.get_room_map(bonfire_id)
+    response["room_map"] = room_map
 
     game_obj = store.get_game(bonfire_id)
     if game_obj:
@@ -1838,6 +1844,19 @@ def route_end_turn(
             "last_gm_reaction": game_obj.last_gm_reaction,
             "last_episode_id": game_obj.last_episode_id,
         }
+
+    gm_summary = str(gm_decision.get("reaction", ""))
+    rooms_list = room_map.get("rooms", [])
+    if isinstance(rooms_list, list):
+        for r in rooms_list:
+            rid = str(r.get("room_id", "")) if isinstance(r, dict) else ""
+            if rid:
+                store.emit_room_event(rid, {
+                    "type": "gm_decision",
+                    "summary": gm_summary,
+                    "room_changes": room_changes,
+                    "npc_changes": npc_obj_changes,
+                })
 
     return JSONResponse(response)
 
@@ -2685,3 +2704,42 @@ def route_get_room_journal(
         })
 
     return JSONResponse({"room_id": room_id, "entries": entries, "count": len(entries)})
+
+
+# ---------------------------------------------------------------------------
+# WebSocket — real-time room event stream
+# ---------------------------------------------------------------------------
+
+
+@router.websocket("/ws/game")
+async def ws_game(websocket: WebSocket) -> None:
+    agent_id = websocket.query_params.get("agent_id", "")
+    api_key = websocket.query_params.get("api_key", "")
+
+    store: GameStore = websocket.app.state.store
+    hub: RoomHub = websocket.app.state.room_hub
+
+    if not agent_id or not api_key:
+        await websocket.close(code=4001, reason="agent_id and api_key required")
+        return
+
+    player = store.get_player(agent_id)
+    if not player:
+        await websocket.close(code=4004, reason="agent not registered")
+        return
+
+    await websocket.accept()
+    await hub.connect(agent_id, websocket)
+
+    if player.current_room:
+        await hub.subscribe(agent_id, player.current_room)
+
+    try:
+        while True:
+            data = await websocket.receive_text()
+            if data == "ping":
+                await websocket.send_text("pong")
+    except WebSocketDisconnect:
+        pass
+    finally:
+        await hub.disconnect(agent_id)
