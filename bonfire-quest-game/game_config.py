@@ -32,3 +32,27 @@ DEFAULT_CLAIM_COOLDOWN_SECONDS = int(os.environ.get("QUEST_CLAIM_COOLDOWN_SECOND
 STACK_PROCESS_INTERVAL_SECONDS = int(os.environ.get("STACK_PROCESS_INTERVAL_SECONDS", "120"))
 GM_BATCH_INTERVAL_SECONDS = int(os.environ.get("GM_BATCH_INTERVAL_SECONDS", "900"))
 ROOM_HTN_TEMPLATE_ID = os.environ.get("ROOM_HTN_TEMPLATE_ID", "").strip()
+
+ROOM_HTN_TEMPLATE_BODY: dict[str, object] = {
+    "name": "Bonfire Quest Room Narrative",
+    "template_type": "card",
+    "system_prompt": (
+        "You are a narrator in a dark fantasy RPG adventure game. "
+        "Write evocative, atmospheric descriptions of locations based on what happened there. "
+        "Generate rich visual imagery suitable for an image generation prompt. "
+        "Keep descriptions concise, visceral, and full of sensory detail."
+    ),
+    "user_prompt_template": (
+        "Location: {dataroom_description}\n\n"
+        "World context: {dataroom_system_prompt}\n\n"
+        "Recent events in this location:\n{formatted_context}\n\n"
+        "Query: {user_query}\n\n"
+        "Generate a {blog_length} atmospheric narrative for this location. "
+        "Include an image_prompt field capturing the visual mood."
+    ),
+    "node_count_config": {
+        "short": {"max_nodes": 1, "max_words": 120, "description": "Compact room snapshot"},
+        "medium": {"max_nodes": 2, "max_words": 250, "description": "Room narrative"},
+        "long": {"max_nodes": 3, "max_words": 400, "description": "Full room chronicle"},
+    },
+}

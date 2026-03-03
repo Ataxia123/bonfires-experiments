@@ -2530,29 +2530,7 @@ def route_generate_quests(
 # Room image / HyperBlog pipeline
 # ---------------------------------------------------------------------------
 
-ROOM_HTN_TEMPLATE_BODY: dict[str, object] = {
-    "name": "Bonfire Quest Room Narrative",
-    "template_type": "card",
-    "system_prompt": (
-        "You are a narrator in a dark fantasy RPG adventure game. "
-        "Write evocative, atmospheric descriptions of locations based on what happened there. "
-        "Generate rich visual imagery suitable for an image generation prompt. "
-        "Keep descriptions concise, visceral, and full of sensory detail."
-    ),
-    "user_prompt_template": (
-        "Location: {dataroom_description}\n\n"
-        "World context: {dataroom_system_prompt}\n\n"
-        "Recent events in this location:\n{formatted_context}\n\n"
-        "Query: {user_query}\n\n"
-        "Generate a {blog_length} atmospheric narrative for this location. "
-        "Include an image_prompt field capturing the visual mood."
-    ),
-    "node_count_config": {
-        "short": {"max_nodes": 1, "max_words": 120, "description": "Compact room snapshot"},
-        "medium": {"max_nodes": 2, "max_words": 250, "description": "Room narrative"},
-        "long": {"max_nodes": 3, "max_words": 400, "description": "Full room chronicle"},
-    },
-}
+ROOM_HTN_TEMPLATE_BODY = config.ROOM_HTN_TEMPLATE_BODY
 
 
 @router.post("/game/setup/htn-template")

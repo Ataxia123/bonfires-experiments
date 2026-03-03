@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 import game_config as config
+import http_client
 from game_store import GameStore
 from room_hub import RoomHub
 from timers import GmBatchTimerRunner, StackTimerRunner
@@ -77,6 +78,7 @@ def create_app(
         )
         _stack_timer.start()
         _gm_timer.start()
+        _ensure_htn_template()
         app.state.store = _store
         app.state.room_hub = _hub
         app.state.resolve_owner_wallet = _noop_resolver
@@ -116,6 +118,22 @@ def create_app(
     app.mount("/", StaticFiles(directory=str(config.GAME_DIR), html=True), name="static")
 
     return app
+
+
+def _ensure_htn_template() -> None:
+    """Auto-provision the Room HTN template on startup if not already set."""
+    if config.ROOM_HTN_TEMPLATE_ID:
+        print(f"[startup] HTN template already set: {config.ROOM_HTN_TEMPLATE_ID}")
+        return
+    url = f"{config.DELVE_BASE_URL}/htn-templates"
+    status, payload = http_client._json_request("POST", url, config.ROOM_HTN_TEMPLATE_BODY)
+    if status in (200, 201) and isinstance(payload, dict):
+        template_id = str(payload.get("id") or payload.get("_id") or "")
+        if template_id:
+            config.ROOM_HTN_TEMPLATE_ID = template_id
+            print(f"[startup] HTN template created: {template_id}")
+            return
+    print(f"[startup] HTN template creation failed ({status}): {payload}")
 
 
 def _noop_resolver(erc8004_bonfire_id: int) -> str:  # pragma: no cover
