@@ -23,7 +23,7 @@ for _env_path in _env_candidates:
         load_dotenv(_env_path)
         break
 
-DB_NAME = "bonfires_dan"
+DB_NAME = "bonfires_staging"
 
 app = FastAPI(title="Eval Dashboard")
 
